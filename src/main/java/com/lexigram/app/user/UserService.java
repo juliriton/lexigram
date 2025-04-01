@@ -3,6 +3,7 @@ package com.lexigram.app.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,35 +17,64 @@ public class UserService {
     this.userRepository = userRepository;
   }
 
-  public List<User> findAllUsers() {
-    return userRepository.findAll();
+  public List<UserDTO> findAllUsers() {
+    List<User> users = userRepository.findAll();
+    List<UserDTO> userDTOs = new ArrayList<>();
+    for (User user : users) {
+      userDTOs.add(new UserDTO(user.getUsername(), user.getEmail()));
+    }
+    return userDTOs;
   }
 
-  public User createUser(String username, String email, String password) {
+  public UserDTO createUser(UserCreateDTO dto) {
     User user = new User();
-    user.setUsername(username);
-    user.setEmail(email);
-    user.setPassword(password);
-    return userRepository.save(user);
+    user.setUsername(dto.getUsername());
+    user.setEmail(dto.getEmail());
+    user.setPassword(dto.getPassword());
+    userRepository.save(user);
+
+    return new UserDTO(user.getUsername(), user.getEmail());
   }
 
-  public Optional<User> findUserById(Long id) {
-    return userRepository.findById(id);
+  public Optional<UserDTO> findUserById(Long id) {
+    Optional<User> userOptional = userRepository.findById(id);
+    if (userOptional.isPresent()) {
+      User user = userOptional.get();
+      return Optional.of(new UserDTO(user.getUsername(), user.getEmail()));
+    }
+    return Optional.empty();
   }
 
-  public User updateUser(Long id, String username, String email, String password) {
+  public Optional<UserDTO> updateUser(Long id, UserUpdateDTO userUpdateDTO) {
     Optional<User> optionalUser = userRepository.findById(id);
+
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      user.setUsername(username);
-      user.setEmail(email);
-      user.setPassword(password);
-      return userRepository.save(user);
+
+      if (userUpdateDTO.getUsername() != null) {
+        user.setUsername(userUpdateDTO.getUsername());
+      }
+      if (userUpdateDTO.getEmail() != null) {
+        user.setEmail(userUpdateDTO.getEmail());
+      }
+      if (userUpdateDTO.getPassword() != null) {
+        user.setPassword(userUpdateDTO.getPassword());
+      }
+
+      userRepository.save(user);
+      return Optional.of(new UserDTO(user.getUsername(), user.getEmail()));
     }
-    return null;
+
+    return Optional.empty();
   }
 
-  public void deleteUser(Long id) {
-    userRepository.deleteById(id);
+  public boolean deleteUser(Long id) {
+    Optional<User> optionalUser = userRepository.findById(id);
+    if (optionalUser.isPresent()) {
+      userRepository.deleteById(id);
+      return true;
+    }
+    return false;
   }
+
 }

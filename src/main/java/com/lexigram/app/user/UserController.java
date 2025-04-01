@@ -1,14 +1,17 @@
 package com.lexigram.app.user;
 
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
 
   private final UserService userService;
@@ -19,32 +22,51 @@ public class UserController {
   }
 
   @PostMapping
-  public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
-    User user = userService.createUser(userDTO.getUsername(), userDTO.getEmail(), userDTO.getPassword());
-    return ResponseEntity.status(201).body(new UserDTO(user.getUsername(), user.getEmail()));
+  public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserCreateDTO dto) {
+    UserDTO user = userService.createUser(dto);
+    return ResponseEntity.status(201).body(user);
+  }
+
+  @GetMapping
+  public ResponseEntity<List<UserDTO>> getAllUsers() {
+    List<UserDTO> users = userService.findAllUsers();
+    if (users.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(users);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
-    Optional<User> userOptional = userService.findUserById(id);
+    Optional<UserDTO> userOptional = userService.findUserById(id);
 
     if (userOptional.isEmpty()) {
       return ResponseEntity.notFound().build();
     }
 
-    User user = userOptional.get();
+    UserDTO user = userOptional.get();
     return ResponseEntity.ok(new UserDTO(user.getUsername(), user.getEmail()));
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
-    User updatedUser = userService.updateUser(id, userDTO.getUsername(), userDTO.getEmail(), userDTO.getPassword());
-    return ResponseEntity.ok(new UserDTO(updatedUser.getUsername(), updatedUser.getEmail()));
+  public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto) {
+    Optional<UserDTO> userOptional = userService.findUserById(id);
+
+    if (userOptional.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+
+    UserDTO user = userOptional.get();
+    userService.updateUser(id, dto);
+    return ResponseEntity.ok(new UserDTO(user.getUsername(), user.getEmail()));
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-    userService.deleteUser(id);
-    return ResponseEntity.noContent().build();
+    if (userService.deleteUser(id)) {
+      return ResponseEntity.noContent().build();
+    } else {
+      return ResponseEntity.notFound().build();
+    }
   }
 }

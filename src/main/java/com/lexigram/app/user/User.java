@@ -22,18 +22,12 @@ public class User {
   @Column(unique = true, nullable = false)
   private String email;
 
-  /*
-  La password se guarda como un hash en la BD y se transforma
-  en los demas niveles
-   */
   @Column(nullable = false)
   private String password;
 
   public Long getId() {
     return id;
   }
-
-  public void setId(Long id) { this.id = id; }
 
   public String getUsername() {
     return username;
