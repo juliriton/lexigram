@@ -2,7 +2,6 @@ package com.lexigram.app.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,9 +20,18 @@ public class UserService {
     List<User> users = userRepository.findAll();
     List<UserDTO> userDTOs = new ArrayList<>();
     for (User user : users) {
-      userDTOs.add(new UserDTO(user.getUsername(), user.getEmail()));
+      userDTOs.add(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
     }
     return userDTOs;
+  }
+
+  public Optional<UserDTO> findUserById(Long id) {
+    Optional<User> userOptional = userRepository.findById(id);
+    if (userOptional.isEmpty()) {
+      return Optional.empty();
+    }
+    User user = userOptional.get();
+    return Optional.of( new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
   }
 
   public UserDTO createUser(UserCreateDTO dto) {
@@ -33,40 +41,40 @@ public class UserService {
     user.setPassword(dto.getPassword());
     userRepository.save(user);
 
-    return new UserDTO(user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
   }
 
-  public Optional<UserDTO> findUserById(Long id) {
+  public Optional<UserDTO> updateUser(Long id, UserUpdateDTO dto) {
     Optional<User> userOptional = userRepository.findById(id);
-    if (userOptional.isPresent()) {
-      User user = userOptional.get();
-      return Optional.of(new UserDTO(user.getUsername(), user.getEmail()));
+    if (userOptional.isEmpty()) {
+      return Optional.empty();
     }
-    return Optional.empty();
-  }
 
-  public Optional<UserDTO> updateUser(Long id, UserUpdateDTO userUpdateDTO) {
-    Optional<User> optionalUser = userRepository.findById(id);
+    User user = userOptional.get();
+    boolean updated = false;
 
-    if (optionalUser.isPresent()) {
-      User user = optionalUser.get();
+    if (dto.getUsername() != null && !dto.getUsername().equals(user.getUsername())) {
+      user.setUsername(dto.getUsername());
+      updated = true;
+    }
 
-      if (userUpdateDTO.getUsername() != null) {
-        user.setUsername(userUpdateDTO.getUsername());
-      }
-      if (userUpdateDTO.getEmail() != null) {
-        user.setEmail(userUpdateDTO.getEmail());
-      }
-      if (userUpdateDTO.getPassword() != null) {
-        user.setPassword(userUpdateDTO.getPassword());
-      }
+    if (dto.getEmail() != null && !dto.getEmail().isEmpty() && !dto.getEmail().equals(user.getEmail())) {
+      user.setEmail(dto.getEmail());
+      updated = true;
+    }
 
+    if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+      user.setPassword(dto.getPassword());
+      updated = true;
+    }
+
+    if (updated) {
       userRepository.save(user);
-      return Optional.of(new UserDTO(user.getUsername(), user.getEmail()));
     }
 
-    return Optional.empty();
+    return Optional.of(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
   }
+
 
   public boolean deleteUser(Long id) {
     Optional<User> optionalUser = userRepository.findById(id);

@@ -1,22 +1,26 @@
 package com.lexigram.app.user;
 
 public class UserDTO {
+  private Long id;
   private String username;
   private String email;
 
   public UserDTO() {}
 
-  public UserDTO(String username, String email) {
+  public UserDTO(Long id, String username, String email) {
+    this.id = id;
     this.username = username;
     this.email = email;
   }
 
+  public Long getId() { return this.id; }
+
   public String getUsername() {
-    return username;
+    return this.username;
   }
 
   public String getEmail() {
-    return email;
+    return this.email;
   }
 
 }

@@ -45,7 +45,7 @@ public class UserController {
     }
 
     UserDTO user = userOptional.get();
-    return ResponseEntity.ok(new UserDTO(user.getUsername(), user.getEmail()));
+    return ResponseEntity.ok(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
   }
 
   @PutMapping("/{id}")
@@ -56,9 +56,8 @@ public class UserController {
       return ResponseEntity.notFound().build();
     }
 
-    UserDTO user = userOptional.get();
-    userService.updateUser(id, dto);
-    return ResponseEntity.ok(new UserDTO(user.getUsername(), user.getEmail()));
+    Optional<UserDTO> updatedUser = userService.updateUser(id, dto);
+    return ResponseEntity.ok(updatedUser.get());
   }
 
   @DeleteMapping("/{id}")
