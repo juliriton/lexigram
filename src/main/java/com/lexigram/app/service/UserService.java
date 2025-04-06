@@ -1,14 +1,15 @@
 package com.lexigram.app.service;
 
+import com.lexigram.app.dto.*;
+import com.lexigram.app.exception.EmailAlreadyUsedException;
+import com.lexigram.app.exception.UserNotFoundException;
+import com.lexigram.app.exception.UsernameAlreadyUsedException;
 import com.lexigram.app.model.User;
-import com.lexigram.app.dto.UserCreateDTO;
-import com.lexigram.app.dto.UserDTO;
 import com.lexigram.app.model.UserPrivacySettings;
 import com.lexigram.app.model.UserProfile;
 import com.lexigram.app.repository.UserPrivacySettingsRepository;
 import com.lexigram.app.repository.UserProfileRepository;
 import com.lexigram.app.repository.UserRepository;
-import com.lexigram.app.dto.UserUpdateDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -67,28 +68,23 @@ public class UserService {
     return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
   }
 
-  public Optional<UserDTO> updateUser(Long id, UserUpdateDTO dto) {
+  public UserDTO updateUserEmail(Long id, UserUpdateEmailDTO dto) {
     Optional<User> userOptional = userRepository.findById(id);
     if (userOptional.isEmpty()) {
-      return Optional.empty();
+      throw new UserNotFoundException();
     }
 
     User user = userOptional.get();
-    boolean updated = false;
+    String newEmail = dto.getEmail();
 
-    if (dto.getUsername() != null && !dto.getUsername().equals(user.getUsername())) {
-      user.setUsername(dto.getUsername());
-      updated = true;
+    if (!user.getUsername().equals(newEmail) && userRepository.existsByEmail(newEmail)) {
+      throw new EmailAlreadyUsedException();
     }
 
-    if (dto.getEmail() != null && !dto.getEmail().isEmpty()
-        && !dto.getEmail().equals(user.getEmail())) {
+    Boolean updated = false;
+
+    if (newEmail != null && !newEmail.isEmpty() && !newEmail.equals(user.getEmail())) {
       user.setEmail(dto.getEmail());
-      updated = true;
-    }
-
-    if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
-      user.setPassword(dto.getPassword());
       updated = true;
     }
 
@@ -96,7 +92,7 @@ public class UserService {
       userRepository.save(user);
     }
 
-    return Optional.of(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
+    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
   }
 
   public boolean deleteUser(Long id) {
@@ -106,6 +102,56 @@ public class UserService {
       return true;
     }
     return false;
+  }
+
+  public UserDTO updateUserUsername(Long id, UserUpdateUsernameDTO dto) {
+    Optional<User> userOptional = userRepository.findById(id);
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    String newUsername = dto.getUsername();
+
+    if (!user.getUsername().equals(newUsername) &&
+        userRepository.existsByUsername(newUsername)) {
+      throw new UsernameAlreadyUsedException();
+    }
+
+    boolean updated = false;
+
+    if (newUsername != null && !newUsername.isEmpty() && !newUsername.equals(user.getUsername())) {
+      user.setUsername(newUsername);
+      updated = true;
+    }
+
+    if (updated) {
+      userRepository.save(user);
+    }
+
+    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+  }
+
+  public UserDTO updateUserPassword(Long id, UserUpdatePasswordDTO dto) {
+    Optional<User> userOptional = userRepository.findById(id);
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    String newPassword = dto.getPassword();
+    Boolean updated = false;
+
+    if (newPassword != null && !newPassword.isEmpty() && !newPassword.equals(user.getEmail())) {
+      user.setPassword(dto.getPassword());
+      updated = true;
+    }
+
+    if (updated) {
+      userRepository.save(user);
+    }
+
+    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
   }
 
 }

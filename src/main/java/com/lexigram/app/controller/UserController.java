@@ -1,14 +1,11 @@
 package com.lexigram.app.controller;
 
-import com.lexigram.app.dto.UserCreateDTO;
-import com.lexigram.app.dto.UserDTO;
+import com.lexigram.app.dto.*;
 import com.lexigram.app.service.UserService;
-import com.lexigram.app.dto.UserUpdateDTO;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,44 +31,42 @@ public class UserController {
   @GetMapping
   public ResponseEntity<List<UserDTO>> getAllUsers() {
     List<UserDTO> users = userService.findAllUsers();
-    if (users.isEmpty()) {
-      return ResponseEntity.notFound().build();
-    }
     return ResponseEntity.ok(users);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
-    Optional<UserDTO> userOptional = userService.findUserById(id);
-
-    if (userOptional.isEmpty()) {
-      return ResponseEntity.notFound().build();
+    Optional<UserDTO> user = userService.findUserById(id);
+    if (user.isPresent()) {
+      return ResponseEntity.ok(user.get());
     }
-
-    UserDTO user = userOptional.get();
-    return ResponseEntity.ok(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
+    return ResponseEntity.notFound().build();
   }
 
-  @PutMapping("/{id}")
-  public ResponseEntity<UserDTO> updateUser(@PathVariable Long id,
-                                            @Valid @RequestBody UserUpdateDTO dto) {
-    Optional<UserDTO> userOptional = userService.findUserById(id);
+  @PutMapping("/{id}/email")
+  public ResponseEntity<UserDTO> updateUserEmail(@PathVariable Long id,
+                                                 @Valid @RequestBody UserUpdateEmailDTO dto) {
+    UserDTO updatedUser = userService.updateUserEmail(id, dto);
+    return ResponseEntity.ok(updatedUser);
+  }
 
-    if (userOptional.isEmpty()) {
-      return ResponseEntity.notFound().build();
-    }
+  @PutMapping("/{id}/username")
+  public ResponseEntity<UserDTO> updateUserUsername(@PathVariable Long id,
+                                                    @Valid @RequestBody UserUpdateUsernameDTO dto) {
+    UserDTO updatedUser = userService.updateUserUsername(id, dto);
+    return ResponseEntity.ok(updatedUser);
+  }
 
-    Optional<UserDTO> updatedUser = userService.updateUser(id, dto);
-    return ResponseEntity.ok(updatedUser.get());
+  @PutMapping("/{id}/password")
+  public ResponseEntity<UserDTO> updateUserPassword(@PathVariable Long id,
+                                                    @Valid @RequestBody UserUpdatePasswordDTO dto) {
+    UserDTO updatedUser = userService.updateUserPassword(id, dto);
+    return ResponseEntity.ok(updatedUser);
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-    if (userService.deleteUser(id)) {
-      return ResponseEntity.noContent().build();
-    } else {
-      return ResponseEntity.notFound().build();
-    }
+    userService.deleteUser(id);
+    return ResponseEntity.noContent().build();
   }
-
 }
