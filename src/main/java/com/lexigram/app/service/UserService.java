@@ -4,11 +4,14 @@ import com.lexigram.app.model.User;
 import com.lexigram.app.dto.UserCreateDTO;
 import com.lexigram.app.dto.UserDTO;
 import com.lexigram.app.model.UserPrivacySettings;
+import com.lexigram.app.model.UserProfile;
 import com.lexigram.app.repository.UserPrivacySettingsRepository;
+import com.lexigram.app.repository.UserProfileRepository;
 import com.lexigram.app.repository.UserRepository;
 import com.lexigram.app.dto.UserUpdateDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,11 +21,15 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final UserPrivacySettingsRepository userPrivacySettingsRepository;
+  private final UserProfileRepository userProfileRepository;
 
   @Autowired
-  public UserService(UserRepository userRepository, UserPrivacySettingsRepository userPrivacySettingsRepository) {
+  public UserService(UserRepository userRepository,
+                     UserPrivacySettingsRepository userPrivacySettingsRepository,
+                     UserProfileRepository userProfileRepository) {
     this.userRepository = userRepository;
     this.userPrivacySettingsRepository = userPrivacySettingsRepository;
+    this.userProfileRepository = userProfileRepository;
   }
 
   public List<UserDTO> findAllUsers() {
@@ -40,7 +47,7 @@ public class UserService {
       return Optional.empty();
     }
     User user = userOptional.get();
-    return Optional.of( new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
+    return Optional.of(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
   }
 
   public UserDTO createUser(UserCreateDTO dto) {
@@ -51,7 +58,12 @@ public class UserService {
     userRepository.save(user); // Guardo el usuario primero para generar el ID
 
     UserPrivacySettings userPrivacySettings = new UserPrivacySettings(user);
+    UserProfile userProfile = new UserProfile(user);
+
+    userProfile.setBiography("No bio yet — still searching for the right words.");
+    userProfile.setProfilePictureUrl("http://localhost:8080/images/default-profile-picture.png");
     userPrivacySettingsRepository.save(userPrivacySettings);
+    userProfileRepository.save(userProfile);
     return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
   }
 
@@ -69,7 +81,8 @@ public class UserService {
       updated = true;
     }
 
-    if (dto.getEmail() != null && !dto.getEmail().isEmpty() && !dto.getEmail().equals(user.getEmail())) {
+    if (dto.getEmail() != null && !dto.getEmail().isEmpty()
+        && !dto.getEmail().equals(user.getEmail())) {
       user.setEmail(dto.getEmail());
       updated = true;
     }

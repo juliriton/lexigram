@@ -17,17 +17,26 @@ public class UserPrivacySettings {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  protected UserPrivacySettings() {}
+  protected UserPrivacySettings() {
+  }
 
-  public UserPrivacySettings(User user) { this.user = user; }
+  public UserPrivacySettings(User user) {
+    this.user = user;
+  }
 
-  public Long getId(){
+  public Long getId() {
     return this.id;
   }
 
-  public void switchVisibility(){ this.visibility = !this.visibility; }
+  public void switchVisibility() {
+    this.visibility = !this.visibility;
+  }
 
-  public User getUser() { return this.user; }
+  public User getUser() {
+    return this.user;
+  }
 
-  public boolean isPublic(){ return this.visibility; }
+  public boolean getVisibility() {
+    return this.visibility;
+  }
 }

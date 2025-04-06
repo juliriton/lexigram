@@ -23,7 +23,7 @@ public class UserPrivacySettingsService {
 
     if (userOptional.isPresent()) {
       UserPrivacySettings userPrivacySettings = userPrivacySettingsRepository.findByUserId(user_id);
-      return Optional.of(new UserPrivacySettingsDTO(userPrivacySettings.isPublic()));
+      return Optional.of(new UserPrivacySettingsDTO(userPrivacySettings.getVisibility()));
     }
     return Optional.empty();
   }
@@ -37,7 +37,7 @@ public class UserPrivacySettingsService {
       userPrivacySettings.switchVisibility();
       userPrivacySettingsRepository.save(userPrivacySettings);
 
-      return Optional.of(new UserPrivacySettingsDTO(userPrivacySettings.isPublic()));
+      return Optional.of(new UserPrivacySettingsDTO(userPrivacySettings.getVisibility()));
     }
     return Optional.empty();
   }

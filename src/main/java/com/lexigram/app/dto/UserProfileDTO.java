@@ -1,6 +1,7 @@
 package com.lexigram.app.dto;
 
 public class UserProfileDTO {
+
   private String biography;
   private String profilePictureUrl;
 

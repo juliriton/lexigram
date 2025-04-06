@@ -1,7 +1,8 @@
 package com.lexigram.app.service;
 
 import com.lexigram.app.dto.UserProfileDTO;
-import com.lexigram.app.dto.UserUpdateProfileDTO;
+import com.lexigram.app.dto.UserUpdateProfileBioDTO;
+import com.lexigram.app.model.UserProfile;
 import com.lexigram.app.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,47 +19,51 @@ public class UserProfileService {
     this.userProfileRepository = userProfileRepository;
   }
 
-  // 📌 Obtener el perfil
-  public Optional<UserProfileDTO> getUserProfile(Long id) {
-    return userProfileRepository.findById(id)
-        .map(userProfile -> new UserProfileDTO(userProfile.getBiography(),
-            userProfile.getProfilePictureUrl()));
+  public Optional<UserProfileDTO> getProfile(Long id) {
+    Optional<UserProfile> userProfile = userProfileRepository.findById(id);
+    if (userProfile.isPresent()) {
+      UserProfile profile = userProfile.get();
+      String biography = profile.getBiography();
+      String profilePicture = profile.getProfilePictureUrl();
+      UserProfileDTO userProfileDTO = new UserProfileDTO(biography, profilePicture);
+
+      return Optional.of(userProfileDTO);
+    }
+    return Optional.empty();
   }
 
-  // 📌 Actualizar completamente el perfil con `PUT`
-  public boolean updateUserProfile(Long id, UserUpdateProfileDTO updateDTO) {
-    return userProfileRepository.findById(id)
-        .map(userProfile -> {
-          if (updateDTO.getBiography() != null) {
-            userProfile.setBiography(updateDTO.getBiography());
-          }
-          if (updateDTO.getProfilePictureUrl() != null) {
-            userProfile.setProfilePictureUrl(updateDTO.getProfilePictureUrl());
-          }
-          userProfileRepository.save(userProfile);
-          return true;
-        })
-        .orElse(false);
+  public Optional<UserProfileDTO> updateUserProfileBio(Long id, UserUpdateProfileBioDTO dto) {
+    Optional<UserProfile> userProfileOptional = userProfileRepository.findById(id);
+
+    if (userProfileOptional.isPresent()) {
+      String biography = dto.getBiography();
+      UserProfile userProfile = userProfileOptional.get();
+
+      userProfile.setBiography(biography);
+
+      userProfileRepository.save(userProfile);
+      return Optional.of(new UserProfileDTO(userProfile.getBiography(),
+          userProfile.getProfilePictureUrl()));
+    }
+    return Optional.empty();
   }
 
-  // Chequear esto:
+  public Optional<UserProfileDTO> updateProfilePicture(Long id, String imageUrl) {
+    Optional<UserProfile> userProfileOptional = userProfileRepository.findById(id);
 
-  // 📌 Actualizar solo la foto con `POST`
-  //public boolean updateProfilePicture(Long id, String file) {
-  //  String uploadedUrl = uploadFileToStorage(file);
-  //
-  //  return userProfileRepository.findById(id)
-  //      .map(userProfile -> {
-  //        userProfile.setProfilePictureUrl(uploadedUrl);
-  //        userProfileRepository.save(userProfile);
-  //        return true;
-  //      })
-  //      .orElse(false);
-  //}
+    if (userProfileOptional.isPresent()) {
+      String profilePictureUrl = imageUrl;
+      UserProfile userProfile = userProfileOptional.get();
 
-  //private String uploadFileToStorage(String file) {
-  //  return "https://example.com/uploads/" + file.getOriginalFilename();
-  //}
+      userProfile.setProfilePictureUrl(profilePictureUrl);
+
+      userProfileRepository.save(userProfile);
+
+      return Optional.of(new UserProfileDTO(userProfile.getBiography(),
+          userProfile.getProfilePictureUrl()));
+    }
+    return Optional.empty();
+  }
 
 }
 

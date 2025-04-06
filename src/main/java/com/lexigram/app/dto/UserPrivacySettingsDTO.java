@@ -10,7 +10,7 @@ public class UserPrivacySettingsDTO {
     this.visibility = visibility;
   }
 
-  public boolean isPublic() {
+  public boolean getVisibility() {
     return visibility;
   }
 

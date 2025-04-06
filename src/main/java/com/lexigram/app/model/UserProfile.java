@@ -4,21 +4,28 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "user_profiles")
-public class UserProfile{
+public class UserProfile {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @OneToOne
-  @JoinColumn(name = "user_id", nullable = false, unique = true)
-  private User user;
-
-  @Column(name = "profile_picture_url", length = 255)
+  @Column(name = "profile_picture_url")
   private String profilePictureUrl;
 
   @Column(columnDefinition = "Text")
   private String biography;
+
+  @OneToOne
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
+
+  public UserProfile() {
+  }
+
+  public UserProfile(User user) {
+    this.user = user;
+  }
 
   public Long getId() {
     return id;

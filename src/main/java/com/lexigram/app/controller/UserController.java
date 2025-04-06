@@ -53,7 +53,8 @@ public class UserController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto) {
+  public ResponseEntity<UserDTO> updateUser(@PathVariable Long id,
+                                            @Valid @RequestBody UserUpdateDTO dto) {
     Optional<UserDTO> userOptional = userService.findUserById(id);
 
     if (userOptional.isEmpty()) {
@@ -72,4 +73,5 @@ public class UserController {
       return ResponseEntity.notFound().build();
     }
   }
+
 }

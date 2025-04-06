@@ -22,7 +22,12 @@ public class User {
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private UserPrivacySettings userPrivacySettings;
 
-  public Long getId() { return id; }
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private UserProfile userProfile;
+
+  public Long getId() {
+    return id;
+  }
 
   public String getUsername() {
     return username;
