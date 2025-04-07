@@ -1,22 +1,25 @@
-package com.lexigram.app.user;
+package com.lexigram.app.dto;
 
 import jakarta.validation.constraints.*;
 
-public class UserUpdateDTO {
+public class UserSignUpDTO {
 
+  @NotEmpty(message = "Username is required")
   @Size(min = 3, max = 25, message = "Username must be between 3 and 25 characters")
-  @Pattern(regexp = "^[A-Za-z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
+  @Pattern(regexp = "^[a-z0-9_]+$", message = "Username must be lowercase, can only contain letters, numbers, and underscores")
   private String username;
 
+  @NotEmpty(message = "Email is required")
   @Email(message = "Invalid email address")
   private String email;
 
+  @NotEmpty(message = "Password is required")
   @Size(min = 6, message = "Password must be at least 6 characters")
   private String password;
 
-  public UserUpdateDTO() {}
+  public UserSignUpDTO() {}
 
-  public UserUpdateDTO(String username, String email, String password) {
+  public UserSignUpDTO(String username, String email, String password) {
     this.username = username;
     this.email = email;
     this.password = password;
@@ -35,3 +38,4 @@ public class UserUpdateDTO {
   }
 
 }
+

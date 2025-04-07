@@ -1,4 +1,4 @@
-package com.lexigram.app.user;
+package com.lexigram.app.dto;
 
 public class UserDTO {
   private Long id;
