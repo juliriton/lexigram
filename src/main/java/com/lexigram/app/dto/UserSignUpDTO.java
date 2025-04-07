@@ -2,7 +2,7 @@ package com.lexigram.app.dto;
 
 import jakarta.validation.constraints.*;
 
-public class UserCreateDTO {
+public class UserSignUpDTO {
 
   @NotEmpty(message = "Username is required")
   @Size(min = 3, max = 25, message = "Username must be between 3 and 25 characters")
@@ -17,9 +17,9 @@ public class UserCreateDTO {
   @Size(min = 6, message = "Password must be at least 6 characters")
   private String password;
 
-  public UserCreateDTO() {}
+  public UserSignUpDTO() {}
 
-  public UserCreateDTO(String username, String email, String password) {
+  public UserSignUpDTO(String username, String email, String password) {
     this.username = username;
     this.email = email;
     this.password = password;

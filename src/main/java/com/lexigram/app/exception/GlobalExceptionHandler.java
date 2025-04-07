@@ -22,4 +22,10 @@ public class GlobalExceptionHandler {
   public ResponseEntity<String> handleUserNotFound(UserNotFoundException e) {
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
   }
+
+  @ExceptionHandler(WrongPasswordException.class)
+  public ResponseEntity<String> handleWrongPassword(WrongPasswordException e) {
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+  }
+
 }

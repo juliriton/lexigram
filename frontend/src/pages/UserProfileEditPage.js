@@ -15,12 +15,12 @@ const UserProfileEditPage = () => {
             .then(data => {
                 setProfile(data);
                 setNewBio(data.biography);
-                console.log("URL de imagen:", data.profilePictureUrl);
+                console.log("Image URL:", data.profilePictureUrl);
             })
-            .catch(err => console.error("Error cargando perfil:", err));
+            .catch(err => console.error("Error:", err));
     }, [userId]);
 
-    // Actualizar biografía
+    // Actualizar biografia
     const handleBioUpdate = () => {
         fetch(`http://localhost:8080/api/users/${userId}/profile/edit/biography`, {
             method: 'PUT',
@@ -29,7 +29,7 @@ const UserProfileEditPage = () => {
         })
             .then(res => res.text())
             .then(() => {
-                alert("Biografía actualizada");
+                alert("Bio updated");
             });
     };
 
@@ -42,7 +42,7 @@ const UserProfileEditPage = () => {
     // Subir imagen de perfil
     const handlePictureUpload = () => {
         if (!selectedFile) {
-            alert("Por favor selecciona un archivo.");
+            alert("Select a file.");
             return;
         }
 
@@ -55,45 +55,42 @@ const UserProfileEditPage = () => {
         })
             .then(res => res.text())
             .then(relativeUrl => {
-                alert("Foto de perfil actualizada");
+                alert("Profile picture updated");
                 setProfile(prev => ({
                     ...prev,
                     profilePictureUrl: relativeUrl
                 }));
-                console.log("Nueva imagen subida:", relativeUrl);
+                console.log("New image uploaded:", relativeUrl);
             })
             .catch(err => {
-                console.error('Error subiendo imagen:', err);
+                console.error('Error:', err);
             });
     };
 
     if (!profile) {
-        return <div>Cargando...</div>;
+        return <div>Loading...</div>;
     }
 
     return (
         <div style={{ padding: '20px' }}>
-            <h2>Editar Perfil</h2>
+            <h2>Edit Profile</h2>
 
-            {/* Imagen actual */}
             {profile.profilePictureUrl && (
                 <div style={{ marginBottom: '20px' }}>
-                    <h4>Foto actual:</h4>
-                    <img
+                    <h4>Current Profile picture:</h4>
                         src={`http://localhost:8080${profile.profilePictureUrl.startsWith('/') ? '' : '/'}${profile.profilePictureUrl}`}
-                        alt="Foto de perfil"
+                        alt="Profile picture"
                         style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '50%' }}
                         onError={(e) => {
-                            console.error("Error cargando imagen:", e.target.src);
+                            console.error("Error:", e.target.src);
                             e.target.src = 'https://via.placeholder.com/150';
                         }}
                     />
                 </div>
             )}
 
-            {/* Biografía */}
             <div>
-                <label>Nueva biografía:</label><br />
+                <label>New Bio:</label><br />
                 <textarea
                     value={newBio}
                     onChange={(e) => setNewBio(e.target.value)}
@@ -101,17 +98,17 @@ const UserProfileEditPage = () => {
                     cols="50"
                 />
                 <br />
-                <button onClick={handleBioUpdate}>Guardar biografía</button>
+                <button onClick={handleBioUpdate}> Save Bio</button>
             </div>
 
             <br /><br />
 
             {/* Subir imagen */}
             <div>
-                <label>Foto de perfil (.jpg):</label><br />
+                <label>New Profile picture: (.jpg):</label><br />
                 <input type="file" accept=".jpg" onChange={handleFileChange} />
                 <br />
-                <button onClick={handlePictureUpload}>Subir nueva foto</button>
+                <button onClick={handlePictureUpload}>Upload</button>
             </div>
         </div>
     );

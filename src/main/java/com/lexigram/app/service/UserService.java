@@ -4,6 +4,7 @@ import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.EmailAlreadyUsedException;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.exception.UsernameAlreadyUsedException;
+import com.lexigram.app.exception.WrongPasswordException;
 import com.lexigram.app.model.User;
 import com.lexigram.app.model.UserPrivacySettings;
 import com.lexigram.app.model.UserProfile;
@@ -11,6 +12,7 @@ import com.lexigram.app.repository.UserPrivacySettingsRepository;
 import com.lexigram.app.repository.UserProfileRepository;
 import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,14 +25,17 @@ public class UserService {
   private final UserRepository userRepository;
   private final UserPrivacySettingsRepository userPrivacySettingsRepository;
   private final UserProfileRepository userProfileRepository;
+  private PasswordEncoder passwordEncoder;
 
   @Autowired
   public UserService(UserRepository userRepository,
                      UserPrivacySettingsRepository userPrivacySettingsRepository,
-                     UserProfileRepository userProfileRepository) {
+                     UserProfileRepository userProfileRepository,
+                     PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.userPrivacySettingsRepository = userPrivacySettingsRepository;
     this.userProfileRepository = userProfileRepository;
+    this.passwordEncoder = passwordEncoder;
   }
 
   public List<UserDTO> findAllUsers() {
@@ -51,11 +56,12 @@ public class UserService {
     return Optional.of(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
   }
 
-  public UserDTO createUser(UserCreateDTO dto) {
+  public UserDTO signUp(UserSignUpDTO dto) {
     User user = new User();
     user.setUsername(dto.getUsername());
     user.setEmail(dto.getEmail());
-    user.setPassword(dto.getPassword());
+    String hashedPassword = passwordEncoder.encode(dto.getPassword());
+    user.setPassword(hashedPassword);
     userRepository.save(user); // Guardo el usuario primero para generar el ID
 
     UserPrivacySettings userPrivacySettings = new UserPrivacySettings(user);
@@ -81,17 +87,11 @@ public class UserService {
       throw new EmailAlreadyUsedException();
     }
 
-    Boolean updated = false;
-
-    if (newEmail != null && !newEmail.isEmpty() && !newEmail.equals(user.getEmail())) {
+    if (newEmail != null && !newEmail.isEmpty()) {
       user.setEmail(dto.getEmail());
-      updated = true;
     }
 
-    if (updated) {
-      userRepository.save(user);
-    }
-
+    userRepository.save(user);
     return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
   }
 
@@ -118,17 +118,11 @@ public class UserService {
       throw new UsernameAlreadyUsedException();
     }
 
-    boolean updated = false;
-
-    if (newUsername != null && !newUsername.isEmpty() && !newUsername.equals(user.getUsername())) {
-      user.setUsername(newUsername);
-      updated = true;
+    if (newUsername != null && !newUsername.isEmpty()) {
+      user.setUsername(newUsername);;
     }
 
-    if (updated) {
-      userRepository.save(user);
-    }
-
+    userRepository.save(user);
     return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
   }
 
@@ -140,18 +134,39 @@ public class UserService {
 
     User user = userOptional.get();
     String newPassword = dto.getPassword();
-    Boolean updated = false;
 
-    if (newPassword != null && !newPassword.isEmpty() && !newPassword.equals(user.getEmail())) {
-      user.setPassword(dto.getPassword());
-      updated = true;
+    if (newPassword != null && !newPassword.isEmpty()) {
+      String hashedPassword = passwordEncoder.encode(newPassword);
+      user.setPassword(hashedPassword);
     }
 
-    if (updated) {
-      userRepository.save(user);
+    userRepository.save(user);
+    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+  }
+
+  public UserDTO login(UserLoginDTO dto) {
+    Optional<User> userOptional;
+
+    if (dto.getCredential().contains("@")) {
+      userOptional = userRepository.findByEmail(dto.getCredential());
+    } else {
+      userOptional = userRepository.findByUsername(dto.getCredential());
+    }
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    boolean passwordMatches = passwordEncoder.matches(dto.getPassword(), user.getPassword());
+
+    if (!passwordMatches) {
+      throw new WrongPasswordException();
     }
 
     return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
   }
+
+
 
 }

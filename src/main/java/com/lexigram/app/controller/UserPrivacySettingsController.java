@@ -2,42 +2,44 @@ package com.lexigram.app.controller;
 
 import com.lexigram.app.dto.UserPrivacySettingsDTO;
 import com.lexigram.app.service.UserPrivacySettingsService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
-@RequestMapping("/api/users/{userId}/privacy")
+@RequestMapping("/api/users/me/privacy")
 public class UserPrivacySettingsController {
 
   private final UserPrivacySettingsService userPrivacySettingsService;
 
   @Autowired
-  public UserPrivacySettingsController(UserPrivacySettingsService userPrivacySettingsService) {
-    this.userPrivacySettingsService = userPrivacySettingsService;
+  public UserPrivacySettingsController(UserPrivacySettingsService service) {
+    this.userPrivacySettingsService = service;
   }
 
-  @GetMapping()
-  public ResponseEntity<UserPrivacySettingsDTO> getPrivacySettings(@PathVariable Long userId) {
+  @GetMapping
+  public ResponseEntity<UserPrivacySettingsDTO> getPrivacySettings(HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) return ResponseEntity.status(401).build();
+
     Optional<UserPrivacySettingsDTO> settings = userPrivacySettingsService.findPrivacySettings(userId);
+    if (settings.isEmpty()) return ResponseEntity.notFound().build();
 
-    if (settings.isPresent()) {
-      return ResponseEntity.ok(settings.get());
-    }
-    return ResponseEntity.notFound().build();
+    return ResponseEntity.ok(settings.get());
   }
 
-  @PutMapping()
-  public ResponseEntity<UserPrivacySettingsDTO> updatePrivacySettings(@PathVariable Long userId) {
-    Optional<UserPrivacySettingsDTO> oldSettings = userPrivacySettingsService.findPrivacySettings(userId);
+  @PutMapping
+  public ResponseEntity<UserPrivacySettingsDTO> updatePrivacySettings(HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) return ResponseEntity.status(401).build();
 
-    if (oldSettings.isPresent()) {
-      Optional<UserPrivacySettingsDTO> newSettings = userPrivacySettingsService.changePrivacySettings(userId);
-      return ResponseEntity.ok(newSettings.get());
-    }
-    return ResponseEntity.notFound().build();
+    Optional<UserPrivacySettingsDTO> updated = userPrivacySettingsService.changePrivacySettings(userId);
+    if (updated.isEmpty()) return ResponseEntity.notFound().build();
+
+    return ResponseEntity.ok(updated.get());
   }
 
 }
