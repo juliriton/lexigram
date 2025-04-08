@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import './LoginPage.css';
 
 const SignUpPage = () => {
     const [email, setEmail] = useState('');
@@ -28,13 +29,13 @@ const SignUpPage = () => {
     };
 
     return (
-        <div className="container">
+        <div className="login-container">
             <h2>Crear cuenta</h2>
             <form onSubmit={handleSignUp}>
                 <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
                 <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                <button type="submit">Sign-Up</button>
+                <button type="submit" class={"boton-elegante"}>Sign-Up</button>
             </form>
 
             <p className="mt-3">

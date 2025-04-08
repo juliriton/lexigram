@@ -30,15 +30,19 @@ const UserProfilePage = () => {
     }, [navigate]);
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            setLoading(true);
+        const fetchUserProfile = async () => {
             try {
-                const response = await fetch('http://localhost:8080/api/users/me/profile', {
+                const resUser = await fetch(`http://localhost:8080/api/auth/me`, {
+                    credentials: 'include'
+                });
+                const resProfile = await fetch('http://localhost:8080/api/auth/me/profile', {
                     credentials: 'include',
                 });
 
-                if (!response.ok) throw new Error('Error');
-                const profileData = await response.json();
+                if (!resUser.ok || !resProfile.ok) throw new Error('Error loading data');
+
+                const profileData = await resProfile.json();
+
                 setProfile(profileData);
                 setNewBio(profileData.biography || '');
             } catch (err) {
@@ -47,7 +51,7 @@ const UserProfilePage = () => {
                 setLoading(false);
             }
         };
-        fetchUserData();
+        fetchUserProfile();
     }, []);
 
     const testImageExists = async (url) => {
@@ -73,7 +77,7 @@ const UserProfilePage = () => {
 
     const handleBioUpdate = async () => {
         try {
-            await fetch(`http://localhost:8080/api/users/me/profile/edit/biography`, {
+            await fetch(`http://localhost:8080/api/auth/me/profile/edit/biography`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -94,7 +98,7 @@ const UserProfilePage = () => {
         formData.append('file', selectedFile);
 
         try {
-            await fetch(`http://localhost:8080/api/users/me/profile/edit/profile-picture`, {
+            await fetch(`http://localhost:8080/api/auth/me/profile/edit/profile-picture`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'

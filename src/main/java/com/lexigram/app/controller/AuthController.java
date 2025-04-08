@@ -54,7 +54,7 @@ public class AuthController {
     return ResponseEntity.ok(user);
   }
 
-  @PostMapping("/logout")
+  @PostMapping("/me/logout")
   public ResponseEntity<?> logout(HttpSession session) {
     session.invalidate();
     return ResponseEntity.ok("Logged out successfully");
