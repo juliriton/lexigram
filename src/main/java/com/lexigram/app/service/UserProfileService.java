@@ -26,15 +26,13 @@ public class UserProfileService {
 
   public Optional<UserProfileDTO> getProfile(Long id) {
     Optional<User> userOptional = userRepository.findById(id);
-    Optional<UserProfile> profileOptional = userProfileRepository.findById(id);
     if (userOptional.isPresent()) {
-      User user = userOptional.get();
+      Optional<UserProfile> profileOptional = userProfileRepository.findById(id);
       UserProfile profile = profileOptional.get();
 
-      String username = user.getUsername();
       String biography = profile.getBiography();
       String profilePicture = profile.getProfilePictureUrl();
-      UserProfileDTO userProfileDTO = new UserProfileDTO(username, biography, profilePicture);
+      UserProfileDTO userProfileDTO = new UserProfileDTO(biography, profilePicture);
 
       return Optional.of(userProfileDTO);
     }
@@ -46,14 +44,13 @@ public class UserProfileService {
     Optional<UserProfile> profileOptional = userProfileRepository.findById(id);
 
     if (userOptional.isPresent()) {
-      User user = userOptional.get();
       UserProfile userProfile = profileOptional.get();
 
       String newBiography = dto.getBiography();
 
       userProfile.setBiography(newBiography);
       userProfileRepository.save(userProfile);
-      return Optional.of(new UserProfileDTO(user.getUsername(), userProfile.getBiography(),
+      return Optional.of(new UserProfileDTO(userProfile.getBiography(),
           userProfile.getProfilePictureUrl()));
     }
     return Optional.empty();
@@ -64,7 +61,6 @@ public class UserProfileService {
     Optional<UserProfile> userProfileOptional = userProfileRepository.findById(id);
 
     if (userOptional.isPresent()) {
-      User user = userOptional.get();
       String profilePictureUrl = imageUrl;
       UserProfile userProfile = userProfileOptional.get();
 
@@ -72,7 +68,7 @@ public class UserProfileService {
 
       userProfileRepository.save(userProfile);
 
-      return Optional.of(new UserProfileDTO(user.getUsername(), userProfile.getBiography(),
+      return Optional.of(new UserProfileDTO(userProfile.getBiography(),
           userProfile.getProfilePictureUrl()));
     }
     return Optional.empty();

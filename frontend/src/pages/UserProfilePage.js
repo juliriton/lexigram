@@ -5,6 +5,7 @@ import '../App.css';
 const UserProfilePage = () => {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
+    const [username, setUsername] = useState('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [usingDefaultImage, setUsingDefaultImage] = useState(false);
@@ -41,8 +42,10 @@ const UserProfilePage = () => {
 
                 if (!resUser.ok || !resProfile.ok) throw new Error('Error loading data');
 
+                const userData = await resUser.json();
                 const profileData = await resProfile.json();
 
+                setUsername(userData.username);
                 setProfile(profileData);
                 setNewBio(profileData.biography || '');
             } catch (err) {
@@ -104,7 +107,6 @@ const UserProfilePage = () => {
                 credentials: 'include'
             });
             alert("Profile picture updated");
-            // Refresh image
             setUsingDefaultImage(false);
             setAttemptedLoad(false);
         } catch {
@@ -148,7 +150,7 @@ const UserProfilePage = () => {
 
     return (
         <div className="container mt-4" style={{ maxWidth: '600px' }}>
-            <h3>{profile.username}'s Profile</h3>
+            <h3>{username}'s Profile</h3>
 
             <div className="text-center mb-3">
                 <img

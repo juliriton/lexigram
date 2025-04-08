@@ -57,10 +57,20 @@ public class UserService {
   }
 
   public UserDTO signUp(UserSignUpDTO dto) {
+    String username = dto.getUsername();
+    String email = dto.getEmail();
+    String password = dto.getPassword();
+
+    if (userRepository.existsByUsername(username)) {
+      throw new UsernameAlreadyUsedException();
+    } else if (userRepository.existsByEmail(email)) {
+      throw new EmailAlreadyUsedException();
+    }
+
     User user = new User();
-    user.setUsername(dto.getUsername());
-    user.setEmail(dto.getEmail());
-    String hashedPassword = passwordEncoder.encode(dto.getPassword());
+    user.setUsername(username);
+    user.setEmail(email);
+    String hashedPassword = passwordEncoder.encode(password);
     user.setPassword(hashedPassword);
     userRepository.save(user); // Guardo el usuario primero para generar el ID
 
