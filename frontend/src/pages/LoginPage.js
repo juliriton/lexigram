@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import './LoginPage.css';
+
 
 const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
     const [credential, setCredential] = useState(''); // Credential for username or email
     const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState(''); // Mensaje de error
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -28,32 +31,42 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
             setUser(data);  // Actualizar el estado de usuario
             navigate('/');  // Redirigir a la página principal después del login exitoso
         } catch (err) {
-            alert(err.message);  // Mostrar mensaje de error si falla el login
+            setErrorMessage('Usuario o contraseña incorrectos. Intenta de nuevo.');
+            // Mostrar mensaje de error si falla el login
         }
     };
 
     return (
-        <div className="container">
+        <div className="login-container">
             <h2>Iniciar sesión</h2>
             <form onSubmit={handleLogin}>
-                {/* This input now accepts either username or email */}
                 <input
-                    type="text"  // Change type to text, so it can accept both email or username
+                    type="text"
                     placeholder="Correo electrónico o Nombre de usuario"
                     value={credential}
-                    onChange={(e) => setCredential(e.target.value)}
+                    onChange={(e) => {
+                        setCredential(e.target.value);
+                        setErrorMessage('');
+                    }}
                     required
                 />
                 <input
                     type="password"
                     placeholder="Contraseña"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                        setPassword(e.target.value);
+                        setErrorMessage('');
+                    }}
                     required
                 />
-                <button type="submit">Iniciar sesión</button>
+                {errorMessage && (
+                    <div className="alert alert-danger" role="alert">
+                        {errorMessage}
+                    </div>
+                )}
+                <button type="submit" class={"boton-elegante"}>Iniciar sesión</button>
             </form>
-
             <p className="mt-3">
                 ¿No tienes cuenta? <Link to="/signup">Regístrate aquí</Link>
             </p>
