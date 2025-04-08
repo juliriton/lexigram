@@ -7,6 +7,7 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
     const [credential, setCredential] = useState(''); // Credential for username or email
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState(''); // Mensaje de error
+    const [showError, setShowError] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -32,7 +33,9 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
             navigate('/');  // Redirigir a la pagina principal después del login exitoso
         } catch (err) {
             setErrorMessage('Usuario o contraseña incorrectos. Intenta de nuevo.');
-            // Mostrar mensaje de error si falla el login
+            setShowError(true);
+
+            setTimeout(() => setShowError(false), 5000);
         }
     };
 
@@ -47,6 +50,7 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
                     onChange={(e) => {
                         setCredential(e.target.value);
                         setErrorMessage('');
+                        setShowError(false);
                     }}
                     required
                 />
@@ -57,11 +61,12 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
                     onChange={(e) => {
                         setPassword(e.target.value);
                         setErrorMessage('');
+                        setShowError(false);
                     }}
                     required
                 />
                 {errorMessage && (
-                    <div className="alert alert-danger" role="alert">
+                    <div className={`alert alert-danger fade-error ${showError ? '' : 'hidden'}`} role="alert">
                         {errorMessage}
                     </div>
                 )}

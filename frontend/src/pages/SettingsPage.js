@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // ← for navigation
+import './SettingsPage.css';
 
 const SettingsPage = () => {
     const [privacy, setPrivacy] = useState(null);
@@ -123,84 +124,116 @@ const SettingsPage = () => {
     if (loading) return <div className="container mt-4">Loading settings...</div>;
 
     return (
-        <div className="container mt-4" style={{ maxWidth: '500px' }}>
-            <h3>Account Settings</h3>
+        <div className="settings-page container mt-4" style={{ maxWidth: '600px' }}>
+            <h2 className="mb-4 text-center">Account Settings</h2>
 
-            <button className="btn btn-outline-secondary mt-2 mb-4" onClick={() => navigate('/')}>
-                ← Back to Home
-            </button>
+            {message && (
+                <div className="alert alert-info animate__animated animate__fadeInDown">
+                    {message}
+                </div>
+            )}
 
-            {message && <div className="alert alert-info mt-2">{message}</div>}
-
-            {/* Display current data summary */}
-            <div className="card mb-4 p-3">
-                <h5>Current Info</h5>
-                <p><strong>Username:</strong> {username}</p>
-                <p><strong>Email:</strong> {email}</p>
-                <p><strong>Privacy:</strong> {privacy === true ? 'Public' : 'Private'}</p>
+            {/* Current Info */}
+            <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                    <h5 className="card-title">Current Information</h5>
+                    <p><strong>Username:</strong> {username}</p>
+                    <p><strong>Email:</strong> {email}</p>
+                    <p><strong>Privacy:</strong> {privacy === true ? 'Public' : 'Private'}</p>
+                </div>
             </div>
 
             {/* Update Username */}
-            <div className="form-group mt-3">
-                <label>New Username</label>
-                <input
-                    type="text"
-                    className="form-control"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
-                <button className="btn btn-primary mt-2" onClick={updateUsername}>
-                    Update Username
-                </button>
+            <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                    <h5 className="card-title">Update Username</h5>
+                    <input
+                        type="text"
+                        className="form-control mb-2"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                    <button className="btn btn-primary w-100" onClick={updateUsername}>
+                        Save Changes
+                    </button>
+                </div>
             </div>
 
             {/* Update Email */}
-            <div className="form-group mt-4">
-                <label>New Email</label>
-                <input
-                    type="email"
-                    className="form-control"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <button className="btn btn-primary mt-2" onClick={updateEmail}>
-                    Update Email
-                </button>
+            <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                    <h5 className="card-title">Update Email</h5>
+                    <input
+                        type="email"
+                        className="form-control mb-2"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <button className="btn btn-primary w-100" onClick={updateEmail}>
+                        Save Changes
+                    </button>
+                </div>
             </div>
 
             {/* Update Password */}
-            <div className="form-group mt-4">
-                <label>New Password</label>
-                <input
-                    type="password"
-                    className="form-control"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                <button className="btn btn-primary mt-2" onClick={updatePassword}>
-                    Update Password
-                </button>
+            <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                    <h5 className="card-title">Change Password</h5>
+                    <input
+                        type="password"
+                        className="form-control mb-2"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button className="btn btn-primary w-100" onClick={updatePassword}>
+                        Save Changes
+                    </button>
+                </div>
             </div>
 
             {/* Toggle Privacy */}
-            <div className="form-group mt-4">
-                <label>
-                    <strong>Profile Visibility:</strong>{' '}
-                    {privacy === true ? 'Public' : privacy === false ? 'Private' : 'Unknown'}
-                </label>
-                <button className="btn btn-secondary d-block mt-2" onClick={togglePrivacy}>
-                    {privacy ? 'Make Private' : 'Make Public'}
-                </button>
+            <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                    <h5 className="card-title">Profile Visibility</h5>
+                    <p>Current: <strong>{privacy ? 'Public' : 'Private'}</strong></p>
+                    <button className="btn btn-secondary w-100" onClick={togglePrivacy}>
+                        {privacy ? 'Make Private' : 'Make Public'}
+                    </button>
+                </div>
             </div>
 
-            {/* Delete account */}
-            <div className="form-group mt-5">
-                <hr/>
-                <button className="btn btn-danger" onClick={deleteAccount}>
-                    Delete Account
+            {/* Delete Account */}
+            <div className="card shadow border-danger mb-4">
+                <div className="card-body">
+                    <h5 className="card-title text-danger">Delete Account</h5>
+                    <p className="text-muted">This action is irreversible.</p>
+                    <button className="btn btn-danger w-100" onClick={deleteAccount}>
+                        Delete My Account
+                    </button>
+                </div>
+            </div>
+            <div className={"text-center"}>
+                <button
+                    className="btn btn-outline-secondary mt-2 d-inline-flex align-items-center gap-2 animate__animated animate__fadeIn"
+                    onClick={() => navigate('/')}
+                    style={{
+                        transition: 'transform 0.2s ease, box-shadow 0.3s ease',
+                    }}
+                    onMouseDown={(e) => {
+                        e.currentTarget.style.transform = 'scale(0.97)';
+                    }}
+                    onMouseUp={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                >
+                    <i className="bi bi-house-door"></i> Back to Home
                 </button>
             </div>
         </div>
+
     );
 };
 
