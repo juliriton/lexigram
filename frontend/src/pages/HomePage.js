@@ -21,7 +21,7 @@ const HomePage = ({ user, setUser }) => {
                     setUser(null);
                 }
             } catch (err) {
-                console.error('Error al verificar sesión:', err);
+                console.error('Error al verificar sesion:', err);
                 setUser(null);
             } finally {
                 setLoading(false);
@@ -32,7 +32,7 @@ const HomePage = ({ user, setUser }) => {
     }, [setUser]);
 
     const handleLogout = () => {
-        fetch('http://localhost:8080/api/auth/logout', {
+        fetch('http://localhost:8080/api/auth/me/logout', {
             method: 'POST',
             credentials: 'include',
         })

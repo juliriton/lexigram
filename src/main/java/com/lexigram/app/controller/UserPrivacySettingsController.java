@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
-@RequestMapping("/api/users/me/privacy")
+@RequestMapping("/api/auth/me/privacy")
 public class UserPrivacySettingsController {
 
   private final UserPrivacySettingsService userPrivacySettingsService;

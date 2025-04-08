@@ -18,7 +18,7 @@ import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
-@RequestMapping("/api/users/me/profile")
+@RequestMapping("/api/auth/me/profile")
 public class UserProfileController {
 
   @Value("${lexigram.upload.dir}")

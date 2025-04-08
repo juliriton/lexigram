@@ -10,7 +10,7 @@ const UserProfileEditPage = () => {
 
     // Cargar el perfil actual
     useEffect(() => {
-        fetch(`http://localhost:8080/api/users/${userId}/profile`)
+        fetch(`http://localhost:8080/api/auth/me/profile`)
             .then(res => res.json())
             .then(data => {
                 setProfile(data);
@@ -22,7 +22,7 @@ const UserProfileEditPage = () => {
 
     // Actualizar biografia
     const handleBioUpdate = () => {
-        fetch(`http://localhost:8080/api/users/${userId}/profile/edit/biography`, {
+        fetch(`http://localhost:8080/api/auth/me/profile/edit/biography`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ biography: newBio })
@@ -49,7 +49,7 @@ const UserProfileEditPage = () => {
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        fetch(`http://localhost:8080/api/users/${userId}/profile/edit/profile-picture`, {
+        fetch(`http://localhost:8080/api/auth/me/profile/edit/profile-picture`, {
             method: 'POST',
             body: formData
         })
@@ -103,7 +103,6 @@ const UserProfileEditPage = () => {
 
             <br /><br />
 
-            {/* Subir imagen */}
             <div>
                 <label>New Profile picture: (.jpg):</label><br />
                 <input type="file" accept=".jpg" onChange={handleFileChange} />
