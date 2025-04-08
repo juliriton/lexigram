@@ -18,15 +18,15 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ credential: trimmedCredential, password: trimmedPassword }),  // Enviar las credenciales sin espacios
-                credentials: 'include',  // Esto asegura que la cookie de sesión se incluya
+                credentials: 'include',  // Esto asegura que la cookie de sesion se incluya
             });
 
-            if (!response.ok) throw new Error('Error al iniciar sesión');
+            if (!response.ok) throw new Error('Error al iniciar sesion');
 
             const data = await response.json();
             localStorage.setItem('userId', data.userId);  // Almacenar el userId en localStorage
             setUser(data);  // Actualizar el estado de usuario
-            navigate('/');  // Redirigir a la página principal después del login exitoso
+            navigate('/');  // Redirigir a la pagina principal después del login exitoso
         } catch (err) {
             alert(err.message);  // Mostrar mensaje de error si falla el login
         }
@@ -36,26 +36,25 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
         <div className="container">
             <h2>Iniciar sesión</h2>
             <form onSubmit={handleLogin}>
-                {/* This input now accepts either username or email */}
                 <input
-                    type="text"  // Change type to text, so it can accept both email or username
-                    placeholder="Correo electrónico o Nombre de usuario"
+                    type="text"
+                    placeholder="Username or Email"
                     value={credential}
                     onChange={(e) => setCredential(e.target.value)}
                     required
                 />
                 <input
                     type="password"
-                    placeholder="Contraseña"
+                    placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                 />
-                <button type="submit">Iniciar sesión</button>
+                <button type="submit">Login</button>
             </form>
 
             <p className="mt-3">
-                ¿No tienes cuenta? <Link to="/signup">Regístrate aquí</Link>
+                Don't have an Account yet? <Link to="/signup">Sign-Up here</Link>
             </p>
         </div>
     );

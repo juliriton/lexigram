@@ -14,10 +14,10 @@ const SettingsPage = () => {
     useEffect(() => {
         const fetchUserSettings = async () => {
             try {
-                const resUser = await fetch(`http://localhost:8080/api/users/me`, {
+                const resUser = await fetch(`http://localhost:8080/api/auth/me`, {
                     credentials: 'include'
                 });
-                const resPrivacy = await fetch(`http://localhost:8080/api/users/me/privacy`, {
+                const resPrivacy = await fetch(`http://localhost:8080/api/auth/me/privacy`, {
                     credentials: 'include'
                 });
 
@@ -42,7 +42,7 @@ const SettingsPage = () => {
 
     const updateUsername = async () => {
         try {
-            const res = await fetch('http://localhost:8080/api/users/me/username', {
+            const res = await fetch('http://localhost:8080/api/auth/me/username', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -57,7 +57,7 @@ const SettingsPage = () => {
 
     const updateEmail = async () => {
         try {
-            const res = await fetch('http://localhost:8080/api/users/me/email', {
+            const res = await fetch('http://localhost:8080/api/auth/me/email', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -72,7 +72,7 @@ const SettingsPage = () => {
 
     const updatePassword = async () => {
         try {
-            const res = await fetch('http://localhost:8080/api/users/me/password', {
+            const res = await fetch('http://localhost:8080/api/auth/me/password', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -88,7 +88,7 @@ const SettingsPage = () => {
 
     const togglePrivacy = async () => {
         try {
-            const res = await fetch('http://localhost:8080/api/users/me/privacy', {
+            const res = await fetch('http://localhost:8080/api/auth/me/privacy', {
                 method: 'PUT',
                 credentials: 'include',
             });
@@ -105,7 +105,7 @@ const SettingsPage = () => {
         if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
 
         try {
-            const res = await fetch('http://localhost:8080/api/users/me', {
+            const res = await fetch('http://localhost:8080/api/auth/me', {
                 method: 'DELETE',
                 credentials: 'include'
             });
