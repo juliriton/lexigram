@@ -72,8 +72,14 @@ public class Experience {
   @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL)
   private ExperiencePrivacySettings experiencePrivacySettings;
 
-  @OneToMany(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
+  @ManyToMany
+  @JoinTable(
+      name = "experience_mentions",
+      joinColumns = @JoinColumn(name = "experience_id"),
+      inverseJoinColumns = @JoinColumn(name = "user_id")
+  )
   private Set<User> mentions = new HashSet<>();
+
 
   public Long getId(){
     return id;

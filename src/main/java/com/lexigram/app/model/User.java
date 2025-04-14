@@ -34,9 +34,8 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private Set<Suggestion> suggestions = new HashSet<>();
 
-  @ManyToOne
-  @JoinColumn(nullable = false)
-  private Experience experience;
+  @ManyToMany(mappedBy = "mentions")
+  private Set<Experience> mentionedIn = new HashSet<>();
 
   public Long getId() {
     return id;
@@ -62,6 +61,22 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public UserPrivacySettings getUserPrivacySettings() {
+    return userPrivacySettings;
+  }
+
+  public Set<Experience> getMentionedIn() {
+    return mentionedIn;
+  }
+
+  public Set<Experience> getExperiences() {
+    return experiences;
+  }
+
+  public Set<Suggestion> getSuggestions() {
+    return suggestions;
   }
 
 }
