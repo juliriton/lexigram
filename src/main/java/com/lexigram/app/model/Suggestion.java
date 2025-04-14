@@ -24,6 +24,9 @@ public class Suggestion {
   @Column(nullable = false, columnDefinition = "Text")
   private String header = "Tell me about";
 
+  @Column(nullable = false, columnDefinition = "Text", updatable = false)
+  private String suggestionText;
+
   @Column(nullable = false)
   private long resonateAmount = 0;
 
@@ -44,6 +47,14 @@ public class Suggestion {
       inverseJoinColumns = @JoinColumn(name = "tag_id")
   )
   private Set<Tag> tags = new HashSet<>();
+
+  public Suggestion() {}
+
+  public Suggestion(User user, Set<Tag> tags, String suggestionText) {
+    this.user = user;
+    this.tags = tags;
+    this.suggestionText = suggestionText;
+  }
 
   public Long getId() {
     return id;
