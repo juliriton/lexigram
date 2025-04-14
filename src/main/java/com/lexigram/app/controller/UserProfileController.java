@@ -1,7 +1,6 @@
 package com.lexigram.app.controller;
 
-import com.lexigram.app.dto.UserProfileDTO;
-import com.lexigram.app.dto.UserUpdateProfileBioDTO;
+import com.lexigram.app.dto.*;
 import com.lexigram.app.service.UserProfileService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
@@ -76,7 +76,7 @@ public class UserProfileController {
   }
 
   @GetMapping("/posts")
-  public ResponseEntity<?> getAllPosts(HttpSession session) {
+  public ResponseEntity<UserPostsDTO> getAllPosts(HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
@@ -84,7 +84,7 @@ public class UserProfileController {
   }
 
   @GetMapping("/posts/experiences")
-  public ResponseEntity<?> getAllExperiences(HttpSession session) {
+  public ResponseEntity<Set<ExperienceDTO>> getAllExperiences(HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
@@ -92,7 +92,7 @@ public class UserProfileController {
   }
 
   @GetMapping("/posts/suggestions")
-  public ResponseEntity<?> getAllSuggestions(HttpSession session) {
+  public ResponseEntity<Set<SuggestionDTO>> getAllSuggestions(HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 

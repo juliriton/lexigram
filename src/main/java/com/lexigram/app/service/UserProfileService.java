@@ -77,13 +77,12 @@ public class UserProfileService {
     return Optional.empty();
   }
 
-  @GetMapping("/posts")
-  public ResponseEntity<UserPostsDTO> getAllUserPosts(Long id) {
+  public UserPostsDTO getAllUserPosts(Long id) {
     Set<Experience> experiences = userProfileRepository.getExperiencesByUserId(id);
     Set<Suggestion> suggestions = userProfileRepository.getSuggestionsByUserId(id);
 
-    UserPostsDTO result = new UserPostsDTO(experiences, suggestions);
-    return ResponseEntity.ok(result);
+    UserPostsDTO dto = new UserPostsDTO(experiences, suggestions);
+    return dto;
   }
 
   public Set<ExperienceDTO> getAllUserExperiences(Long id) {
