@@ -12,6 +12,9 @@ public class Tag {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column(nullable = false)
+  private boolean isInFeed = false;
+
   @Column(unique = true, nullable = false)
   private String name;
 
@@ -23,5 +26,12 @@ public class Tag {
   @JoinColumn(name = "experience_id")
   private List<Experience> experiences = new ArrayList<>();
 
+  public String getName(){
+    return name;
+  }
+
+  public boolean isInFeed(){
+    return isInFeed;
+  }
 
 }

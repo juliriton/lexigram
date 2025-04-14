@@ -74,4 +74,30 @@ public class UserProfileController {
       return ResponseEntity.status(500).body("Error al subir imagen: " + e.getMessage());
     }
   }
+
+  @GetMapping("/posts")
+  public ResponseEntity<?> getAllPosts(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getAllUserPosts(id));
+  }
+
+  @GetMapping("/posts/experiences")
+  public ResponseEntity<?> getAllExperiences(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getAllUserExperiences(id));
+  }
+
+  @GetMapping("/posts/suggestions")
+  public ResponseEntity<?> getAllSuggestions(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getAllUserSuggestions(id));
+  }
+
+
 }

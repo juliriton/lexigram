@@ -2,10 +2,7 @@ package com.lexigram.app.model;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity(name = "experiences")
 public class Experience {
@@ -18,6 +15,9 @@ public class Experience {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(nullable = false, unique = true, updatable = false)
+  private UUID uuid = UUID.randomUUID();
 
   @Column(nullable = false, columnDefinition = "Text")
   private String quote;
@@ -70,5 +70,76 @@ public class Experience {
 
   @OneToMany(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<User> mentions = new HashSet<>();
+
+  public Long getId(){
+    return id;
+  }
+
+  public UUID getUuid() {
+    return uuid;
+  }
+
+  public String getQuote() {
+    return quote;
+  }
+
+  public String getReflection() {
+    return reflection;
+  }
+
+  public long getCreationDate() {
+    return creationDate;
+  }
+
+  public long getResonatesAmount() {
+    return resonatesAmount;
+  }
+
+  public long getCommentAmount() {
+    return commentAmount;
+  }
+
+  public long getSaveAmount() {
+    return saveAmount;
+  }
+
+  public long getBranchAmount() {
+    return branchAmount;
+  }
+
+  public boolean isOrigin() {
+    return isOrigin;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public List<Comment> getComments() {
+    return comments;
+  }
+
+  public Set<Tag> getTags() {
+    return tags;
+  }
+
+  public Experience getOrigin() {
+    return origin;
+  }
+
+  public List<Experience> getForks() {
+    return forks;
+  }
+
+  public ExperienceStyle getStyle() {
+    return style;
+  }
+  public ExperiencePrivacySettings getExperiencePrivacySettings() {
+    return experiencePrivacySettings;
+  }
+
+  public Set<User> getMentions() {
+    return mentions;
+  }
 
 }

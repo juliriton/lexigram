@@ -2,8 +2,8 @@ package com.lexigram.app.model;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -29,10 +29,10 @@ public class User {
   private UserProfile userProfile;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-  private List<Experience> experiences = new ArrayList<>();
+  private Set<Experience> experiences = new HashSet<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-  private List<Suggestion> suggestions = new ArrayList<>();
+  private Set<Suggestion> suggestions = new HashSet<>();
 
   @ManyToOne
   @JoinColumn(nullable = false)

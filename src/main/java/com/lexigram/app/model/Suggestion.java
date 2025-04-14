@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity(name = "suggestions")
 public class Suggestion {
@@ -16,6 +17,9 @@ public class Suggestion {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(nullable = false, unique = true, updatable = false)
+  private UUID uuid = UUID.randomUUID();
 
   @Column(nullable = false, columnDefinition = "Text")
   private String header = "Tell me about";

@@ -2,7 +2,7 @@ package com.lexigram.app.model;
 
 import jakarta.persistence.*;
 
-@Entity
+@Entity(name = "experience_styles")
 public class ExperienceStyle {
 
   @Id

@@ -1,9 +1,11 @@
 package com.lexigram.app.repository;
 
+import com.lexigram.app.model.Experience;
 import com.lexigram.app.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
