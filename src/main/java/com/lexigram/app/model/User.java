@@ -2,6 +2,9 @@ package com.lexigram.app.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -24,6 +27,16 @@ public class User {
 
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private UserProfile userProfile;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private List<Experience> experiences = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private List<Suggestion> suggestions = new ArrayList<>();
+
+  @ManyToOne
+  @JoinColumn(nullable = false)
+  private Experience experience;
 
   public Long getId() {
     return id;
