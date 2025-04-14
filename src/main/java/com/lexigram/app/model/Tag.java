@@ -19,11 +19,9 @@ public class Tag {
   private String name;
 
   @ManyToMany(mappedBy = "tags")
-  @JoinColumn(name = "suggestion_id", nullable = false)
   private List<Suggestion> suggestions = new ArrayList<>();
 
   @ManyToMany(mappedBy = "tags")
-  @JoinColumn(name = "experience_id")
   private List<Experience> experiences = new ArrayList<>();
 
   public String getName(){

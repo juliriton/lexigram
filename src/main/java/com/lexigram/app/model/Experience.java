@@ -48,10 +48,14 @@ public class Experience {
   private User user;
 
   @OneToMany(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Comment> comments = new ArrayList<>();
+  private Set<Comment> comments = new HashSet<>();
 
-  @ManyToMany(mappedBy = "experiences")
-  @JoinColumn(name = "experience_id", nullable = false)
+  @ManyToMany
+  @JoinTable(
+      name = "experience_tag",
+      joinColumns = @JoinColumn(name = "experience_id"),
+      inverseJoinColumns = @JoinColumn(name = "tag_id")
+  )
   private Set<Tag> tags = new HashSet<>();
 
   @ManyToOne
@@ -115,7 +119,7 @@ public class Experience {
     return user;
   }
 
-  public List<Comment> getComments() {
+  public Set<Comment> getComments() {
     return comments;
   }
 

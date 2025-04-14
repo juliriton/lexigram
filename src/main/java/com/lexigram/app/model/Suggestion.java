@@ -37,8 +37,44 @@ public class Suggestion {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @ManyToMany(mappedBy = "suggestions", cascade = CascadeType.ALL)
-  @JoinColumn(name = "tag_id", nullable = false)
+  @ManyToMany
+  @JoinTable(
+      name = "suggestion_tag",
+      joinColumns = @JoinColumn(name = "suggestion_id"),
+      inverseJoinColumns = @JoinColumn(name = "tag_id")
+  )
   private Set<Tag> tags = new HashSet<>();
+
+  public Long getId() {
+    return id;
+  }
+
+  public UUID getUuid() {
+    return uuid;
+  }
+
+  public String getHeader() {
+    return header;
+  }
+
+  public long getResonatesAmount() {
+    return resonateAmount;
+  }
+
+  public long getExperienceAmount() {
+    return experienceAmount;
+  }
+
+  public long getCreationDate() {
+    return creationDate;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public Set<Tag> getTags() {
+    return tags;
+  }
 
 }

@@ -12,6 +12,8 @@ const UserProfilePage = () => {
     const [attemptedLoad, setAttemptedLoad] = useState(false);
     const [newBio, setNewBio] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
+    const [posts, setPosts] = useState([]);
+    const [postFilter, setPostFilter] = useState('all');
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -56,6 +58,32 @@ const UserProfilePage = () => {
         };
         fetchUserProfile();
     }, []);
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            let url;
+            switch (postFilter) {
+                case 'suggestions':
+                    url = 'http://localhost:8080/api/auth/me/profile/posts/suggestions';
+                    break;
+                case 'experiences':
+                    url = 'http://localhost:8080/api/auth/me/profile/posts/experiences';
+                    break;
+                default:
+                    url = 'http://localhost:8080/api/auth/me/profile/posts';
+            }
+
+            try {
+                const res = await fetch(url, { credentials: 'include' });
+                if (!res.ok) throw new Error('Failed to fetch posts');
+                const data = await res.json();
+                setPosts(data);
+            } catch (err) {
+                setPosts([]);
+            }
+        };
+        fetchPosts();
+    }, [postFilter]);
 
     const testImageExists = async (url) => {
         return new Promise((resolve) => {
@@ -190,6 +218,38 @@ const UserProfilePage = () => {
                 <button className="btn btn-secondary mt-2" onClick={handlePictureUpload}>
                     Upload Picture
                 </button>
+            </div>
+
+            <hr />
+            <h5>User Posts</h5>
+
+            <div className="form-group">
+                <label>Filter posts:</label>
+                <select
+                    className="form-control"
+                    value={postFilter}
+                    onChange={(e) => setPostFilter(e.target.value)}
+                >
+                    <option value="all">All</option>
+                    <option value="suggestions">Suggestions</option>
+                    <option value="experiences">Experiences</option>
+                </select>
+            </div>
+
+            <div className="mt-3">
+                {posts.length === 0 ? (
+                    <p>No posts found for this filter.</p>
+                ) : (
+                    <ul className="list-group">
+                        {posts.map((post, index) => (
+                            <li className="list-group-item" key={index}>
+                                <strong>{post.title}</strong><br />
+                                <span>{post.content}</span><br />
+                                <small className="text-muted">{post.type}</small>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
 
             <hr />
