@@ -6,6 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
-@RequestMapping("/api/auth/")
+@RequestMapping("/api/auth/me")
 public class SuggestionContoller {
 }

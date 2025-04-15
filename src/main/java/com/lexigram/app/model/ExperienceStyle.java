@@ -13,23 +13,41 @@ public class ExperienceStyle {
   @JoinColumn(name = "experience_id", nullable = false)
   private Experience experience;
 
-  @Column(name = "font_family")
+  @Column(name = "font_family", nullable = false)
   private String fontFamily;
 
-  @Column(name = "font_size")
+  @Column(name = "font_size", nullable = false)
   private int fontSize;
 
-  @Column(name = "font_color")
+  @Column(name = "font_color", nullable = false)
   private String fontColor;
 
-  @Column(name = "text_position_x")
+  @Column(name = "text_position_x", nullable = false)
   private int textPositionX;
 
-  @Column(name = "text_position_y")
+  @Column(name = "text_position_y", nullable = false)
   private int textPositionY;
 
-  @Column(name = "background_media_url")
+  @Column(name = "background_media_url", nullable = false)
   private String backgroundMediaUrl;
+
+  public ExperienceStyle() {}
+
+  public ExperienceStyle(Experience experience,
+                         String fontFamily,
+                         int fontSize,
+                         String fontColor,
+                         int textPositionX,
+                         int textPositionY,
+                         String backgroundMediaUrl) {
+    this.experience = experience;
+    this.fontFamily = fontFamily;
+    this.fontSize = fontSize;
+    this.fontColor = fontColor;
+    this.textPositionX = textPositionX;
+    this.textPositionY = textPositionY;
+    this.backgroundMediaUrl = backgroundMediaUrl;
+  }
 
 }
 

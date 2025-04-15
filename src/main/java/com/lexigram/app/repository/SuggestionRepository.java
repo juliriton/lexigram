@@ -1,12 +1,13 @@
 package com.lexigram.app.repository;
 
 import com.lexigram.app.model.Suggestion;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.Set;
 
 @Repository
-public interface SuggestionRepository {
+public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
   Optional<Set<Suggestion>> findSuggestionByUserId(Long id);
 }

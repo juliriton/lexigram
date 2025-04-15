@@ -80,6 +80,27 @@ public class Experience {
   )
   private Set<User> mentions = new HashSet<>();
 
+  public Experience() {}
+
+  public Experience(User user, ExperienceStyle style,
+                    ExperiencePrivacySettings experiencePrivacySettings,
+                    Experience origin,
+                    Set<User> mentions,
+                    Set<Tag> tags,
+                    String quote,
+                    String reflection,
+                    Boolean isOrigin) {
+
+    this.user = user;
+    this.style = style;
+    this.experiencePrivacySettings = experiencePrivacySettings;
+    this.isOrigin = isOrigin;
+    this.origin = origin;
+    this.mentions = mentions;
+    this.tags = tags;
+    this.quote = quote;
+    this.reflection = reflection;
+  }
 
   public Long getId(){
     return id;
@@ -150,6 +171,14 @@ public class Experience {
 
   public Set<User> getMentions() {
     return mentions;
+  }
+
+  public void setStyle(ExperienceStyle style) {
+    this.style = style;
+  }
+
+  public void setPrivacySettings(ExperiencePrivacySettings privacySettings) {
+    this.experiencePrivacySettings = privacySettings;
   }
 
 }

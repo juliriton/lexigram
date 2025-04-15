@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth/me/post")
@@ -24,7 +26,7 @@ public class PostCreationController {
   }
 
   @PostMapping("/experience")
-  public ResponseEntity<ExperienceDTO> postExperience(@Valid @RequestBody PostExperienceDTO postExperienceDTO, HttpSession session) {
+  public ResponseEntity<ExperienceDTO> postExperience(@Valid @RequestBody PostExperienceDTO postExperienceDTO, HttpSession session) throws IOException {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
