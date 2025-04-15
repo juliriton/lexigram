@@ -1,22 +1,45 @@
 package com.lexigram.app.dto;
 
 import com.lexigram.app.model.Tag;
+import jakarta.validation.constraints.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
 public class PostExperienceDTO {
 
+  @NotBlank
   private String quote;
+
+  @NotBlank
+  @Size(min = 200, max = 800, message = "Reflection must be between 200 and 800 characters. Share something meaningful!")
   private String reflection;
+
+  @NotNull
+  @Size(min = 1, message = "Experiences should have at least 1 tag.")
   private Set<Tag> tags;
+
   private Set<String> mentions;
+
+  @NotBlank
   private String fontFamily;
+
+  @Min(8)
+  @Max(48)
   private int fontSize;
+
+  @Pattern(regexp = "^#[0-9a-fA-F]{6}$")
   private String fontColor;
+
+  @Min(0)
   private int textPositionX;
+
+  @Min(0)
   private int textPositionY;
+
+  @NotNull
   private MultipartFile file;
+
   private boolean allowComments;
   private boolean allowForks;
   private boolean allowResonates;
