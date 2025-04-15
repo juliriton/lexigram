@@ -26,7 +26,7 @@ public class PostCreationController {
   }
 
   @PostMapping("/experience")
-  public ResponseEntity<ExperienceDTO> postExperience(@Valid @RequestBody PostExperienceDTO postExperienceDTO, HttpSession session) throws IOException {
+  public ResponseEntity<ExperienceDTO> postExperience(@Valid @ModelAttribute PostExperienceDTO postExperienceDTO, HttpSession session) throws IOException {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
@@ -36,7 +36,7 @@ public class PostCreationController {
   }
 
   @PostMapping("/suggestion")
-  public ResponseEntity<SuggestionDTO> postSuggestion(@Valid @RequestBody PostSuggestionDTO postSuggestionDTO, HttpSession session) {
+  public ResponseEntity<SuggestionDTO> postSuggestion(@Valid @ModelAttribute PostSuggestionDTO postSuggestionDTO, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
 
     if (id == null) return ResponseEntity.status(401).build();

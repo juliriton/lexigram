@@ -1,6 +1,5 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.Tag;
 import jakarta.validation.constraints.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,12 +11,12 @@ public class PostExperienceDTO {
   private String quote;
 
   @NotBlank
-  @Size(min = 200, max = 800, message = "Reflection must be between 200 and 800 characters. Share something meaningful!")
+  @Size(min = 10, max = 300, message = "Reflection must be between 10 and 300 characters. Share something meaningful!")
   private String reflection;
 
   @NotNull
   @Size(min = 1, message = "Experiences should have at least 1 tag.")
-  private Set<Tag> tags;
+  private Set<String> tags;
 
   private Set<String> mentions;
 
@@ -40,13 +39,16 @@ public class PostExperienceDTO {
   @NotNull
   private MultipartFile file;
 
+  @NotNull
+  private boolean isOrigin;
+
   private boolean allowComments;
   private boolean allowForks;
   private boolean allowResonates;
 
   public PostExperienceDTO(String quote,
-                           String experience,
-                           Set<Tag> tags,
+                           String reflection,
+                           Set<String> tags,
                            Set<String> mentions,
                            String fontFamily,
                            int fontSize,
@@ -54,11 +56,12 @@ public class PostExperienceDTO {
                            int textPositionX,
                            int textPositionY,
                            MultipartFile file,
+                           boolean isOrigin,
                            boolean allowComments,
                            boolean allowResonates,
                            boolean allowForks) {
     this.quote = quote;
-    this.reflection = experience;
+    this.reflection = reflection;
     this.tags = tags;
     this.mentions = mentions;
     this.fontFamily = fontFamily;
@@ -67,6 +70,7 @@ public class PostExperienceDTO {
     this.textPositionX = textPositionX;
     this.textPositionY = textPositionY;
     this.file = file;
+    this.isOrigin = isOrigin;
     this.allowComments = allowComments;
     this.allowResonates = allowResonates;
     this.allowForks = allowForks;
@@ -80,7 +84,7 @@ public class PostExperienceDTO {
     return reflection;
   }
 
-  public Set<Tag> getTags() {
+  public Set<String> getTags() {
     return tags;
   }
 
@@ -122,6 +126,10 @@ public class PostExperienceDTO {
 
   public boolean areForksAllowed() {
     return allowForks;
+  }
+
+  public boolean isOrigin(){
+    return isOrigin;
   }
 
 }

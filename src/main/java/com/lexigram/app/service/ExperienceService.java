@@ -3,11 +3,9 @@ package com.lexigram.app.service;
 import com.lexigram.app.dto.ExperienceDTO;
 import com.lexigram.app.dto.PostExperienceDTO;
 import com.lexigram.app.exception.UserNotFoundException;
-import com.lexigram.app.model.Experience;
-import com.lexigram.app.model.ExperiencePrivacySettings;
-import com.lexigram.app.model.ExperienceStyle;
-import com.lexigram.app.model.User;
+import com.lexigram.app.model.*;
 import com.lexigram.app.repository.ExperienceRepository;
+import com.lexigram.app.repository.TagRepository;
 import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,58 +27,73 @@ public class ExperienceService {
 
   private final UserRepository userRepository;
   private ExperienceRepository experienceRepository;
+  private TagRepository tagRepository;
 
   @Autowired
-  public ExperienceService(ExperienceRepository experienceRepository, UserRepository userRepository) {
+  public ExperienceService(ExperienceRepository experienceRepository, UserRepository userRepository, TagRepository tagRepository) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
+    this.tagRepository = tagRepository;
   }
 
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO) throws IOException {
     User user = userRepository.findById(id).get();
     Set<User> mentions = new HashSet<>();
+    Set<Tag> tags = new HashSet<>();
 
-    for (String username : postExperienceDTO.getMentions()) {
-      Optional<User> mention = userRepository.findByUsername(username);
-      if (mention.isPresent()) {
-        mentions.add(mention.get());
-      } else {
-        throw new UserNotFoundException();
+    if (postExperienceDTO.getMentions() != null) {
+      for (String username : postExperienceDTO.getMentions()) {
+        Optional<User> mention = userRepository.findByUsername(username);
+        if (mention.isPresent()) {
+          mentions.add(mention.get());
+        } else {
+          throw new UserNotFoundException();
+        }
       }
     }
 
-    Experience experience = new Experience(
-        user,
-        null,
-        null,
-        null,
-        mentions,
-        postExperienceDTO.getTags(),
-        postExperienceDTO.getQuote(),
-        postExperienceDTO.getReflection(),
-        true);
+    for (String t : postExperienceDTO.getTags()) {
+      Optional<Tag> tagOptional = tagRepository.findByName(t);
+      if (tagOptional.isPresent()) {
+        tags.add(tagOptional.get());
+      } else {
+        Tag tag = new Tag(t);
+        tagRepository.save(tag);
+        tags.add(tag);
+      }
+    }
+
+    Experience experience;
+    String quote = postExperienceDTO.getQuote();
+    String reflection = postExperienceDTO.getReflection();
+
+    experience = new Experience(user, mentions, tags, quote, reflection);
 
     experience = experienceRepository.save(experience);
 
+    experience.setOrigin(experience);
+    experience = experienceRepository.save(experience);
+
     MultipartFile file = postExperienceDTO.getFile();
-    String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-    File destination = new File(uploadDir + File.separator + fileName);
-    destination.getParentFile().mkdirs();
-    file.transferTo(destination);
+    if (file != null && !file.isEmpty()) {
+      String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+      File destination = new File(uploadDir + File.separator + fileName);
+      destination.getParentFile().mkdirs();
+      file.transferTo(destination);
 
-    String relativePath = "/images/" + fileName;
+      String relativePath = "/images/" + fileName;
 
-    ExperienceStyle style = new ExperienceStyle(
-        experience,
-        postExperienceDTO.getFontFamily(),
-        postExperienceDTO.getFontSize(),
-        postExperienceDTO.getFontColor(),
-        postExperienceDTO.getTextPositionX(),
-        postExperienceDTO.getTextPositionY(),
-        relativePath
-    );
-
-    experience.setStyle(style);
+      ExperienceStyle style = new ExperienceStyle(
+          experience,
+          postExperienceDTO.getFontFamily(),
+          postExperienceDTO.getFontSize(),
+          postExperienceDTO.getFontColor(),
+          postExperienceDTO.getTextPositionX(),
+          postExperienceDTO.getTextPositionY(),
+          relativePath
+      );
+      experience.setStyle(style);
+    }
 
     ExperiencePrivacySettings privacy = new ExperiencePrivacySettings(
         experience,
@@ -88,12 +101,10 @@ public class ExperienceService {
         postExperienceDTO.areForksAllowed(),
         postExperienceDTO.areResonatesAllowed()
     );
-
     experience.setPrivacySettings(privacy);
 
     experience = experienceRepository.save(experience);
 
     return new ExperienceDTO(experience);
   }
-
 }
