@@ -7,6 +7,8 @@ const HomePage = ({ user, setUser }) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
+    const [imageError, setImageError] = useState(false);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -18,6 +20,10 @@ const HomePage = ({ user, setUser }) => {
                 if (res.ok) {
                     const data = await res.json();
                     setUser(data);
+
+                    if (data) {
+                        fetchProfilePicture();
+                    }
                 } else {
                     setUser(null);
                 }
@@ -32,6 +38,28 @@ const HomePage = ({ user, setUser }) => {
         fetchUser();
     }, [setUser]);
 
+    const fetchProfilePicture = async () => {
+        try {
+            const profileRes = await fetch('http://localhost:8080/api/auth/me/profile', {
+                credentials: 'include',
+            });
+
+            if (profileRes.ok) {
+                const profileData = await profileRes.json();
+                if (profileData.profilePictureUrl) {
+                    setProfilePicture(`http://localhost:8080${profileData.profilePictureUrl}`);
+                } else {
+                    setImageError(true);
+                }
+            } else {
+                setImageError(true);
+            }
+        } catch (err) {
+            console.error('Error al obtener foto de perfil:', err);
+            setImageError(true);
+        }
+    };
+
     const handleLogout = () => {
         fetch('http://localhost:8080/api/auth/me/logout', {
             method: 'POST',
@@ -45,6 +73,10 @@ const HomePage = ({ user, setUser }) => {
             .catch((err) => {
                 console.error('Logout failed:', err);
             });
+    };
+
+    const handleImageError = () => {
+        setImageError(true);
     };
 
     const goToProfile = () => {
@@ -94,8 +126,17 @@ const HomePage = ({ user, setUser }) => {
                     {user ? (
                         <>
                             <div className="user-info">
-                                <FaUserCircle size={40} />
-                                <p>{user.username || 'Usuario'}</p>
+                                {profilePicture && !imageError ? (
+                                    <img
+                                        src={profilePicture}
+                                        alt="Perfil"
+                                        className="profile-image"
+                                        onError={handleImageError}
+                                    />
+                                ) : (
+                                    <FaUserCircle size={40} />
+                                )}
+                                <h5><p>{user.username || 'Usuario'}</p></h5>
                             </div>
                             <div className="sidebar-menu-items">
                                 <div className="menu-item" onClick={goToProfile}>

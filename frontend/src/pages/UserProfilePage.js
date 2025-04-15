@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../App.css';
+import '../styles/UserProfilePage.css';
 
 const UserProfilePage = () => {
     const navigate = useNavigate();
@@ -14,6 +14,7 @@ const UserProfilePage = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [posts, setPosts] = useState([]);
     const [postFilter, setPostFilter] = useState('all');
+    const [activeTab, setActiveTab] = useState('posts'); // New state for tabs
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -151,14 +152,21 @@ const UserProfilePage = () => {
     };
 
     if (loading) {
-        return <div className="container mt-4">Loading user profile...</div>;
+        return (
+            <div className="profile-loading">
+                <div className="spinner"></div>
+                <p>Loading profile...</p>
+            </div>
+        );
     }
 
     if (error) {
         return (
-            <div className="container mt-4">
-                <div className="alert alert-danger"><strong>Error:</strong> {error}</div>
-                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>
+            <div className="profile-error">
+                <div className="error-icon">⚠️</div>
+                <h3>Error Loading Profile</h3>
+                <p>{error}</p>
+                <button className="btn-primary" onClick={() => navigate('/')}>
                     Back to Home
                 </button>
             </div>
@@ -167,9 +175,11 @@ const UserProfilePage = () => {
 
     if (!profile) {
         return (
-            <div className="container mt-4">
-                <div className="alert alert-warning">User profile not found</div>
-                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>
+            <div className="profile-not-found">
+                <div className="not-found-icon">🔍</div>
+                <h3>Profile Not Found</h3>
+                <p>We couldn't find your profile information.</p>
+                <button className="btn-primary" onClick={() => navigate('/')}>
                     Back to Home
                 </button>
             </div>
@@ -177,85 +187,119 @@ const UserProfilePage = () => {
     }
 
     return (
-        <div className="container mt-4" style={{ maxWidth: '600px' }}>
-            <h3>{username}'s Profile</h3>
+        <div className="profile-container">
+            <div className="profile-header">
+                <div className="profile-cover">
+                    <div className="profile-avatar-container">
+                        <img
+                            src={getProfileImageUrl()}
+                            alt="Profile"
+                            className="profile-avatar"
+                            onError={(e) => {
+                                setUsingDefaultImage(true);
+                                e.target.src = defaultUrl;
+                            }}
+                        />
+                        <div className="profile-username">{username}</div>
+                    </div>
+                </div>
 
-            <div className="text-center mb-3">
-                <img
-                    src={getProfileImageUrl()}
-                    alt="Profile"
-                    className="profile-pic"
-                    style={{ maxWidth: '150px', borderRadius: '50%' }}
-                    onError={(e) => {
-                        setUsingDefaultImage(true);
-                        e.target.src = defaultUrl;
-                    }}
-                />
+                <div className="profile-bio">
+                    <p>{profile.biography || 'No biography yet. Add something about yourself!'}</p>
+                </div>
             </div>
 
-            <p><strong>Biography:</strong> {profile.biography || 'No biography'}</p>
-
-            <hr />
-
-            <h5>Edit Profile</h5>
-
-            <div className="form-group">
-                <label>New biography:</label>
-                <textarea
-                    className="form-control"
-                    value={newBio}
-                    rows="3"
-                    onChange={(e) => setNewBio(e.target.value)}
-                />
-                <button className="btn btn-primary mt-2" onClick={handleBioUpdate}>
-                    Save Biography
-                </button>
-            </div>
-
-            <div className="form-group mt-4">
-                <label>New Profile Picture (.jpg only):</label>
-                <input type="file" className="form-control" accept=".jpg" onChange={handleFileChange} />
-                <button className="btn btn-secondary mt-2" onClick={handlePictureUpload}>
-                    Upload Picture
-                </button>
-            </div>
-
-            <hr />
-            <h5>User Posts</h5>
-
-            <div className="form-group">
-                <label>Filter posts:</label>
-                <select
-                    className="form-control"
-                    value={postFilter}
-                    onChange={(e) => setPostFilter(e.target.value)}
+            <div className="profile-nav">
+                <button
+                    className={`profile-nav-item ${activeTab === 'posts' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('posts')}
                 >
-                    <option value="all">All</option>
-                    <option value="suggestions">Suggestions</option>
-                    <option value="experiences">Experiences</option>
-                </select>
+                    Posts
+                </button>
+                <button
+                    className={`profile-nav-item ${activeTab === 'edit' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('edit')}
+                >
+                    Edit Profile
+                </button>
             </div>
 
-            <div className="mt-3">
-                {posts.length === 0 ? (
-                    <p>No posts found for this filter.</p>
-                ) : (
-                    <ul className="list-group">
-                        {posts.map((post, index) => (
-                            <li className="list-group-item" key={index}>
-                                <strong>{post.title}</strong><br />
-                                <span>{post.content}</span><br />
-                                <small className="text-muted">{post.type}</small>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+            {activeTab === 'posts' && (
+                <div className="profile-content profile-posts">
+                    <div className="post-filter">
+                        <select
+                            value={postFilter}
+                            onChange={(e) => setPostFilter(e.target.value)}
+                        >
+                            <option value="all">All Posts</option>
+                            <option value="suggestions">Suggestions</option>
+                            <option value="experiences">Experiences</option>
+                        </select>
+                    </div>
 
-            <hr />
-            <button className="btn btn-outline-secondary mt-3" onClick={() => navigate('/')}>
-                Back to Home
-            </button>
+                    {posts.length === 0 ? (
+                        <div className="no-posts">
+                            <p>No posts found for this filter.</p>
+                        </div>
+                    ) : (
+                        <div className="posts-grid">
+                            {posts.map((post, index) => (
+                                <div className="post-card" key={index}>
+                                    <div className="post-type">{post.type}</div>
+                                    <h3 className="post-title">{post.title}</h3>
+                                    <p className="post-content">{post.content}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'edit' && (
+                <div className="profile-content profile-edit">
+                    <div className="edit-section">
+                        <h3>Update Biography</h3>
+                        <textarea
+                            value={newBio}
+                            placeholder="Write something about yourself..."
+                            rows="3"
+                            onChange={(e) => setNewBio(e.target.value)}
+                        />
+                        <button className="btn-primary" onClick={handleBioUpdate}>
+                            Save Biography
+                        </button>
+                    </div>
+
+                    <div className="edit-section">
+                        <h3>Update Profile Picture</h3>
+                        <div className="file-upload">
+                            <label className="file-upload-label">
+                                <input
+                                    type="file"
+                                    accept=".jpg"
+                                    onChange={handleFileChange}
+                                    className="file-input"
+                                />
+                                <span>Choose File</span>
+                            </label>
+                            <span className="file-name">{selectedFile ? selectedFile.name : 'No file chosen'}</span>
+                        </div>
+                        <button
+                            className="btn-secondary"
+                            onClick={handlePictureUpload}
+                            disabled={!selectedFile}
+                        >
+                            Upload Picture
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <div className="profile-footer">
+                <button className="btn-outline" onClick={() => navigate('/')}>
+                    <i className="bi bi-house-door"></i> Back to Home
+                </button>
+            </div>
         </div>
     );
 };
