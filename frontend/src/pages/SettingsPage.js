@@ -133,7 +133,6 @@ const SettingsPage = () => {
                 </div>
             )}
 
-            {/* Current Info */}
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
                     <h5 className="card-title">Current Information</h5>
@@ -143,7 +142,6 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            {/* Update Username */}
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
                     <h5 className="card-title">Update Username</h5>
@@ -159,7 +157,6 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            {/* Update Email */}
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
                     <h5 className="card-title">Update Email</h5>
@@ -175,7 +172,6 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            {/* Update Password */}
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
                     <h5 className="card-title">Change Password</h5>
@@ -191,7 +187,6 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            {/* Toggle Privacy */}
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
                     <h5 className="card-title">Profile Visibility</h5>
@@ -202,7 +197,6 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            {/* Delete Account */}
             <div className="card shadow border-danger mb-4">
                 <div className="card-body">
                     <h5 className="card-title text-danger">Delete Account</h5>
@@ -214,7 +208,7 @@ const SettingsPage = () => {
             </div>
             <div className={"text-center"}>
                 <button
-                    className="btn btn-outline-secondary mt-2 d-inline-flex align-items-center gap-2 animate__animated animate__fadeIn"
+                    className="btn btn-primary mt-2 d-inline-flex align-items-center gap-2 animate__animated animate__fadeIn"
                     onClick={() => navigate('/')}
                     style={{
                         transition: 'transform 0.2s ease, box-shadow 0.3s ease',

@@ -1,7 +1,8 @@
 package com.lexigram.app.service;
 
-import com.lexigram.app.dto.UserProfileDTO;
-import com.lexigram.app.dto.UserUpdateProfileBioDTO;
+import com.lexigram.app.dto.*;
+import com.lexigram.app.model.Experience;
+import com.lexigram.app.model.Suggestion;
 import com.lexigram.app.model.User;
 import com.lexigram.app.model.UserProfile;
 import com.lexigram.app.repository.UserProfileRepository;
@@ -9,7 +10,7 @@ import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserProfileService {
@@ -72,6 +73,52 @@ public class UserProfileService {
           userProfile.getProfilePictureUrl()));
     }
     return Optional.empty();
+  }
+
+  public UserPostsDTO getAllUserPosts(Long id) {
+    Set<Experience> experiences = userProfileRepository.getExperiencesByUserId(id);
+    Set<Suggestion> suggestions = userProfileRepository.getSuggestionsByUserId(id);
+
+    UserPostsDTO dto = new UserPostsDTO(experiences, suggestions);
+    return dto;
+  }
+
+  public Set<ExperienceDTO> getAllUserExperiences(Long id) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()){
+      return Collections.emptySet();
+    }
+
+    Set<Experience> experiences = userProfileRepository.getExperiencesByUserId(id);
+
+    if (experiences.isEmpty()) return Collections.emptySet();
+
+    Set<Experience> experienceSet = userProfileRepository.getExperiencesByUserId(id);
+    Set<ExperienceDTO> experienceDTOset = new HashSet<>();
+
+    for (Experience e : experienceSet){
+      experienceDTOset.add(new ExperienceDTO(e));
+    }
+
+    return experienceDTOset;
+  }
+
+  public Set<SuggestionDTO> getAllUserSuggestions(Long id){
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()){
+      return Collections.emptySet();
+    }
+
+    Set<Suggestion> suggestions = userProfileRepository.getSuggestionsByUserId(id);
+    Set<SuggestionDTO> suggestionDTOset = new HashSet<>();
+
+    for (Suggestion s : suggestions){
+      suggestionDTOset.add(new SuggestionDTO(s));
+    }
+
+    return suggestionDTOset;
   }
 
 }

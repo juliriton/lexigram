@@ -2,6 +2,9 @@ package com.lexigram.app.model;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -24,6 +27,15 @@ public class User {
 
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private UserProfile userProfile;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private Set<Experience> experiences = new HashSet<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private Set<Suggestion> suggestions = new HashSet<>();
+
+  @ManyToMany(mappedBy = "mentions")
+  private Set<Experience> mentionedIn = new HashSet<>();
 
   public Long getId() {
     return id;
@@ -49,6 +61,22 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public UserPrivacySettings getUserPrivacySettings() {
+    return userPrivacySettings;
+  }
+
+  public Set<Experience> getMentionedIn() {
+    return mentionedIn;
+  }
+
+  public Set<Experience> getExperiences() {
+    return experiences;
+  }
+
+  public Set<Suggestion> getSuggestions() {
+    return suggestions;
   }
 
 }
