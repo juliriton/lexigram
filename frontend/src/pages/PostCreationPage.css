@@ -1,0 +1,11 @@
+.post-creation-container {
+    padding: 2rem;
+    text-align: center;
+    background-color: #f7f7f7;
+    min-height: 100vh;
+}
+
+.post-creation-container h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}

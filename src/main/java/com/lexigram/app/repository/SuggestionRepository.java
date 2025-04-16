@@ -9,5 +9,5 @@ import java.util.Set;
 
 @Repository
 public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
-  Optional<Set<Suggestion>> findSuggestionByUserId(Long id);
+  Set<Suggestion> getSuggestionsByUserId(Long id);
 }

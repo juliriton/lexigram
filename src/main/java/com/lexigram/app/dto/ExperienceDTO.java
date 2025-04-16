@@ -18,7 +18,8 @@ public class ExperienceDTO {
   private long branchAmount;
   private boolean isOrigin;
   private User user;
-  private Set<Tag> tags;
+  private Set<TagDTO> tags;
+  private final String type = "experience";
   private ExperienceStyleDTO style;
 
   public ExperienceDTO(Experience experience) {
@@ -32,7 +33,11 @@ public class ExperienceDTO {
     this.branchAmount = experience.getBranchAmount();
     this.isOrigin = experience.isOrigin();
     this.user = experience.getUser();
-    this.tags = experience.getTags();
+    Set<TagDTO> tagDTO = new HashSet<>();
+    for (Tag tag : experience.getTags()) {
+      tagDTO.add(new TagDTO(tag.getName(), tag.isInFeed()));
+    }
+    this.tags = tagDTO;
   }
 
   public UUID getUuid() {
@@ -79,15 +84,15 @@ public class ExperienceDTO {
   }
 
   public Set<TagDTO> getTags(){
-    Set<TagDTO> tagsDTO = new HashSet<>();
-    for (Tag t : tags){
-      tagsDTO.add(new TagDTO(t.getName(), t.isInFeed()));
-    }
-    return tagsDTO;
+    return tags;
   }
 
   public ExperienceStyleDTO getStyle() {
     return style;
+  }
+
+  public String getType(){
+    return type;
   }
 
 }

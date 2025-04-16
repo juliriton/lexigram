@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaCog, FaSignOutAlt, FaTimes } from 'react-icons/fa';
+import { FaUserCircle, FaCog, FaSignOutAlt, FaTimes, FaPenFancy } from 'react-icons/fa';
 import '../pages/HomePage.css';
 
 const HomePage = ({ user, setUser }) => {
@@ -87,27 +87,27 @@ const HomePage = ({ user, setUser }) => {
             <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <h3>Menú</h3>
-                    <FaTimes className="close-btn" onClick={toggleSidebar} />
+                    <FaTimes className="close-btn" onClick={toggleSidebar}/>
                 </div>
 
                 <div className="sidebar-content">
                     {user ? (
                         <>
                             <div className="user-info">
-                                <FaUserCircle size={40} />
+                                <FaUserCircle size={40}/>
                                 <p>{user.username || 'Usuario'}</p>
                             </div>
                             <div className="sidebar-menu-items">
                                 <div className="menu-item" onClick={goToProfile}>
-                                    <FaUserCircle size={20} />
+                                    <FaUserCircle size={20}/>
                                     <span>Profile</span>
                                 </div>
                                 <div className="menu-item" onClick={goToSettings}>
-                                    <FaCog size={20} />
+                                    <FaCog size={20}/>
                                     <span>Settings</span>
                                 </div>
                                 <div className="menu-item" onClick={handleLogout}>
-                                    <FaSignOutAlt size={20} />
+                                    <FaSignOutAlt size={20}/>
                                     <span>Log out</span>
                                 </div>
                             </div>
@@ -115,7 +115,7 @@ const HomePage = ({ user, setUser }) => {
                     ) : (
                         <div className="sidebar-menu-items">
                             <div className="menu-item" onClick={goToLogin}>
-                                <FaUserCircle size={20} />
+                                <FaUserCircle size={20}/>
                                 <span>Log In</span>
                             </div>
                         </div>
@@ -129,6 +129,11 @@ const HomePage = ({ user, setUser }) => {
                 <h2>Lexigram</h2>
                 <p>Feed</p>
             </div>
+            <div className="create-post-icon"
+                 onClick={() => navigate(user ? '/post/create' : '/login')}>
+                <FaPenFancy size={30}/>
+            </div>
+
         </div>
     );
 };

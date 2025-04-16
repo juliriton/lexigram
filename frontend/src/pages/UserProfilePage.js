@@ -72,13 +72,31 @@ const UserProfilePage = () => {
                 default:
                     url = 'http://localhost:8080/api/auth/me/profile/posts';
             }
-
             try {
                 const res = await fetch(url, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch posts');
                 const data = await res.json();
-                setPosts(data);
+                console.log('Raw data from API:', data);
+
+                // Process the data based on the endpoint
+                let processedPosts = [];
+                if (postFilter === 'experiences') {
+                    // Direct array of experiences
+                    processedPosts = data;
+                } else if (postFilter === 'suggestions') {
+                    // Direct array of suggestions
+                    processedPosts = data;
+                } else {
+                    // Combined posts from UserPostsDTO
+                    const experiences = data.experiences || [];
+                    const suggestions = data.suggestions || [];
+                    processedPosts = [...experiences, ...suggestions];
+                }
+
+                setPosts(processedPosts);
+                console.log('Fetched posts:', processedPosts);
             } catch (err) {
+                console.error('Error fetching posts:', err);
                 setPosts([]);
             }
         };
@@ -150,6 +168,66 @@ const UserProfilePage = () => {
         return `http://localhost:8080${profile.profilePictureUrl}?t=${new Date().getTime()}`;
     };
 
+    const formatDate = (timestamp) => {
+        return new Date(timestamp).toLocaleDateString();
+    };
+
+    // Render post based on type
+    const renderPost = (post) => {
+        console.log("Rendering post:", post);
+
+        if (post.type === 'experience') {
+            // For experiences from ExperienceDTO
+            return (
+                <div key={post.uuid} className="card shadow-sm mb-3">
+                    <div className="card-body">
+                        <h5 className="card-title">{post.quote}</h5>
+                        <p className="card-text">{post.reflection}</p>
+                        <div className="d-flex justify-content-between align-items-center">
+                            <span className="badge bg-primary">Experience</span>
+                            <small className="text-muted">{formatDate(post.creationDate)}</small>
+                        </div>
+                        {post.tags && post.tags.length > 0 && (
+                            <div className="mt-2">
+                                {/* Map through tag objects */}
+                                {Array.isArray(post.tags) ? post.tags.map((tag, i) => (
+                                    <span key={i} className="badge bg-secondary me-1">
+                                        {typeof tag === 'object' ? tag.name : tag}
+                                    </span>
+                                )) : null}
+                            </div>
+                        )}
+                        {post.imageUrl && (
+                            <img
+                                src={`http://localhost:8080${post.imageUrl}`}
+                                alt="Post media"
+                                className="img-fluid mt-2"
+                                style={{maxHeight: '200px'}}
+                                onError={(e) => {e.target.style.display = 'none'}}
+                            />
+                        )}
+                    </div>
+                </div>
+            );
+        } else {
+            // For suggestions or other post types
+            return (
+                <div key={post.uuid || post.id} className="card shadow-sm mb-3">
+                    <div className="card-body">
+                        <h5 className="card-title">{post.title}</h5>
+                        <p className="card-text">{post.content}</p>
+                        <div className="d-flex justify-content-between align-items-center">
+                            <span className="badge bg-secondary">{post.type || 'post'}</span>
+                            {post.creationDate && (
+                                <small className="text-muted">{formatDate(post.creationDate)}</small>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+    };
+
     if (loading) {
         return <div className="container mt-4">Loading user profile...</div>;
     }
@@ -177,7 +255,7 @@ const UserProfilePage = () => {
     }
 
     return (
-        <div className="container mt-4" style={{ maxWidth: '600px' }}>
+        <div className="container mt-4" style={{maxWidth: '600px'}}>
             <h3>{username}'s Profile</h3>
 
             <div className="text-center mb-3">
@@ -185,7 +263,7 @@ const UserProfilePage = () => {
                     src={getProfileImageUrl()}
                     alt="Profile"
                     className="profile-pic"
-                    style={{ maxWidth: '150px', borderRadius: '50%' }}
+                    style={{maxWidth: '150px', borderRadius: '50%'}}
                     onError={(e) => {
                         setUsingDefaultImage(true);
                         e.target.src = defaultUrl;
@@ -195,7 +273,7 @@ const UserProfilePage = () => {
 
             <p><strong>Biography:</strong> {profile.biography || 'No biography'}</p>
 
-            <hr />
+            <hr/>
 
             <h5>Edit Profile</h5>
 
@@ -214,45 +292,39 @@ const UserProfilePage = () => {
 
             <div className="form-group mt-4">
                 <label>New Profile Picture (.jpg only):</label>
-                <input type="file" className="form-control" accept=".jpg" onChange={handleFileChange} />
+                <input type="file" className="form-control" accept=".jpg"
+                       onChange={handleFileChange}/>
                 <button className="btn btn-secondary mt-2" onClick={handlePictureUpload}>
                     Upload Picture
                 </button>
             </div>
 
-            <hr />
+            <hr/>
             <h5>User Posts</h5>
 
-            <div className="form-group">
-                <label>Filter posts:</label>
-                <select
-                    className="form-control"
-                    value={postFilter}
-                    onChange={(e) => setPostFilter(e.target.value)}
-                >
-                    <option value="all">All</option>
-                    <option value="suggestions">Suggestions</option>
-                    <option value="experiences">Experiences</option>
-                </select>
-            </div>
+            <div className="mt-4">
+                <div className="form-group mb-3">
+                    <label className="form-label">Filter posts:</label>
+                    <select
+                        className="form-select"
+                        value={postFilter}
+                        onChange={(e) => setPostFilter(e.target.value)}
+                    >
+                        <option value="all">All</option>
+                        <option value="suggestions">Suggestions</option>
+                        <option value="experiences">Experiences</option>
+                    </select>
+                </div>
 
-            <div className="mt-3">
                 {posts.length === 0 ? (
-                    <p>No posts found for this filter.</p>
+                    <p className="text-muted text-center">No posts found for this filter.</p>
                 ) : (
-                    <ul className="list-group">
-                        {posts.map((post, index) => (
-                            <li className="list-group-item" key={index}>
-                                <strong>{post.title}</strong><br />
-                                <span>{post.content}</span><br />
-                                <small className="text-muted">{post.type}</small>
-                            </li>
-                        ))}
-                    </ul>
+                    <div className="d-flex flex-column gap-3">
+                        {posts.map((post) => renderPost(post))}
+                    </div>
                 )}
             </div>
-
-            <hr />
+            <hr/>
             <button className="btn btn-outline-secondary mt-3" onClick={() => navigate('/')}>
                 Back to Home
             </button>
