@@ -18,6 +18,7 @@ public class SuggestionDTO {
   private long resonatesAmount;
   private long experienceAmount;
 
+  public SuggestionDTO() {}
 
   public SuggestionDTO(Suggestion suggestion) {
     this.uuid = suggestion.getUuid();

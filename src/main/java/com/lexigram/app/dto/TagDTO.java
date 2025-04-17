@@ -5,6 +5,8 @@ public class TagDTO {
   private boolean isInFeed;
   private String name;
 
+  public TagDTO() {}
+
   public TagDTO(String name, boolean isInFeed) {
     this.name = name;
     this.isInFeed = isInFeed;

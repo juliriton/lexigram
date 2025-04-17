@@ -1,7 +1,6 @@
 package com.lexigram.app.dto;
 
 import jakarta.validation.constraints.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
@@ -20,60 +19,31 @@ public class PostExperienceDTO {
 
   private Set<String> mentions;
 
-  @NotBlank
-  private String fontFamily;
-
-  @Min(8)
-  @Max(48)
-  private int fontSize;
-
-  @Pattern(regexp = "^#[0-9a-fA-F]{6}$")
-  private String fontColor;
-
-  @Min(0)
-  private int textPositionX;
-
-  @Min(0)
-  private int textPositionY;
-
-  @NotNull
-  private MultipartFile file;
-
   @NotNull
   private boolean isOrigin;
 
-  private boolean allowComments;
-  private boolean allowForks;
-  private boolean allowResonates;
+  @NotNull
+  private PostExperienceStyleDTO style;
+
+  @NotNull
+  private PostExperiencePrivacySettingsDTO privacySettings;
+
+  public PostExperienceDTO() {}
 
   public PostExperienceDTO(String quote,
                            String reflection,
                            Set<String> tags,
                            Set<String> mentions,
-                           String fontFamily,
-                           int fontSize,
-                           String fontColor,
-                           int textPositionX,
-                           int textPositionY,
-                           MultipartFile file,
                            boolean isOrigin,
-                           boolean allowComments,
-                           boolean allowResonates,
-                           boolean allowForks) {
+                           PostExperiencePrivacySettingsDTO privacySettings,
+                           PostExperienceStyleDTO style) {
     this.quote = quote;
     this.reflection = reflection;
     this.tags = tags;
     this.mentions = mentions;
-    this.fontFamily = fontFamily;
-    this.fontSize = fontSize;
-    this.fontColor = fontColor;
-    this.textPositionX = textPositionX;
-    this.textPositionY = textPositionY;
-    this.file = file;
     this.isOrigin = isOrigin;
-    this.allowComments = allowComments;
-    this.allowResonates = allowResonates;
-    this.allowForks = allowForks;
+    this.privacySettings = privacySettings;
+    this.style = style;
   }
 
   public String getQuote() {
@@ -92,44 +62,16 @@ public class PostExperienceDTO {
     return mentions;
   }
 
-  public String getFontFamily() {
-    return fontFamily;
-  }
-
-  public int getFontSize() {
-    return fontSize;
-  }
-
-  public String getFontColor() {
-    return fontColor;
-  }
-
-  public int getTextPositionX() {
-    return textPositionX;
-  }
-
-  public int getTextPositionY() {
-    return textPositionY;
-  }
-
-  public MultipartFile getFile() {
-    return file;
-  }
-
-  public boolean areCommentsAllowed() {
-    return allowComments;
-  }
-
-  public boolean areResonatesAllowed() {
-    return allowResonates;
-  }
-
-  public boolean areForksAllowed() {
-    return allowForks;
-  }
-
   public boolean isOrigin(){
     return isOrigin;
+  }
+
+  public PostExperienceStyleDTO getStyle() {
+    return style;
+  }
+
+  public PostExperiencePrivacySettingsDTO getPrivacySettings() {
+    return privacySettings;
   }
 
 }

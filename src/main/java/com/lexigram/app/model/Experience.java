@@ -70,7 +70,7 @@ public class Experience {
   private ExperienceStyle style;
 
   @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL)
-  private ExperiencePrivacySettings experiencePrivacySettings;
+  private ExperiencePrivacySettings privacySettings;
 
   @ManyToMany
   @JoinTable(
@@ -155,8 +155,8 @@ public class Experience {
     return style;
   }
 
-  public ExperiencePrivacySettings getExperiencePrivacySettings() {
-    return experiencePrivacySettings;
+  public ExperiencePrivacySettings getPrivacySettings() {
+    return privacySettings;
   }
 
   public Set<User> getMentions() {
@@ -168,7 +168,7 @@ public class Experience {
   }
 
   public void setPrivacySettings(ExperiencePrivacySettings privacySettings) {
-    this.experiencePrivacySettings = privacySettings;
+    this.privacySettings = privacySettings;
   }
 
   public void setOrigin(Experience origin) {

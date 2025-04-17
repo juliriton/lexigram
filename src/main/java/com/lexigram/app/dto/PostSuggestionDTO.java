@@ -15,6 +15,8 @@ public class PostSuggestionDTO {
   @Size(min = 1, max = 100, message = "Suggestions must be between 1 and 100 characters.")
   private String suggestion;
 
+  public PostSuggestionDTO() {}
+
   public PostSuggestionDTO(Set<Tag> tags, String suggestion) {
     this.tags = tags;
     this.suggestion = suggestion;

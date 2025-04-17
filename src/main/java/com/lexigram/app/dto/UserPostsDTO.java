@@ -10,6 +10,8 @@ public class UserPostsDTO {
   private Set<Experience> experiences;
   private Set<Suggestion> suggestions;
 
+  public UserPostsDTO() {}
+
   public UserPostsDTO(Set<Experience> experiences, Set<Suggestion> suggestions) {
     this.experiences = experiences;
     this.suggestions = suggestions;
