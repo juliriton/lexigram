@@ -15,8 +15,8 @@ const UserProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [usingDefaultImage, setUsingDefaultImage] = useState(false);
     const [attemptedLoad, setAttemptedLoad] = useState(false);
-    // State to track which experiences have their quotes hidden
     const [hiddenQuotes, setHiddenQuotes] = useState({});
+    const [showMentions, setShowMentions] = useState({});
 
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
@@ -118,7 +118,14 @@ const UserProfilePage = () => {
         }
     };
 
-    const handleFileChange = (e) => setSelectedFile(e.target.files[0]);
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file && file.type !== 'image/jpeg') {
+            alert("Please select a JPG image.");
+            return;
+        }
+        setSelectedFile(file);
+    };
 
     const handlePictureUpload = async () => {
         if (!selectedFile) return alert("Please select an image.");
@@ -176,83 +183,78 @@ const UserProfilePage = () => {
         }));
     };
 
+    const renderMentions = (mentions, postId) => (
+        showMentions[postId] && (
+            <div className="mt-2">
+                <h6>Mentions:</h6>
+                {mentions.map((mention, i) => (
+                    <span key={i} className="badge bg-info me-1">{mention}</span>
+                ))}
+            </div>
+        )
+    );
+
     const renderPost = (post) => {
-        const isExperience = post.type === 'experience';
-        const imageUrl = post.style?.backgroundMediaUrl || post.imageUrl;
+        const isExperience = post.type === 'Experience';
         const postId = post.uuid || post.id;
         const isQuoteHidden = hiddenQuotes[postId];
-
-        // Get quote font style from post.style if available
-        const fontColor = post.style?.fontColor || '#ffffff';
-        const fontSize = post.style?.fontSize || '1.5rem';
-        const fontFamily = post.style?.fontFamily || 'inherit';
-        const backgroundColor = post.style?.backgroundColor || 'transparent';
 
         if (isExperience) {
             return (
                 <div key={postId} className="card shadow-sm mb-4" style={{ overflow: 'hidden' }}>
-                    {/* Image container with overlay quote */}
-                    <div style={{
-                        position: 'relative',
-                        height: '300px',
-                        overflow: 'hidden'
-                    }}>
-                        <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            backgroundImage: `url(${baseApiUrl}${imageUrl})`,
-                            filter: isQuoteHidden ? 'none' : 'brightness(70%)'
-                        }}></div>
-
-                        {!isQuoteHidden && (
-                            <div style={{
+                    <div style={{ position: 'relative', height: '300px', overflow: 'hidden' }}>
+                        <div
+                            style={{
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
                                 width: '100%',
                                 height: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                padding: '2rem'
-                            }}>
-                                <div style={{
-                                    padding: '1rem',
-                                    borderRadius: post.style?.borderRadius || '10px',
-                                    backgroundColor: backgroundColor !== 'transparent' ? backgroundColor : 'rgba(0,0,0,0.3)',
-                                    maxWidth: '80%',
-                                    textAlign: 'center'
-                                }}>
-                                    <h4 style={{
-                                        color: fontColor,
-                                        fontSize: fontSize,
-                                        fontFamily: fontFamily,
-                                        fontWeight: 'bold',
-                                        textShadow: backgroundColor === 'transparent' ? '1px 1px 3px rgba(0,0,0,0.8)' : 'none',
-                                        margin: 0
-                                    }}>
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                backgroundImage: `url(${baseApiUrl}${post.style?.backgroundMediaUrl || post.imageUrl})`,
+                                filter: isQuoteHidden ? 'none' : 'brightness(70%)'
+                            }}
+                        />
+                        {!isQuoteHidden && (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '2rem'
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        padding: '1rem',
+                                        borderRadius: post.style?.borderRadius || '10px',
+                                        backgroundColor: 'rgba(0,0,0,0.3)',
+                                        maxWidth: '80%',
+                                        textAlign: 'center'
+                                    }}
+                                >
+                                    <h4
+                                        style={{
+                                            color: post.style?.fontColor || '#ffffff',
+                                            fontSize: post.style?.fontSize || '1.5rem',
+                                            fontFamily: post.style?.fontFamily || 'inherit',
+                                            fontWeight: 'bold',
+                                            textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
+                                            margin: 0
+                                        }}
+                                    >
                                         "{post.quote || post.title}"
                                     </h4>
                                 </div>
                             </div>
                         )}
-
-                        {/* Toggle button positioned at the bottom right of the image */}
-                        <button
-                            onClick={() => toggleQuote(postId)}
-                            className="btn btn-sm btn-light position-absolute"
-                            style={{ bottom: '10px', right: '10px', opacity: 0.8, zIndex: 10 }}
-                        >
-                            {isQuoteHidden ? 'Show Quote' : 'Show Image'}
-                        </button>
                     </div>
-
-                    {/* White card section below for other details */}
                     <div className="card-body bg-white">
                         <p className="card-text">{post.reflection || post.content}</p>
                         <div className="d-flex justify-content-between align-items-center">
@@ -264,51 +266,37 @@ const UserProfilePage = () => {
                         {post.tags?.length > 0 && (
                             <div className="mt-2">{renderTags(post.tags)}</div>
                         )}
+                        {post.mentions?.length > 0 && (
+                            <button
+                                className="btn btn-link mt-2"
+                                onClick={() => setShowMentions(prev => ({ ...prev, [postId]: !prev[postId] }))}
+                            >
+                                {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
+                            </button>
+                        )}
+                        {renderMentions(post.mentions, postId)}
                     </div>
+
+                    <button className="btn btn-link" onClick={() => toggleQuote(postId)}>
+                        {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
+                    </button>
                 </div>
             );
         }
 
-        // Non-experience posts remain unchanged
-        const quoteStyle = post.style ? {
-            backgroundColor: post.style.backgroundColor || 'transparent',
-            color: post.style.fontColor || 'inherit',
-            borderRadius: post.style.borderRadius || '10px',
-            padding: '0.5rem'
-        } : {};
-
         return (
-            <div key={postId} className="card shadow-sm mb-3">
+            <div key={postId} className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title" style={quoteStyle}>
-                        {post.quote || post.title}
-                    </h5>
-                    <p className="card-text">{post.reflection || post.content}</p>
+                    <h5 className="card-title text-muted small">{post.header || "Tell me about"}</h5>
+                    <p className="card-text fw-bold fs-5">{post.body}</p>
                     <div className="d-flex justify-content-between align-items-center">
-                        <span className="badge bg-primary">{post.type || 'post'}</span>
+                        <span className="badge bg-primary">Suggestion</span>
                         {post.creationDate && (
                             <small className="text-muted">{formatDate(post.creationDate)}</small>
                         )}
                     </div>
                     {post.tags?.length > 0 && (
                         <div className="mt-2">{renderTags(post.tags)}</div>
-                    )}
-                    {imageUrl ? (
-                        <div className="mt-2">
-                            <img
-                                src={`${baseApiUrl}${imageUrl}`}
-                                alt="Post"
-                                className="img-fluid"
-                                style={{ maxHeight: '200px', borderRadius: '8px' }}
-                                onError={(e) => {
-                                    console.log("Failed to load image:", `${baseApiUrl}${imageUrl}`);
-                                    e.target.style.display = 'none';
-                                    e.target.parentNode.innerHTML += "<div>Image failed to load</div>";
-                                }}
-                            />
-                        </div>
-                    ) : (
-                        <div>No image available</div>
                     )}
                 </div>
             </div>
@@ -323,9 +311,7 @@ const UserProfilePage = () => {
                 <div className={`alert alert-${error ? 'danger' : 'warning'}`}>
                     <strong>{error ? 'Error:' : 'Notice:'}</strong> {error || 'User profile not found'}
                 </div>
-                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>
-                    Back to Home
-                </button>
+                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>Back to Home</button>
             </div>
         );
     }
@@ -340,10 +326,7 @@ const UserProfilePage = () => {
                     alt="Profile"
                     className="profile-pic"
                     style={{ maxWidth: '150px', borderRadius: '50%' }}
-                    onError={(e) => {
-                        setUsingDefaultImage(true);
-                        e.target.src = defaultProfilePic;
-                    }}
+                    onError={(e) => { setUsingDefaultImage(true); e.target.src = defaultProfilePic; }}
                 />
             </div>
 
@@ -352,7 +335,7 @@ const UserProfilePage = () => {
             <hr />
             <h5>Edit Profile</h5>
 
-            <div className="form-group">
+            <div className="form-group mb-2">
                 <label>New biography:</label>
                 <textarea
                     className="form-control"
@@ -360,31 +343,24 @@ const UserProfilePage = () => {
                     rows="3"
                     onChange={(e) => setNewBio(e.target.value)}
                 />
-                <button className="btn btn-primary mt-2" onClick={handleBioUpdate}>
-                    Save Biography
-                </button>
+                <button className="btn btn-primary mt-2" onClick={handleBioUpdate}>Update Biography</button>
             </div>
 
             <div className="form-group mt-3">
-                <label>Change Profile Picture:</label>
+                <label>Change profile picture:</label>
                 <input type="file" className="form-control" onChange={handleFileChange} />
-                <button className="btn btn-secondary mt-2" onClick={handlePictureUpload}>
-                    Upload Picture
-                </button>
+                <button className="btn btn-secondary mt-2" onClick={handlePictureUpload}>Upload Picture</button>
             </div>
 
             <hr />
             <h5>Your Posts</h5>
             <div className="btn-group mb-3">
-                <button className="btn btn-outline-primary" onClick={() => setPostFilter('all')}>All</button>
-                <button className="btn btn-outline-primary" onClick={() => setPostFilter('experience')}>Experiences</button>
-                <button className="btn btn-outline-primary" onClick={() => setPostFilter('suggestion')}>Suggestions</button>
+                <button className={`btn btn-outline-primary ${postFilter === 'all' ? 'active' : ''}`} onClick={() => setPostFilter('all')}>All</button>
+                <button className={`btn btn-outline-primary ${postFilter === 'experiences' ? 'active' : ''}`} onClick={() => setPostFilter('experiences')}>Experiences</button>
+                <button className={`btn btn-outline-primary ${postFilter === 'suggestions' ? 'active' : ''}`} onClick={() => setPostFilter('suggestions')}>Suggestions</button>
             </div>
-            {posts.length === 0 ? (
-                <p>No posts to display.</p>
-            ) : (
-                posts.map(renderPost)
-            )}
+
+            {posts.length > 0 ? posts.map(renderPost) : (<p>No posts found for this filter.</p>)}
         </div>
     );
 };

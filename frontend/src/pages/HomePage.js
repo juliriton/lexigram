@@ -86,7 +86,7 @@ const HomePage = ({ user, setUser }) => {
 
             <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <h3>Menú</h3>
+                    <h3>Menu</h3>
                     <FaTimes className="close-btn" onClick={toggleSidebar}/>
                 </div>
 

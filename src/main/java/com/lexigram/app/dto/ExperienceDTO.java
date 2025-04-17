@@ -2,6 +2,8 @@ package com.lexigram.app.dto;
 
 import com.lexigram.app.model.Experience;
 import com.lexigram.app.model.Tag;
+import com.lexigram.app.model.User;
+
 import java.util.*;
 
 public class ExperienceDTO {
@@ -17,7 +19,8 @@ public class ExperienceDTO {
   private final boolean isOrigin;
   private final UserDTO user;
   private final Set<TagDTO> tags;
-  private final String type = "experience";
+  private final Set<String> mentions;
+  private final String type = "Experience";
   private final ExperienceStyleDTO style;
   private final ExperiencePrivacySettingsDTO privacySettings;
 
@@ -41,6 +44,10 @@ public class ExperienceDTO {
       tagDTO.add(new TagDTO(tag.getName(), tag.isInFeed()));
     }
     this.tags = tagDTO;
+    this.mentions = new HashSet<>();
+    for (User u : experience.getMentions()){
+      this.mentions.add(u.getUsername());
+    }
     this.style = new ExperienceStyleDTO(experience.getStyle());
     this.privacySettings = new ExperiencePrivacySettingsDTO(experience.getPrivacySettings());
   }
@@ -59,5 +66,21 @@ public class ExperienceDTO {
   public ExperienceStyleDTO getStyle() { return style; }
   public ExperiencePrivacySettingsDTO getPrivacySettings() { return privacySettings; }
   public String getType() { return type; }
+  public Set<String> getMentions() { return mentions;}
 
 }
+
+/*
+
+    const [showMentions, setShowMentions] = useState(false);
+
+       const renderMentions = (mentions) => (
+        <div>
+            <h6>Mentions:</h6>
+            {mentions.map((mention, i) => (
+                <span key={i} className="badge bg-info me-1">{mention}</span>
+            ))}
+        </div>
+    );
+
+ */

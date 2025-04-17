@@ -42,7 +42,7 @@ public class PostCreationController {
 
 
   @PostMapping("/suggestion")
-  public ResponseEntity<SuggestionDTO> postSuggestion(@Valid @ModelAttribute PostSuggestionDTO postSuggestionDTO, HttpSession session) {
+  public ResponseEntity<SuggestionDTO> postSuggestion(@Valid @RequestBody PostSuggestionDTO postSuggestionDTO, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
 
     if (id == null) return ResponseEntity.status(401).build();
