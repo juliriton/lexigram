@@ -74,4 +74,17 @@ public class SuggestionService {
     return publicSuggestions;
   }
 
+  public Set<SuggestionDTO> getAllFollowingSuggestions() {
+    Set<User> following = userRepository.getFollowing();
+    Set<SuggestionDTO> followingSuggestions = new HashSet<>();
+    for (User user : following) {
+      Long userId = user.getId();
+      Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
+      for (Suggestion suggestion : userSuggestions) {
+        followingSuggestions.add(new SuggestionDTO(suggestion));
+      }
+    }
+    return followingSuggestions;
+  }
+
 }

@@ -1,9 +1,6 @@
 package com.lexigram.app.service;
 
-import com.lexigram.app.dto.ExperienceDTO;
-import com.lexigram.app.dto.PostExperienceDTO;
-import com.lexigram.app.dto.PostExperiencePrivacySettingsDTO;
-import com.lexigram.app.dto.PostExperienceStyleDTO;
+import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.model.*;
 import com.lexigram.app.repository.*;
@@ -138,6 +135,19 @@ public class ExperienceService {
     }
 
     return publicExperiences;
+  }
+
+  public Set<ExperienceDTO> getAllFollowingExperiences() {
+    Set<User> following = userRepository.getFollowing();
+    Set<ExperienceDTO> followingExperiences = new HashSet<>();
+    for (User user : following) {
+      Long userId = user.getId();
+      Set<Experience> userExperiences = experienceRepository.getExperiencesByUserId(userId);
+      for (Experience experience : userExperiences) {
+        followingExperiences.add(new ExperienceDTO(experience));
+      }
+    }
+    return followingExperiences;
   }
 
 }
