@@ -83,6 +83,8 @@ const HomePage = ({ user, setUser }) => {
     const renderExperience = exp => {
         const id = exp.uuid;
         const hidden = hiddenQuotes[id];
+        const author = exp.user?.username || 'Unknown';
+
         return (
             <div key={id} className="card shadow-sm mb-4">
                 <div className="card-img-top" style={{
@@ -109,6 +111,9 @@ const HomePage = ({ user, setUser }) => {
                         <span className="badge bg-primary">{exp.type}</span>
                         <small className="text-muted">{formatDate(exp.creationDate)}</small>
                     </div>
+                    <div className="mt-1">
+                        <small className="text-muted">Posted by <strong>{author}</strong></small>
+                    </div>
                     <div className="mt-2">{renderTags(exp.tags)}</div>
                     <div className="mt-2">
                         <button className="btn btn-link p-0 me-3" onClick={() => toggleQuote(id)}>
@@ -128,6 +133,8 @@ const HomePage = ({ user, setUser }) => {
 
     const renderSuggestion = sug => {
         const id = sug.uuid;
+        const author = sug.user?.username || 'Unknown';
+
         return (
             <div key={id} className="card shadow-sm mb-3 d-flex flex-row suggestion-card">
                 <div className="card-body d-flex flex-column justify-content-between">
@@ -139,6 +146,9 @@ const HomePage = ({ user, setUser }) => {
                     <div className="d-flex justify-content-between align-items-center mt-3">
                         <span className="badge bg-primary">{sug.type}</span>
                         <small className="text-muted">{formatDate(sug.creationDate)}</small>
+                    </div>
+                    <div>
+                        <small className="text-muted">Posted by <strong>{author}</strong></small>
                     </div>
                 </div>
             </div>

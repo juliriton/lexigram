@@ -85,6 +85,8 @@ public class UserProfileService {
   }
 
   public UserPostsDTO getAllUserPosts(Long id) {
+    User user = userRepository.findById(id).get();
+
     Set<Experience> experiences = experienceRepository.getExperiencesByUserId(id);
 
     Set<ExperienceDTO> experienceDTOs = new HashSet<>();
@@ -100,7 +102,8 @@ public class UserProfileService {
       suggestionDTOs.add(new SuggestionDTO(suggestion));
     }
 
-    UserPostsDTO dto = new UserPostsDTO(experienceDTOs, suggestionDTOs);
+    UserDTO userDTO = new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    UserPostsDTO dto = new UserPostsDTO(userDTO, experienceDTOs, suggestionDTOs);
     return dto;
   }
 

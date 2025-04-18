@@ -1,18 +1,16 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.Experience;
-import com.lexigram.app.model.Suggestion;
-
-import java.util.HashSet;
 import java.util.Set;
 
 public class UserPostsDTO {
+  private UserDTO user;
   private Set<ExperienceDTO> experiences;
   private Set<SuggestionDTO> suggestions;
 
   public UserPostsDTO() {}
 
-  public UserPostsDTO(Set<ExperienceDTO> experiences, Set<SuggestionDTO> suggestions) {
+  public UserPostsDTO(UserDTO user, Set<ExperienceDTO> experiences, Set<SuggestionDTO> suggestions) {
+    this.user = user;
     this.experiences = experiences;
     this.suggestions = suggestions;
   }
@@ -23,6 +21,10 @@ public class UserPostsDTO {
 
   public Set<SuggestionDTO> getSuggestions() {
     return suggestions;
+  }
+
+  public UserDTO getUser() {
+    return user;
   }
 
 }
