@@ -137,11 +137,13 @@ public class ExperienceService {
     return publicExperiences;
   }
 
-  public Set<ExperienceDTO> getAllFollowingExperiences() {
-    Set<User> following = userRepository.getFollowing();
+  public Set<ExperienceDTO> getAllFollowingExperiences(Long id) {
+    User user = userRepository.findById(id).get();
+
+    Set<User> following = userRepository.findByFollowing(user);
     Set<ExperienceDTO> followingExperiences = new HashSet<>();
-    for (User user : following) {
-      Long userId = user.getId();
+    for (User u : following) {
+      Long userId = u.getId();
       Set<Experience> userExperiences = experienceRepository.getExperiencesByUserId(userId);
       for (Experience experience : userExperiences) {
         followingExperiences.add(new ExperienceDTO(experience));

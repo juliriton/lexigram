@@ -37,9 +37,9 @@ public class FeedService {
     return Optional.of(new PostsDTO(experiences, suggestions));
   }
 
-  public PostsDTO getAllFollowingPosts(){
-    Set<ExperienceDTO> experiences = experienceService.getAllFollowingExperiences();
-    Set<SuggestionDTO> suggestions = suggestionService.getAllFollowingSuggestions();
+  public PostsDTO getAllFollowingPosts(Long id){
+    Set<ExperienceDTO> experiences = experienceService.getAllFollowingExperiences(id);
+    Set<SuggestionDTO> suggestions = suggestionService.getAllFollowingSuggestions(id);
 
     return new PostsDTO(experiences, suggestions);
   }

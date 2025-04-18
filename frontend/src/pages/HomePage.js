@@ -13,6 +13,7 @@ const HomePage = ({ user, setUser }) => {
     const [postFilter, setPostFilter] = useState('all');
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
+    const [feedType, setFeedType] = useState('my'); // 'my' | 'following'
 
     const baseApiUrl = 'http://localhost:8080';
 
@@ -24,7 +25,12 @@ const HomePage = ({ user, setUser }) => {
                     const data = await res.json();
                     setUser(data);
 
-                    const feedRes = await fetch(`${baseApiUrl}/api/auth/me/feed`, { credentials: 'include' });
+                    let feedUrl = `${baseApiUrl}/api/auth/me/feed`;
+                    if (feedType === 'following') {
+                        feedUrl += '/following';
+                    }
+
+                    const feedRes = await fetch(feedUrl, { credentials: 'include' });
                     if (feedRes.ok) {
                         const feedData = await feedRes.json();
                         setExperiences(feedData.experiences || []);
@@ -41,7 +47,7 @@ const HomePage = ({ user, setUser }) => {
             }
         };
         fetchUserAndFeed();
-    }, [setUser]);
+    }, [setUser, feedType]);
 
     const handleLogout = () => {
         fetch(`${baseApiUrl}/api/auth/me/logout`, {
@@ -216,10 +222,16 @@ const HomePage = ({ user, setUser }) => {
             <div className="main-content">
                 <h2>Lexigram</h2>
                 <p>Feed</p>
+
                 <div className="btn-group mb-3">
-                    <button className={`btn btn-outline-primary ${postFilter === 'all' ? 'active' : ''}`} onClick={() => setPostFilter('all')}>All</button>
-                    <button className={`btn btn-outline-primary ${postFilter === 'experiences' ? 'active' : ''}`} onClick={() => setPostFilter('experiences')}>Experiences</button>
-                    <button className={`btn btn-outline-primary ${postFilter === 'suggestions' ? 'active' : ''}`} onClick={() => setPostFilter('suggestions')}>Suggestions</button>
+                    <button className={`btn btn-outline-primary ${feedType === 'my' ? 'active' : ''}`} onClick={() => setFeedType('my')}>My Feed</button>
+                    <button className={`btn btn-outline-primary ${feedType === 'following' ? 'active' : ''}`} onClick={() => setFeedType('following')}>Following</button>
+                </div>
+
+                <div className="btn-group mb-3 ms-2">
+                    <button className={`btn btn-outline-secondary ${postFilter === 'all' ? 'active' : ''}`} onClick={() => setPostFilter('all')}>All</button>
+                    <button className={`btn btn-outline-secondary ${postFilter === 'experiences' ? 'active' : ''}`} onClick={() => setPostFilter('experiences')}>Experiences</button>
+                    <button className={`btn btn-outline-secondary ${postFilter === 'suggestions' ? 'active' : ''}`} onClick={() => setPostFilter('suggestions')}>Suggestions</button>
                 </div>
 
                 {filteredExperiences.map(renderExperience)}

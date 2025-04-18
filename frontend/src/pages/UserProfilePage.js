@@ -194,28 +194,52 @@ const UserProfilePage = () => {
         )
     );
 
+    const isVideo = (url) => {
+        return url?.match(/\.(mp4|webm|ogg)$/i);
+    };
+
     const renderPost = (post) => {
         const isExperience = post.type === 'Experience';
         const postId = post.uuid || post.id;
         const isQuoteHidden = hiddenQuotes[postId];
+        const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
+        const fullMediaUrl = `${baseApiUrl}${mediaUrl}`;
 
         if (isExperience) {
             return (
                 <div key={postId} className="card shadow-sm mb-4" style={{ overflow: 'hidden' }}>
                     <div style={{ position: 'relative', height: '300px', overflow: 'hidden' }}>
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                height: '100%',
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                backgroundImage: `url(${baseApiUrl}${post.style?.backgroundMediaUrl || post.imageUrl})`,
-                                filter: isQuoteHidden ? 'none' : 'brightness(70%)'
-                            }}
-                        />
+                        {isVideo(mediaUrl) ? (
+                            <video
+                                src={fullMediaUrl}
+                                autoPlay
+                                muted
+                                loop
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    filter: isQuoteHidden ? 'none' : 'brightness(70%)'
+                                }}
+                            />
+                        ) : (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    backgroundImage: `url(${fullMediaUrl})`,
+                                    filter: isQuoteHidden ? 'none' : 'brightness(70%)'
+                                }}
+                            />
+                        )}
                         {!isQuoteHidden && (
                             <div
                                 style={{
@@ -276,7 +300,6 @@ const UserProfilePage = () => {
                         )}
                         {renderMentions(post.mentions, postId)}
                     </div>
-
                     <button className="btn btn-link" onClick={() => toggleQuote(postId)}>
                         {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
                     </button>
@@ -304,63 +327,57 @@ const UserProfilePage = () => {
     };
 
     if (loading) return <div className="container mt-4">Loading user profile...</div>;
-
     if (error || !profile) {
         return (
             <div className="container mt-4">
                 <div className={`alert alert-${error ? 'danger' : 'warning'}`}>
-                    <strong>{error ? 'Error:' : 'Notice:'}</strong> {error || 'User profile not found'}
+                    <strong>{error ? error : "No profile data found"}</strong>
                 </div>
-                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>Back to Home</button>
             </div>
         );
     }
 
     return (
-        <div className="container mt-4" style={{ maxWidth: '600px' }}>
-            <h3>{username}'s Profile</h3>
-
-            <div className="text-center mb-3">
+        <div className="container mt-4">
+            <div className="d-flex align-items-center mb-4">
                 <img
                     src={getProfileImageUrl()}
                     alt="Profile"
-                    className="profile-pic"
-                    style={{ maxWidth: '150px', borderRadius: '50%' }}
-                    onError={(e) => { setUsingDefaultImage(true); e.target.src = defaultProfilePic; }}
+                    className="rounded-circle me-3"
+                    style={{ width: '80px', height: '80px', objectFit: 'cover' }}
                 />
+                <div>
+                    <h4>{username}</h4>
+                    <p>{profile.biography}</p>
+                </div>
             </div>
-
-            <p><strong>Biography:</strong> {profile.biography || 'No biography'}</p>
-
-            <hr />
-            <h5>Edit Profile</h5>
-
-            <div className="form-group mb-2">
-                <label>New biography:</label>
+            <div className="mb-3">
+                <label className="form-label">Edit Biography</label>
                 <textarea
                     className="form-control"
                     value={newBio}
-                    rows="3"
                     onChange={(e) => setNewBio(e.target.value)}
                 />
-                <button className="btn btn-primary mt-2" onClick={handleBioUpdate}>Update Biography</button>
+                <button className="btn btn-primary mt-2" onClick={handleBioUpdate}>Update Bio</button>
             </div>
-
-            <div className="form-group mt-3">
-                <label>Change profile picture:</label>
+            <div className="mb-3">
+                <label className="form-label">Upload Profile Picture (JPG)</label>
                 <input type="file" className="form-control" onChange={handleFileChange} />
-                <button className="btn btn-secondary mt-2" onClick={handlePictureUpload}>Upload Picture</button>
+                <button className="btn btn-secondary mt-2" onClick={handlePictureUpload}>Upload</button>
             </div>
-
-            <hr />
-            <h5>Your Posts</h5>
-            <div className="btn-group mb-3">
-                <button className={`btn btn-outline-primary ${postFilter === 'all' ? 'active' : ''}`} onClick={() => setPostFilter('all')}>All</button>
-                <button className={`btn btn-outline-primary ${postFilter === 'experiences' ? 'active' : ''}`} onClick={() => setPostFilter('experiences')}>Experiences</button>
-                <button className={`btn btn-outline-primary ${postFilter === 'suggestions' ? 'active' : ''}`} onClick={() => setPostFilter('suggestions')}>Suggestions</button>
+            <div className="mb-3">
+                <label className="form-label">Filter Posts</label>
+                <select
+                    className="form-select"
+                    value={postFilter}
+                    onChange={(e) => setPostFilter(e.target.value)}
+                >
+                    <option value="all">All</option>
+                    <option value="experience">Experiences</option>
+                    <option value="suggestion">Suggestions</option>
+                </select>
             </div>
-
-            {posts.length > 0 ? posts.map(renderPost) : (<p>No posts found for this filter.</p>)}
+            {posts.map(renderPost)}
         </div>
     );
 };

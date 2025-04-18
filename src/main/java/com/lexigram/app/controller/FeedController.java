@@ -52,7 +52,7 @@ public class FeedController {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(feedService.getAllFollowingPosts());
+    return ResponseEntity.ok(feedService.getAllFollowingPosts(id));
   }
 
   /*

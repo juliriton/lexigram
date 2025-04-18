@@ -153,8 +153,10 @@ public class UserProfileService {
       throw new UserNotFoundException();
     }
 
+    User user = userOptional.get();
     Set<ConnectionDTO> followers = new HashSet<>();
-    Set<User> users = userRepository.getFollowers();
+    Set<User> users = userRepository.findByFollowers(user); //Encuentra los usuarios que sigue user
+
     for (User u : users){
       UserProfile userProfile = userProfileRepository.findById(u.getId()).get();
       String profilePicture = userProfile.getProfilePictureUrl();
@@ -169,8 +171,10 @@ public class UserProfileService {
       throw new UserNotFoundException();
     }
 
+    User user = userOptional.get();
     Set<ConnectionDTO> following = new HashSet<>();
-    Set<User> users = userRepository.getFollowing();
+    Set<User> users = userRepository.findByFollowing(user);
+
     for (User u : users){
       UserProfile userProfile = userProfileRepository.findById(u.getId()).get();
       String profilePicture = userProfile.getProfilePictureUrl();
