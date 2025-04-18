@@ -147,5 +147,36 @@ public class UserProfileService {
     return suggestionDTOset;
   }
 
+  public Set<ConnectionDTO> getFollowers(Long id) {
+    Optional<User> userOptional = userRepository.findById(id);
+    if (userOptional.isEmpty()){
+      throw new UserNotFoundException();
+    }
+
+    Set<ConnectionDTO> followers = new HashSet<>();
+    Set<User> users = userRepository.getFollowers();
+    for (User u : users){
+      UserProfile userProfile = userProfileRepository.findById(u.getId()).get();
+      String profilePicture = userProfile.getProfilePictureUrl();
+      followers.add(new ConnectionDTO(u.getId(), u.getUsername(), u.getEmail(), profilePicture));
+    }
+    return followers;
+  }
+
+  public Set<ConnectionDTO> getFollowing(Long id){
+    Optional<User> userOptional = userRepository.findById(id);
+    if (userOptional.isEmpty()){
+      throw new UserNotFoundException();
+    }
+
+    Set<ConnectionDTO> following = new HashSet<>();
+    Set<User> users = userRepository.getFollowing();
+    for (User u : users){
+      UserProfile userProfile = userProfileRepository.findById(u.getId()).get();
+      String profilePicture = userProfile.getProfilePictureUrl();
+      following.add(new ConnectionDTO(u.getId(), u.getUsername(), u.getEmail(), profilePicture));
+    }
+    return following;
+  }
 }
 

@@ -39,15 +39,19 @@ public class FeedController {
   }
 
   @GetMapping("/me/feed/following")
-  public String getUserFollowingFeed() {
+  public ResponseEntity<UserPostsDTO> getUserFollowingFeed(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
 
-    return "Hello World";
+    return ResponseEntity.ok(feedService.getAllPosts(id));
   }
 
   @GetMapping("/me/feed/discover")
-  public String getUserDiscoverFeed() {
+  public ResponseEntity<UserPostsDTO> getUserDiscoverFeed(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
 
-    return "Hello World";
+    return ResponseEntity.ok(feedService.getAllPosts(id));
   }
 
 }

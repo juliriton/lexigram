@@ -106,5 +106,20 @@ public class UserProfileController {
     return ResponseEntity.ok(userProfileService.getAllUserSuggestions(id));
   }
 
+  @GetMapping("/followers")
+  public ResponseEntity<Set<ConnectionDTO>> getFollowers(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getFollowers(id));
+  }
+
+  @GetMapping("/following")
+  public ResponseEntity<Set<ConnectionDTO>> getFollowing(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getFollowing(id));
+  }
 
 }

@@ -48,6 +48,5 @@ public class UserController {
     Long id = (Long) session.getAttribute("user");
     return ResponseEntity.ok(userService.updateUserPassword(id, dto));
   }
-
 }
 

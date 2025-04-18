@@ -177,4 +177,66 @@ public class UserService {
     return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
   }
 
+  //Falta logica de aceptacion
+
+  public Optional<UserDTO> followUser(Long id, Long toFollowId) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<User> toFollowOptional = userRepository.findById(toFollowId);
+
+    if (toFollowOptional.isPresent()) {
+      User toFollow = toFollowOptional.get();
+      user.addFollowing(toFollow);
+      toFollow.addFollower(user);
+      userRepository.save(user);
+      userRepository.save(toFollow);
+    }
+    return Optional.empty();
+  }
+
+  public Optional<UserDTO> unfollowUser(Long id, Long toUnfollowId) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+    User user = userOptional.get();
+    Optional<User> toUnfollowOptional = userRepository.findById(toUnfollowId);
+
+    if (toUnfollowOptional.isPresent()) {
+      User toUnfollow = toUnfollowOptional.get();
+      user.removeFollowing(toUnfollow);
+      toUnfollow.removeFollower(user);
+
+      userRepository.save(user);
+      userRepository.save(toUnfollow);
+      return Optional.of(new UserDTO(toUnfollow.getId(), toUnfollow.getUsername(), toUnfollow.getEmail()));
+    }
+    return Optional.empty();
+  }
+
+  public Optional<UserDTO> removeFollower(Long id, Long toRemoveId) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<User> toRemoveOptional = userRepository.findById(toRemoveId);
+
+    if (toRemoveOptional.isPresent()) {
+      User toRemove = toRemoveOptional.get();
+      user.removeFollower(toRemove);
+      userRepository.save(user);
+      return Optional.of(new UserDTO(toRemove.getId(), toRemove.getUsername(), toRemove.getEmail()));
+    }
+    return Optional.empty();
+  }
+
 }
