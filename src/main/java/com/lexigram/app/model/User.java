@@ -37,6 +37,17 @@ public class User {
   @ManyToMany(mappedBy = "mentions")
   private Set<Experience> mentionedIn = new HashSet<>();
 
+  @ManyToMany
+  @JoinTable(
+      name = "user_following",
+      joinColumns = @JoinColumn(name = "follower_id"),
+      inverseJoinColumns = @JoinColumn(name = "following_id")
+  )
+  private Set<User> following = new HashSet<>();
+
+  @ManyToMany(mappedBy = "following")
+  private Set<User> followers = new HashSet<>();
+
   public Long getId() {
     return id;
   }
@@ -77,6 +88,30 @@ public class User {
 
   public Set<Suggestion> getSuggestions() {
     return suggestions;
+  }
+
+  public Set<User> getFollowers() {
+    return followers;
+  }
+
+  public Set<User> getFollowing() {
+    return following;
+  }
+
+  public void addFollower(User user) {
+    followers.add(user);
+  }
+
+  public void addFollowing(User user) {
+    following.add(user);
+  }
+
+  public void removeFollowing(User user) {
+    following.remove(user);
+  }
+
+  public void removeFollower(User user) {
+    followers.remove(user);
   }
 
 }
