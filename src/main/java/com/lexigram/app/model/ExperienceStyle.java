@@ -49,6 +49,30 @@ public class ExperienceStyle {
     this.backgroundMediaUrl = backgroundMediaUrl;
   }
 
+  public String getFontFamily(){
+    return fontFamily;
+  }
+
+  public int getFontSize(){
+    return fontSize;
+  }
+
+  public String getFontColor(){
+    return fontColor;
+  }
+
+  public int getTextPositionX(){
+    return textPositionX;
+  }
+
+  public int getTextPositionY(){
+    return textPositionY;
+  }
+
+  public String getBackgroundMediaUrl(){
+    return backgroundMediaUrl;
+  }
+
 }
 
 

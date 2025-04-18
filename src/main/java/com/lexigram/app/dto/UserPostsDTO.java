@@ -1,34 +1,30 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.Experience;
-import com.lexigram.app.model.Suggestion;
-
-import java.util.HashSet;
 import java.util.Set;
 
 public class UserPostsDTO {
-  private Set<Experience> experiences;
-  private Set<Suggestion> suggestions;
+  private UserDTO user;
+  private Set<ExperienceDTO> experiences;
+  private Set<SuggestionDTO> suggestions;
 
-  public UserPostsDTO(Set<Experience> experiences, Set<Suggestion> suggestions) {
+  public UserPostsDTO() {}
+
+  public UserPostsDTO(UserDTO user, Set<ExperienceDTO> experiences, Set<SuggestionDTO> suggestions) {
+    this.user = user;
     this.experiences = experiences;
     this.suggestions = suggestions;
   }
 
   public Set<ExperienceDTO> getExperiences() {
-    Set<ExperienceDTO> experienceDTOs = new HashSet<>();
-    for (Experience experience : experiences) {
-      experienceDTOs.add(new ExperienceDTO(experience));
-    }
-    return experienceDTOs;
+    return experiences;
   }
 
   public Set<SuggestionDTO> getSuggestions() {
-    Set<SuggestionDTO> suggestionsDTO = new HashSet<>();
-    for (Suggestion suggestion : suggestions) {
-      suggestionsDTO.add(new SuggestionDTO(suggestion));
-    }
-    return suggestionsDTO;
+    return suggestions;
+  }
+
+  public UserDTO getUser() {
+    return user;
   }
 
 }

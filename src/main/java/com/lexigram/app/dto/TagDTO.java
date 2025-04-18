@@ -2,8 +2,10 @@ package com.lexigram.app.dto;
 
 public class TagDTO {
 
-  private String name;
   private boolean isInFeed;
+  private String name;
+
+  public TagDTO() {}
 
   public TagDTO(String name, boolean isInFeed) {
     this.name = name;
@@ -14,7 +16,7 @@ public class TagDTO {
     return name;
   }
 
-  public boolean isInFeed() {
+  public boolean isInFeed(){
     return isInFeed;
   }
 

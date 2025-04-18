@@ -25,7 +25,7 @@ public class Suggestion {
   private String header = "Tell me about";
 
   @Column(nullable = false, columnDefinition = "Text", updatable = false)
-  private String suggestionText;
+  private String body;
 
   @Column(nullable = false)
   private long resonateAmount = 0;
@@ -50,10 +50,10 @@ public class Suggestion {
 
   public Suggestion() {}
 
-  public Suggestion(User user, Set<Tag> tags, String suggestionText) {
+  public Suggestion(User user, Set<Tag> tags, String body) {
     this.user = user;
     this.tags = tags;
-    this.suggestionText = suggestionText;
+    this.body = body;
   }
 
   public Long getId() {
@@ -86,6 +86,10 @@ public class Suggestion {
 
   public Set<Tag> getTags() {
     return tags;
+  }
+
+  public String getBody(){
+    return body;
   }
 
 }

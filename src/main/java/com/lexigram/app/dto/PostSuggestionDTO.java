@@ -1,6 +1,5 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.Tag;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -9,22 +8,24 @@ import java.util.Set;
 public class PostSuggestionDTO {
 
   @Size(min = 1)
-  private Set<Tag> tags;
+  private Set<String> tags;
 
   @NotBlank
   @Size(min = 1, max = 100, message = "Suggestions must be between 1 and 100 characters.")
-  private String suggestion;
+  private String body;
 
-  public PostSuggestionDTO(Set<Tag> tags, String suggestion) {
+  public PostSuggestionDTO() {}
+
+  public PostSuggestionDTO(Set<String> tags, String body) {
     this.tags = tags;
-    this.suggestion = suggestion;
+    this.body = body;
   }
 
-  public Set<Tag> getTags() {
+  public Set<String> getTags() {
     return tags;
   }
-  public String getSuggestion() {
-    return suggestion;
+  public String getBody() {
+    return body;
   }
 
 }

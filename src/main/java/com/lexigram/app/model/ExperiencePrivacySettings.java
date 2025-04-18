@@ -34,4 +34,20 @@ public class ExperiencePrivacySettings {
     this.allowResonates = allowResonates;
   }
 
+  public boolean areCommentsAllowed(){
+    return allowComments;
+  }
+
+  public boolean areForksAllowed(){
+    return allowForks;
+  }
+
+  public boolean areResonatesAllowed(){
+    return allowResonates;
+  }
+
+  public Experience getExperience() {
+    return experience;
+  }
+
 }

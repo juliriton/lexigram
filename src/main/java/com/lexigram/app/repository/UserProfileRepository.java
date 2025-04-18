@@ -11,6 +11,4 @@ import java.util.Set;
 
 public interface UserProfileRepository extends JpaRepository<UserProfile, Long> {
   Optional<UserProfile> findById(Long id);
-  Set<Experience> getExperiencesByUserId(Long id);
-  Set<Suggestion> getSuggestionsByUserId(Long id);
 }

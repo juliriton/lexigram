@@ -4,6 +4,7 @@ import com.lexigram.app.dto.*;
 import com.lexigram.app.service.UserProfileService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +60,12 @@ public class UserProfileController {
                                                      @RequestParam MultipartFile file) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
+
+    if (!"image/jpeg".equalsIgnoreCase(file.getContentType())) {
+      return ResponseEntity
+          .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+          .body("Only JPG/JPEG images are allowed");
+    }
 
     try {
       String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();

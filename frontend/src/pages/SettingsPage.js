@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // ← for navigation
-import './SettingsPage.css';
+import '../styles/SettingsPage.css';
 
 const SettingsPage = () => {
     const [privacy, setPrivacy] = useState(null);
