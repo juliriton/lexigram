@@ -86,9 +86,21 @@ public class UserProfileService {
 
   public UserPostsDTO getAllUserPosts(Long id) {
     Set<Experience> experiences = experienceRepository.getExperiencesByUserId(id);
+
+    Set<ExperienceDTO> experienceDTOs = new HashSet<>();
+    for (Experience experience : experiences) {
+      experienceDTOs.add(new ExperienceDTO(experience));
+    }
+
     Set<Suggestion> suggestions = suggestionRepository.getSuggestionsByUserId(id);
 
-    UserPostsDTO dto = new UserPostsDTO(experiences, suggestions);
+    Set<SuggestionDTO> suggestionDTOs = new HashSet<>();
+
+    for (Suggestion suggestion : suggestions) {
+      suggestionDTOs.add(new SuggestionDTO(suggestion));
+    }
+
+    UserPostsDTO dto = new UserPostsDTO(experienceDTOs, suggestionDTOs);
     return dto;
   }
 

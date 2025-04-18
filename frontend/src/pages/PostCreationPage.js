@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaPhotoVideo, FaQuestion } from 'react-icons/fa';
-import './PostCreationPage.css';
+import '../styles/PostCreationPage.css';
 
 const PostCreationPage = ({ user }) => {
     const navigate = useNavigate();

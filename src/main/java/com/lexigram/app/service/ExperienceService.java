@@ -22,6 +22,7 @@ import java.util.UUID;
 @Service
 public class ExperienceService {
 
+  private final SuggestionRepository suggestionRepository;
   @Value("${lexigram.upload.dir}")
   private String uploadDir;
 
@@ -36,12 +37,13 @@ public class ExperienceService {
                            UserRepository userRepository,
                            TagRepository tagRepository,
                            ExperienceStyleRepository experienceStyleRepository,
-                           ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository) {
+                           ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository, SuggestionRepository suggestionRepository) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
     this.experienceStyleRepository = experienceStyleRepository;
     this.experiencePrivacySettingsRepository = experiencePrivacySettingsRepository;
+    this.suggestionRepository = suggestionRepository;
   }
 
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
@@ -119,4 +121,23 @@ public class ExperienceService {
 
     return new ExperienceDTO(experience);
   }
+
+  public Set<ExperienceDTO> getAllExperiencesExcludingUser(Long id){
+    Set<User> publicUsers = userRepository.findByUserPrivacySettingsVisibilityTrue();
+    Set<ExperienceDTO> publicExperiences = new HashSet<>();
+
+    for (User user : publicUsers) {
+      Long userId = user.getId();
+      if (userId.equals(id)) {
+        continue;
+      }
+      Set<Experience> userExperiences = experienceRepository.getExperiencesByUserId(userId);
+      for (Experience experience : userExperiences) {
+        publicExperiences.add(new ExperienceDTO(experience));
+      }
+    }
+
+    return publicExperiences;
+  }
+
 }

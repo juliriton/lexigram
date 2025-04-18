@@ -54,4 +54,24 @@ public class SuggestionService {
     return new SuggestionDTO(suggestion);
   }
 
+  public Set<SuggestionDTO> getAllSuggestions(Long id){
+    Set<User> publicUsers = userRepository.findByUserPrivacySettingsVisibilityTrue();
+    Set<SuggestionDTO> publicSuggestions = new HashSet<>();
+
+    for (User user : publicUsers) {
+      Long userId = user.getId();
+
+      if (userId.equals(id)) {
+        continue;
+      }
+
+      Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
+      for (Suggestion suggestion : userSuggestions) {
+        publicSuggestions.add(new SuggestionDTO(suggestion));
+      }
+    }
+
+    return publicSuggestions;
+  }
+
 }
