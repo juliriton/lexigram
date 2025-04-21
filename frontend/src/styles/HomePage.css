@@ -188,4 +188,22 @@
     margin: 0 auto;
 }
 
+.profile-image {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+}
 
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px 0;
+}
+
+.user-info p {
+    margin-top: 10px;
+    font-weight: 500;
+}
