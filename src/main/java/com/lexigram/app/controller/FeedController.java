@@ -24,15 +24,10 @@ public class FeedController {
     this.feedService = feedService;
   }
 
-  /*
   @GetMapping("/feed")
-  public ResponseEntity<UserPostsDTO> getGuestFeed(HttpSession session) {
-    Long id = (Long) session.getAttribute("user");
-    if (id == null) return ResponseEntity.status(401).build();
-
-    return ResponseEntity.ok(feedService.getAllPosts(id));
+  public ResponseEntity<PostsDTO> getGuestFeed() {
+    return ResponseEntity.ok(feedService.getAllPublicPosts());
   }
-   */
 
   @GetMapping("/me/feed")
   public ResponseEntity<PostsDTO> getUserFeedFeed(HttpSession session) {

@@ -137,6 +137,21 @@ public class ExperienceService {
     return publicExperiences;
   }
 
+  public Set<ExperienceDTO> getAllPublicExperiences(){
+    Set<User> publicUsers = userRepository.findByUserPrivacySettingsVisibilityTrue();
+    Set<ExperienceDTO> publicExperiences = new HashSet<>();
+
+    for (User user : publicUsers) {
+      Long userId = user.getId();
+      Set<Experience> userExperiences = experienceRepository.getExperiencesByUserId(userId);
+      for (Experience experience : userExperiences) {
+        publicExperiences.add(new ExperienceDTO(experience));
+      }
+    }
+
+    return publicExperiences;
+  }
+
   public Set<ExperienceDTO> getAllFollowingExperiences(Long id) {
     User user = userRepository.findById(id).get();
 

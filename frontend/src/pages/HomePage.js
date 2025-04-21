@@ -18,6 +18,19 @@ const HomePage = ({ user, setUser }) => {
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
+    const fetchGuestFeed = async () => {
+        try {
+            const res = await fetch(`${baseApiUrl}/api/auth/feed`); // mapea a @GetMapping("/feed")
+            if (res.ok) {
+                const feedData = await res.json();
+                setExperiences(feedData.experiences || []);
+                setSuggestions(feedData.suggestions || []);
+            }
+        } catch (err) {
+            console.error('Error loading guest feed:', err);
+        }
+    };
+
     const fetchProfilePicture = useCallback(async () => {
         try {
             const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
@@ -65,6 +78,7 @@ const HomePage = ({ user, setUser }) => {
                     }
                 } else {
                     setUser(null);
+                    await fetchGuestFeed();
                 }
             } catch (err) {
                 console.error('Error loading user or feed:', err);

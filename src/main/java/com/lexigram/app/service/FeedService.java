@@ -33,7 +33,7 @@ public class FeedService {
     }
 
     Set<ExperienceDTO> experiences = experienceService.getAllExperiencesExcludingUser(id);
-    Set<SuggestionDTO> suggestions = suggestionService.getAllSuggestions(id);
+    Set<SuggestionDTO> suggestions = suggestionService.getAllSuggestionsExcludingUser(id);
     return Optional.of(new PostsDTO(experiences, suggestions));
   }
 
@@ -41,6 +41,12 @@ public class FeedService {
     Set<ExperienceDTO> experiences = experienceService.getAllFollowingExperiences(id);
     Set<SuggestionDTO> suggestions = suggestionService.getAllFollowingSuggestions(id);
 
+    return new PostsDTO(experiences, suggestions);
+  }
+
+  public PostsDTO getAllPublicPosts() {
+    Set<ExperienceDTO> experiences = experienceService.getAllPublicExperiences();
+    Set<SuggestionDTO> suggestions = suggestionService.getAllPublicSuggestions();
     return new PostsDTO(experiences, suggestions);
   }
 
