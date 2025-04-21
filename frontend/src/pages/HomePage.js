@@ -57,14 +57,14 @@ const HomePage = ({ user, setUser }) => {
 
     const fetchProfilePicture = async () => {
         try {
-            const profileRes = await fetch('http://localhost:8080/api/auth/me/profile', {
+            const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
                 credentials: 'include',
             });
 
             if (profileRes.ok) {
                 const profileData = await profileRes.json();
                 if (profileData.profilePictureUrl) {
-                    setProfilePicture(`http://localhost:8080${profileData.profilePictureUrl}`);
+                    setProfilePicture(`${baseApiUrl}${profileData.profilePictureUrl}`);
                 } else {
                     setImageError(true);
                 }
@@ -98,22 +98,31 @@ const HomePage = ({ user, setUser }) => {
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
     const formatDate = ts => new Date(ts).toLocaleDateString();
+
+    const isVideo = (url) => {
+        return url?.match(/\.(mp4|webm|ogg)$/i);
+    };
+
     const renderTags = tags => (
         Array.isArray(tags) && tags.map((tag, i) => (
-            <span key={i} className="badge bg-secondary me-1">
+            <span key={i} className="tag-badge">
                 {typeof tag === 'object' ? tag.name : tag}
             </span>
         ))
     );
+
     const toggleQuote = id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }));
     const toggleMentions = id => setShowMentions(prev => ({ ...prev, [id]: !prev[id] }));
+
     const renderMentions = (mentions, id) => (
         showMentions[id] && (
-            <div className="mt-2">
+            <div className="post-mentions">
                 <h6>Mentions:</h6>
-                {mentions.map((m, idx) => (
-                    <span key={idx} className="badge bg-info me-1">{m}</span>
-                ))}
+                <div className="mentions-list">
+                    {mentions.map((mention, i) => (
+                        <span key={i} className="badge bg-info me-1">@{mention}</span>
+                    ))}
+                </div>
             </div>
         )
     );
@@ -122,47 +131,81 @@ const HomePage = ({ user, setUser }) => {
         const id = exp.uuid;
         const hidden = hiddenQuotes[id];
         const author = exp.user?.username || 'Unknown';
+        const mediaUrl = exp.style?.backgroundMediaUrl || exp.imageUrl;
+        const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
+        const isVideoMedia = isVideo(mediaUrl);
 
         return (
-            <div key={id} className="card shadow-sm mb-4">
-                <div className="card-img-top" style={{
-                    height: 250,
-                    backgroundImage: `url(${baseApiUrl}${exp.style?.backgroundMediaUrl || exp.imageUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    filter: hidden ? 'none' : 'brightness(70%)',
-                    position: 'relative'
-                }}>
-                    {!hidden && (
-                        <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-4">
-                            <div className="p-3 bg-dark bg-opacity-50 rounded">
-                                <h4 className="text-white fw-bold mb-0 text-center" style={{ fontSize: exp.style?.fontSize || '1.5rem' }}>
+            <div key={id} className="post-card">
+                <div className="post-type">{exp.type}</div>
+
+                {fullMediaUrl && (
+                    <div className="post-media">
+                        {isVideoMedia ? (
+                            <video
+                                src={fullMediaUrl}
+                                autoPlay
+                                muted
+                                loop
+                                className="post-video"
+                                style={{
+                                    filter: hidden ? 'none' : 'brightness(70%)'
+                                }}
+                            />
+                        ) : (
+                            <div
+                                className="post-image"
+                                style={{
+                                    backgroundImage: `url(${fullMediaUrl})`,
+                                    filter: hidden ? 'none' : 'brightness(70%)'
+                                }}
+                            />
+                        )}
+
+                        {!hidden && (
+                            <div className="post-quote-overlay">
+                                <div className="post-quote" style={{
+                                    fontSize: exp.style?.fontSize ? `${exp.style.fontSize}px` : 'inherit',
+                                    fontFamily: exp.style?.fontFamily || 'inherit',
+                                    color: exp.style?.fontColor || 'inherit'
+                                }}>
                                     "{exp.quote || exp.title}"
-                                </h4>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
-                <div className="card-body">
-                    <p>{exp.reflection || exp.content}</p>
-                    <div className="d-flex justify-content-between align-items-center">
-                        <span className="badge bg-primary">{exp.type}</span>
-                        <small className="text-muted">{formatDate(exp.creationDate)}</small>
+                        )}
                     </div>
-                    <div className="mt-1">
+                )}
+
+                <div className="post-content">
+                    <h3 className="post-title">{exp.title}</h3>
+                    <p>{exp.reflection || exp.content}</p>
+
+                    <div className="post-meta">
+                        <small className="post-date">{formatDate(exp.creationDate)}</small>
+                    </div>
+
+                    <div className="mt-2">
                         <small className="text-muted">Posted by <strong>{author}</strong></small>
                     </div>
-                    <div className="mt-2">{renderTags(exp.tags)}</div>
+
+                    {exp.tags?.length > 0 && (
+                        <div className="post-tags">{renderTags(exp.tags)}</div>
+                    )}
+
                     <div className="mt-2">
-                        <button className="btn btn-link p-0 me-3" onClick={() => toggleQuote(id)}>
-                            {hidden ? 'Show Quote' : 'Hide Quote'}
-                        </button>
+                        {fullMediaUrl && (
+                            <button className="btn-link me-3" onClick={() => toggleQuote(id)}>
+                                {hidden ? 'Show Quote' : 'Hide Quote'}
+                            </button>
+                        )}
+
                         {exp.mentions?.length > 0 && (
-                            <button className="btn btn-link p-0" onClick={() => toggleMentions(id)}>
+                            <button className="btn-link" onClick={() => toggleMentions(id)}>
                                 {showMentions[id] ? 'Hide Mentions' : 'Show Mentions'}
                             </button>
                         )}
                     </div>
+
                     {renderMentions(exp.mentions || [], id)}
                 </div>
             </div>
@@ -174,20 +217,23 @@ const HomePage = ({ user, setUser }) => {
         const author = sug.user?.username || 'Unknown';
 
         return (
-            <div key={id} className="card shadow-sm mb-3 d-flex flex-row suggestion-card">
-                <div className="card-body d-flex flex-column justify-content-between">
-                    <div>
-                        <h6 className="text-muted">{sug.header || 'Tell me about'}</h6>
-                        <p className="fw-bold fs-5 mb-2">{sug.body}</p>
-                        <div>{renderTags(sug.tags)}</div>
+            <div key={id} className="post-card">
+                <div className="post-type">Suggestion</div>
+                <div className="post-content">
+                    <h5 className="post-subtitle">{sug.header || "Tell me about"}</h5>
+                    <h3 className="post-title">{sug.body}</h3>
+
+                    <div className="post-meta">
+                        <small className="post-date">{formatDate(sug.creationDate)}</small>
                     </div>
-                    <div className="d-flex justify-content-between align-items-center mt-3">
-                        <span className="badge bg-primary">{sug.type}</span>
-                        <small className="text-muted">{formatDate(sug.creationDate)}</small>
-                    </div>
-                    <div>
+
+                    <div className="mt-2">
                         <small className="text-muted">Posted by <strong>{author}</strong></small>
                     </div>
+
+                    {sug.tags?.length > 0 && (
+                        <div className="post-tags">{renderTags(sug.tags)}</div>
+                    )}
                 </div>
             </div>
         );
@@ -197,7 +243,7 @@ const HomePage = ({ user, setUser }) => {
     const filteredSuggestions = postFilter === 'all' || postFilter === 'suggestions' ? suggestions : [];
 
     if (loading) {
-        return <div className="container"><p>Loading...</p></div>;
+        return <div className="container"><div className="spinner"></div><p>Loading...</p></div>;
     }
 
     return (
@@ -227,7 +273,7 @@ const HomePage = ({ user, setUser }) => {
                                 {profilePicture && !imageError ? (
                                     <img
                                         src={profilePicture}
-                                        alt="Perfil"
+                                        alt="Profile"
                                         className="profile-image"
                                         onError={handleImageError}
                                     />
@@ -275,8 +321,10 @@ const HomePage = ({ user, setUser }) => {
                     <button className={`btn btn-outline-secondary ${postFilter === 'suggestions' ? 'active' : ''}`} onClick={() => setPostFilter('suggestions')}>Suggestions</button>
                 </div>
 
-                {filteredExperiences.map(renderExperience)}
-                {filteredSuggestions.map(renderSuggestion)}
+                <div className="posts-grid">
+                    {filteredExperiences.map(renderExperience)}
+                    {filteredSuggestions.map(renderSuggestion)}
+                </div>
             </div>
 
             <div className="create-post-icon" onClick={() => navigate(user ? '/post/create' : '/login')}>

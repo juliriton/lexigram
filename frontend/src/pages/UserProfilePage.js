@@ -253,7 +253,11 @@ const UserProfilePage = () => {
 
                             {!isQuoteHidden && (
                                 <div className="post-quote-overlay">
-                                    <div className="post-quote">
+                                    <div className="post-quote" style={{
+                                        fontSize: post.style?.fontSize ? `${post.style.fontSize}px` : 'inherit',
+                                        fontFamily: post.style?.fontFamily || 'inherit',
+                                        color: post.style?.fontColor || 'inherit'
+                                    }}>
                                         "{post.quote || post.title}"
                                     </div>
                                 </div>

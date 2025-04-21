@@ -1,10 +1,28 @@
+:root {
+    --primary-color: #4a6bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+/* Base container styles */
 .container {
     position: relative;
     min-height: 100vh;
     width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
 }
 
-/* Estilos para el botón hamburguesa */
+/* Burger menu styles */
 .burger {
     position: fixed;
     top: 20px;
@@ -68,7 +86,7 @@
     left: 5px;
 }
 
-/* Estilos para el sidebar */
+/* Sidebar styles */
 .sidebar {
     position: fixed;
     top: 0;
@@ -118,6 +136,13 @@
     font-weight: bold;
 }
 
+.profile-image {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 .sidebar-menu-items {
     display: flex;
     flex-direction: column;
@@ -138,7 +163,6 @@
     background-color: #f5f5f5;
 }
 
-/* Overlay para cerrar el menú al hacer clic fuera */
 .sidebar-overlay {
     position: fixed;
     top: 0;
@@ -149,61 +173,193 @@
     z-index: 999;
 }
 
-/* Contenido principal - ajustado para dar espacio al botón */
+/* Main content area */
 .main-content {
     padding: 20px 10px 20px;
 }
 
+.main-content h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.main-content p {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Feed type selection buttons */
+.btn-group {
+    margin-bottom: 20px;
+}
+
+.btn-outline-primary, .btn-outline-secondary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: transparent;
+    transition: var(--transition);
+    margin-right: 5px;
+    border-radius: var(--border-radius);
+    padding: 8px 16px;
+}
+
+.btn-outline-primary:hover, .btn-outline-secondary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-outline-primary.active, .btn-outline-secondary.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Create post button */
 .create-post-icon {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #0055ff;
+    background-color: var(--primary-color);
     color: white;
     padding: 12px;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
-    transition: background-color 0.3s ease;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    z-index: 90;
 }
 
 .create-post-icon:hover {
-    background-color: #000000;
+    background-color: #3a5be0;
+    transform: translateY(-3px);
 }
 
-.container {
+/* Post cards - making them consistent with profile page */
+.card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    transition: var(--transition);
+    overflow: hidden;
+    border: none;
+    border-top: 4px solid var(--primary-color);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Experience card specific styles */
+.card-img-top {
     position: relative;
-    min-height: 100vh;
+    height: 250px;
+}
+
+.card-img-top video {
     width: 100%;
-}
-
-.experience-card {
-    width: 100%;
-}
-
-.suggestion-card {
-    min-height: 130px;
-    flex-direction: row;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.profile-image {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
+    height: 100%;
     object-fit: cover;
 }
 
-.user-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 15px 0;
+.card-body {
+    padding: 20px;
 }
 
-.user-info p {
+.card-body h4 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.card-body p {
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+/* Badge styling consistent with profile page */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.bg-secondary {
+    background-color: #f0f0f0 !important;
+    color: #666 !important;
+}
+
+.bg-info {
+    background-color: #e6f0ff !important;
+    color: var(--primary-color) !important;
+}
+
+/* Suggestion cards styling */
+.suggestion-card {
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+    margin: 0 auto 20px;
+    border-top: 4px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: var(--transition);
+}
+
+.suggestion-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-card .card-body {
+    padding: 20px;
+}
+
+.suggestion-card h6 {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.suggestion-card p.fw-bold {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
     margin-top: 10px;
-    font-weight: 500;
+}
+
+.text-muted {
+    color: #999 !important;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .card-img-top {
+        height: 200px;
+    }
 }
