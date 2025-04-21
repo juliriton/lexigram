@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserCircle, FaCog, FaSignOutAlt, FaTimes, FaPenFancy } from 'react-icons/fa';
 import '../styles/HomePage.css';
@@ -8,8 +8,6 @@ const HomePage = ({ user, setUser }) => {
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
-    const [imageError, setImageError] = useState(false);
-
     const [experiences, setExperiences] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
     const [postFilter, setPostFilter] = useState('all');
@@ -18,6 +16,29 @@ const HomePage = ({ user, setUser }) => {
     const [feedType, setFeedType] = useState('my'); // 'my' | 'following'
 
     const baseApiUrl = 'http://localhost:8080';
+    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+
+    const fetchProfilePicture = useCallback(async () => {
+        try {
+            const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                credentials: 'include',
+            });
+
+            if (profileRes.ok) {
+                const profileData = await profileRes.json();
+                if (profileData.profilePictureUrl) {
+                    setProfilePicture(`${baseApiUrl}${profileData.profilePictureUrl}`);
+                } else {
+                    setProfilePicture(defaultProfilePicture);
+                }
+            } else {
+                setProfilePicture(defaultProfilePicture);
+            }
+        } catch (err) {
+            console.error('Error al obtener foto de perfil:', err);
+            setProfilePicture(defaultProfilePicture);
+        }
+    }, [baseApiUrl, defaultProfilePicture]);
 
     useEffect(() => {
         const fetchUserAndFeed = async () => {
@@ -53,43 +74,25 @@ const HomePage = ({ user, setUser }) => {
             }
         };
         fetchUserAndFeed();
-    }, [setUser, feedType]);
-
-    const fetchProfilePicture = async () => {
-        try {
-            const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
-                credentials: 'include',
-            });
-
-            if (profileRes.ok) {
-                const profileData = await profileRes.json();
-                if (profileData.profilePictureUrl) {
-                    setProfilePicture(`${baseApiUrl}${profileData.profilePictureUrl}`);
-                } else {
-                    setImageError(true);
-                }
-            } else {
-                setImageError(true);
-            }
-        } catch (err) {
-            console.error('Error al obtener foto de perfil:', err);
-            setImageError(true);
-        }
-    };
+    }, [setUser, feedType, fetchProfilePicture, baseApiUrl]);
 
     const handleLogout = () => {
         fetch(`${baseApiUrl}/api/auth/me/logout`, {
             method: 'POST',
             credentials: 'include',
-        }).then(() => {
-            setUser(null);
-            navigate('/');
-            setSidebarOpen(false);
-        }).catch((err) => console.error('Logout failed:', err));
+        })
+            .then(() => {
+                setUser(null);
+                setSidebarOpen(false);
+
+                // Force a full page reload to reset the app
+                window.location.href = '/';
+            })
+            .catch((err) => console.error('Logout failed:', err));
     };
 
     const handleImageError = () => {
-        setImageError(true);
+        setProfilePicture(defaultProfilePicture);
     };
 
     const goToProfile = () => { navigate(user ? '/profile' : '/login'); setSidebarOpen(false); };
@@ -270,7 +273,7 @@ const HomePage = ({ user, setUser }) => {
                     {user ? (
                         <>
                             <div className="user-info">
-                                {profilePicture && !imageError ? (
+                                {profilePicture ? (
                                     <img
                                         src={profilePicture}
                                         alt="Profile"
@@ -308,7 +311,6 @@ const HomePage = ({ user, setUser }) => {
 
             <div className="main-content">
                 <h2>Lexigram</h2>
-                <p>Feed</p>
 
                 <div className="btn-group mb-3">
                     <button className={`btn btn-outline-primary ${feedType === 'my' ? 'active' : ''}`} onClick={() => setFeedType('my')}>My Feed</button>

@@ -18,6 +18,7 @@ const UserProfilePage = () => {
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
     const [activeTab, setActiveTab] = useState('posts');
+    const [updateMessage, setUpdateMessage] = useState('');
 
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
@@ -111,21 +112,26 @@ const UserProfilePage = () => {
 
     const handleBioUpdate = async () => {
         try {
+            const previousBioValue = profile.biography || 'No bio yet — still searching for the right words.';
+            const bioToUpdate = newBio.trim() || 'No bio yet — still searching for the right words.';
+
             const res = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/biography`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ biography: newBio })
+                body: JSON.stringify({ biography: bioToUpdate })
             });
+
             if (!res.ok) throw new Error('Update failed');
+
             setProfile(prev => ({
                 ...prev,
-                biography: newBio
+                biography: bioToUpdate
             }));
-            alert("Biography updated");
+
+            setUpdateMessage(`Your biography has been updated! Previous: "${previousBioValue}" New: "${bioToUpdate}"`);
         } catch (err) {
             console.error("Error updating biography:", err);
-            alert("Error updating biography");
         }
     };
 
@@ -162,14 +168,15 @@ const UserProfilePage = () => {
                 setProfile(profileData);
             }
 
-            alert("Profile picture updated");
             setUsingDefaultImage(false);
             setAttemptedLoad(false);
 
-            // Resetear el archivo seleccionado
             setSelectedFile(null);
             const fileInput = document.getElementById('profile-picture-input');
             if (fileInput) fileInput.value = '';
+
+            setUpdateMessage('Your profile picture has been updated!');
+
         } catch (err) {
             console.error("Error uploading picture:", err);
             alert("Error uploading picture");
@@ -333,7 +340,7 @@ const UserProfilePage = () => {
     if (error || !profile) {
         return (
             <div className="profile-error">
-                <div className="error-icon">⚠️</div>
+                <div className="error-icon"> </div>
                 <h3>Error Loading Profile</h3>
                 <p>{error || "No profile data found"}</p>
                 <button className="btn-primary" onClick={() => navigate('/')}>
@@ -365,6 +372,12 @@ const UserProfilePage = () => {
                     <p>{profile.biography || 'No biography yet. Add something about yourself!'}</p>
                 </div>
             </div>
+
+            {updateMessage && (
+                <div className="alert alert-info animate__animated animate__fadeInDown">
+                    {updateMessage}
+                </div>
+            )}
 
             <div className="profile-nav">
                 <button

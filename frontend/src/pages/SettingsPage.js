@@ -9,6 +9,10 @@ const SettingsPage = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
+    const [oldEmail, setOldEmail] = useState('');
+    const [oldUsername, setOldUsername] = useState('');
+    const [oldPassword, setOldPassword] = useState('');
+    const [oldPrivacy, setOldPrivacy] = useState(null);
 
     const navigate = useNavigate(); // ← Hook for navigation
 
@@ -27,6 +31,10 @@ const SettingsPage = () => {
                 const userData = await resUser.json();
                 const privacyData = await resPrivacy.json();
 
+                setOldEmail(userData.email);
+                setOldUsername(userData.username);
+                setOldPrivacy(privacyData.visibility);
+
                 setEmail(userData.email);
                 setUsername(userData.username);
                 setPrivacy(privacyData.visibility);
@@ -42,52 +50,62 @@ const SettingsPage = () => {
     }, []);
 
     const updateUsername = async () => {
-        try {
-            const res = await fetch('http://localhost:8080/api/auth/me/username', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ username }),
-            });
-            if (!res.ok) throw new Error('Failed');
-            setMessage('Username updated successfully.');
-        } catch {
-            setMessage('Error updating username.');
+        if (username !== oldUsername) {
+            try {
+                const res = await fetch('http://localhost:8080/api/auth/me/username', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ username }),
+                });
+                if (!res.ok) throw new Error('Failed');
+                setMessage(`Username updated successfully. Old: ${oldUsername}, New: ${username}`);
+                setOldUsername(username); // Update old value to the new one
+            } catch {
+                setMessage('Error updating username.');
+            }
         }
     };
 
     const updateEmail = async () => {
-        try {
-            const res = await fetch('http://localhost:8080/api/auth/me/email', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ email }),
-            });
-            if (!res.ok) throw new Error('Failed');
-            setMessage('Email updated successfully.');
-        } catch {
-            setMessage('Error updating email.');
+        if (email !== oldEmail) {
+            try {
+                const res = await fetch('http://localhost:8080/api/auth/me/email', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email }),
+                });
+                if (!res.ok) throw new Error('Failed');
+                setMessage(`Email updated successfully. Old: ${oldEmail}, New: ${email}`);
+                setOldEmail(email); // Update old value to the new one
+            } catch {
+                setMessage('Error updating email.');
+            }
         }
     };
 
     const updatePassword = async () => {
-        try {
-            const res = await fetch('http://localhost:8080/api/auth/me/password', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ password }),
-            });
-            if (!res.ok) throw new Error('Failed');
-            setPassword('');
-            setMessage('Password updated successfully.');
-        } catch {
-            setMessage('Error updating password.');
+        if (password !== oldPassword) {
+            try {
+                const res = await fetch('http://localhost:8080/api/auth/me/password', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ password }),
+                });
+                if (!res.ok) throw new Error('Failed');
+                setPassword('');
+                setMessage('Password updated successfully.');
+                setOldPassword(password); // Update old value to the new one
+            } catch {
+                setMessage('Error updating password.');
+            }
         }
     };
 
     const togglePrivacy = async () => {
+        const newPrivacy = !privacy;
         try {
             const res = await fetch('http://localhost:8080/api/auth/me/privacy', {
                 method: 'PUT',
@@ -96,7 +114,8 @@ const SettingsPage = () => {
             if (!res.ok) throw new Error('Failed');
             const data = await res.json();
             setPrivacy(data.visibility);
-            setMessage('Privacy setting updated.');
+            setMessage(`Privacy setting updated. Old: ${oldPrivacy ? 'Public' : 'Private'}, New: ${newPrivacy ? 'Public' : 'Private'}`);
+            setOldPrivacy(newPrivacy);
         } catch {
             setMessage('Error updating privacy.');
         }
@@ -227,7 +246,6 @@ const SettingsPage = () => {
                 </button>
             </div>
         </div>
-
     );
 };
 

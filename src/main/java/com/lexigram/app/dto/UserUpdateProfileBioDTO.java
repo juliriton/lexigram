@@ -1,10 +1,12 @@
 package com.lexigram.app.dto;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class UserUpdateProfileBioDTO {
 
-  @Size(max = 150, message = "La biografía no puede tener más de 500 caracteres.")
+  @NotNull(message = "Biography can't be blank")
+  @Size(max = 150, message = "Biography can't be longer than 500 characters.")
   private String biography;
 
   public UserUpdateProfileBioDTO() {}
