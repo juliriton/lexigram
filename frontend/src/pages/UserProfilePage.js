@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../App.css';
+import '../styles/UserPorfilePage.css';
 
 const UserProfilePage = () => {
     const navigate = useNavigate();
@@ -17,6 +17,7 @@ const UserProfilePage = () => {
     const [attemptedLoad, setAttemptedLoad] = useState(false);
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
+    const [activeTab, setActiveTab] = useState('posts');
 
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
@@ -63,10 +64,17 @@ const UserProfilePage = () => {
 
     useEffect(() => {
         const fetchPosts = async () => {
-            const base = `${baseApiUrl}/api/auth/me/profile/posts`;
-            const url = postFilter === 'all'
-                ? base
-                : `${base}/${postFilter}`;
+            let url;
+            switch (postFilter) {
+                case 'suggestions':
+                    url = `${baseApiUrl}/api/auth/me/profile/posts/suggestion`;
+                    break;
+                case 'experiences':
+                    url = `${baseApiUrl}/api/auth/me/profile/posts/experience`;
+                    break;
+                default:
+                    url = `${baseApiUrl}/api/auth/me/profile/posts`;
+            }
 
             try {
                 const res = await fetch(url, { credentials: 'include' });
@@ -109,8 +117,11 @@ const UserProfilePage = () => {
                 credentials: 'include',
                 body: JSON.stringify({ biography: newBio })
             });
-
             if (!res.ok) throw new Error('Update failed');
+            setProfile(prev => ({
+                ...prev,
+                biography: newBio
+            }));
             alert("Biography updated");
         } catch (err) {
             console.error("Error updating biography:", err);
@@ -154,6 +165,11 @@ const UserProfilePage = () => {
             alert("Profile picture updated");
             setUsingDefaultImage(false);
             setAttemptedLoad(false);
+
+            // Resetear el archivo seleccionado
+            setSelectedFile(null);
+            const fileInput = document.getElementById('profile-picture-input');
+            if (fileInput) fileInput.value = '';
         } catch (err) {
             console.error("Error uploading picture:", err);
             alert("Error uploading picture");
@@ -171,7 +187,7 @@ const UserProfilePage = () => {
         new Date(timestamp).toLocaleDateString();
 
     const renderTags = (tags) => Array.isArray(tags) && tags.map((tag, i) => (
-        <span key={i} className="badge bg-secondary me-1">
+        <span key={i} className="tag-badge">
             {typeof tag === 'object' ? tag.name : tag}
         </span>
     ));
@@ -185,11 +201,13 @@ const UserProfilePage = () => {
 
     const renderMentions = (mentions, postId) => (
         showMentions[postId] && (
-            <div className="mt-2">
+            <div className="post-mentions">
                 <h6>Mentions:</h6>
-                {mentions.map((mention, i) => (
-                    <span key={i} className="badge bg-info me-1">{mention}</span>
-                ))}
+                <div className="mentions-list">
+                    {mentions.map((mention, i) => (
+                        <span key={i} className="mention-badge">@{mention}</span>
+                    ))}
+                </div>
             </div>
         )
     );
@@ -203,181 +221,233 @@ const UserProfilePage = () => {
         const postId = post.uuid || post.id;
         const isQuoteHidden = hiddenQuotes[postId];
         const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
-        const fullMediaUrl = `${baseApiUrl}${mediaUrl}`;
+        const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
 
         if (isExperience) {
             return (
-                <div key={postId} className="card shadow-sm mb-4" style={{ overflow: 'hidden' }}>
-                    <div style={{ position: 'relative', height: '300px', overflow: 'hidden' }}>
-                        {isVideo(mediaUrl) ? (
-                            <video
-                                src={fullMediaUrl}
-                                autoPlay
-                                muted
-                                loop
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                    filter: isQuoteHidden ? 'none' : 'brightness(70%)'
-                                }}
-                            />
-                        ) : (
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
-                                    backgroundImage: `url(${fullMediaUrl})`,
-                                    filter: isQuoteHidden ? 'none' : 'brightness(70%)'
-                                }}
-                            />
-                        )}
-                        {!isQuoteHidden && (
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '2rem'
-                                }}
-                            >
-                                <div
+                <div key={postId} className="post-card">
+                    <div className="post-type">{post.type}</div>
+
+                    {fullMediaUrl && (
+                        <div className="post-media">
+                            {isVideo(mediaUrl) ? (
+                                <video
+                                    src={fullMediaUrl}
+                                    autoPlay
+                                    muted
+                                    loop
+                                    className="post-video"
                                     style={{
-                                        padding: '1rem',
-                                        borderRadius: post.style?.borderRadius || '10px',
-                                        backgroundColor: 'rgba(0,0,0,0.3)',
-                                        maxWidth: '80%',
-                                        textAlign: 'center'
+                                        filter: isQuoteHidden ? 'none' : 'brightness(70%)'
                                     }}
-                                >
-                                    <h4
-                                        style={{
-                                            color: post.style?.fontColor || '#ffffff',
-                                            fontSize: post.style?.fontSize || '1.5rem',
-                                            fontFamily: post.style?.fontFamily || 'inherit',
-                                            fontWeight: 'bold',
-                                            textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
-                                            margin: 0
-                                        }}
-                                    >
+                                />
+                            ) : (
+                                <div
+                                    className="post-image"
+                                    style={{
+                                        backgroundImage: `url(${fullMediaUrl})`,
+                                        filter: isQuoteHidden ? 'none' : 'brightness(70%)'
+                                    }}
+                                />
+                            )}
+
+                            {!isQuoteHidden && (
+                                <div className="post-quote-overlay">
+                                    <div className="post-quote">
                                         "{post.quote || post.title}"
-                                    </h4>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className="card-body bg-white">
-                        <p className="card-text">{post.reflection || post.content}</p>
-                        <div className="d-flex justify-content-between align-items-center">
-                            <span className="badge bg-primary">{post.type}</span>
-                            {post.creationDate && (
-                                <small className="text-muted">{formatDate(post.creationDate)}</small>
                             )}
                         </div>
+                    )}
+
+                    <div className="post-content">
+                        <h3 className="post-title">{post.title}</h3>
+                        <p>{post.reflection || post.content}</p>
+
+                        <div className="post-meta">
+                            {post.creationDate && (
+                                <small className="post-date">{formatDate(post.creationDate)}</small>
+                            )}
+                        </div>
+
                         {post.tags?.length > 0 && (
-                            <div className="mt-2">{renderTags(post.tags)}</div>
+                            <div className="post-tags">{renderTags(post.tags)}</div>
                         )}
+
                         {post.mentions?.length > 0 && (
                             <button
-                                className="btn btn-link mt-2"
+                                className="btn-link"
                                 onClick={() => setShowMentions(prev => ({ ...prev, [postId]: !prev[postId] }))}
                             >
                                 {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
                             </button>
                         )}
+
                         {renderMentions(post.mentions, postId)}
                     </div>
-                    <button className="btn btn-link" onClick={() => toggleQuote(postId)}>
-                        {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
-                    </button>
+
+                    {fullMediaUrl && (
+                        <button className="btn-toggle-quote" onClick={() => toggleQuote(postId)}>
+                            {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
+                        </button>
+                    )}
                 </div>
             );
         }
 
         return (
-            <div key={postId} className="card shadow-sm mb-4">
-                <div className="card-body">
-                    <h5 className="card-title text-muted small">{post.header || "Tell me about"}</h5>
-                    <p className="card-text fw-bold fs-5">{post.body}</p>
-                    <div className="d-flex justify-content-between align-items-center">
-                        <span className="badge bg-primary">Suggestion</span>
+            <div key={postId} className="post-card">
+                <div className="post-type">Suggestion</div>
+                <div className="post-content">
+                    <h5 className="post-subtitle">{post.header || "Tell me about"}</h5>
+                    <h3 className="post-title">{post.body}</h3>
+
+                    <div className="post-meta">
                         {post.creationDate && (
-                            <small className="text-muted">{formatDate(post.creationDate)}</small>
+                            <small className="post-date">{formatDate(post.creationDate)}</small>
                         )}
                     </div>
+
                     {post.tags?.length > 0 && (
-                        <div className="mt-2">{renderTags(post.tags)}</div>
+                        <div className="post-tags">{renderTags(post.tags)}</div>
                     )}
                 </div>
             </div>
         );
     };
 
-    if (loading) return <div className="container mt-4">Loading user profile...</div>;
+    if (loading) {
+        return (
+            <div className="profile-loading">
+                <div className="spinner"></div>
+                <p>Loading profile...</p>
+            </div>
+        );
+    }
+
     if (error || !profile) {
         return (
-            <div className="container mt-4">
-                <div className={`alert alert-${error ? 'danger' : 'warning'}`}>
-                    <strong>{error ? error : "No profile data found"}</strong>
-                </div>
+            <div className="profile-error">
+                <div className="error-icon">⚠️</div>
+                <h3>Error Loading Profile</h3>
+                <p>{error || "No profile data found"}</p>
+                <button className="btn-primary" onClick={() => navigate('/')}>
+                    Back to Home
+                </button>
             </div>
         );
     }
 
     return (
-        <div className="container mt-4">
-            <div className="d-flex align-items-center mb-4">
-                <img
-                    src={getProfileImageUrl()}
-                    alt="Profile"
-                    className="rounded-circle me-3"
-                    style={{ width: '80px', height: '80px', objectFit: 'cover' }}
-                />
-                <div>
-                    <h4>{username}</h4>
-                    <p>{profile.biography}</p>
+        <div className="profile-container">
+            <div className="profile-header">
+                <div className="profile-cover">
+                    <div className="profile-avatar-container">
+                        <img
+                            src={getProfileImageUrl()}
+                            alt="Profile"
+                            className="profile-avatar"
+                            onError={(e) => {
+                                setUsingDefaultImage(true);
+                                e.target.src = defaultProfilePic;
+                            }}
+                        />
+                        <div className="profile-username">{username}</div>
+                    </div>
+                </div>
+
+                <div className="profile-bio">
+                    <p>{profile.biography || 'No biography yet. Add something about yourself!'}</p>
                 </div>
             </div>
-            <div className="mb-3">
-                <label className="form-label">Edit Biography</label>
-                <textarea
-                    className="form-control"
-                    value={newBio}
-                    onChange={(e) => setNewBio(e.target.value)}
-                />
-                <button className="btn btn-primary mt-2" onClick={handleBioUpdate}>Update Bio</button>
-            </div>
-            <div className="mb-3">
-                <label className="form-label">Upload Profile Picture (JPG)</label>
-                <input type="file" className="form-control" onChange={handleFileChange} />
-                <button className="btn btn-secondary mt-2" onClick={handlePictureUpload}>Upload</button>
-            </div>
-            <div className="mb-3">
-                <label className="form-label">Filter Posts</label>
-                <select
-                    className="form-select"
-                    value={postFilter}
-                    onChange={(e) => setPostFilter(e.target.value)}
+
+            <div className="profile-nav">
+                <button
+                    className={`profile-nav-item ${activeTab === 'posts' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('posts')}
                 >
-                    <option value="all">All</option>
-                    <option value="experience">Experiences</option>
-                    <option value="suggestion">Suggestions</option>
-                </select>
+                    Posts
+                </button>
+                <button
+                    className={`profile-nav-item ${activeTab === 'edit' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('edit')}
+                >
+                    Edit Profile
+                </button>
             </div>
-            {posts.map(renderPost)}
+
+            {activeTab === 'posts' && (
+                <div className="profile-content profile-posts">
+                    <div className="post-filter">
+                        <select
+                            value={postFilter}
+                            onChange={(e) => setPostFilter(e.target.value)}
+                        >
+                            <option value="all">All Posts</option>
+                            <option value="suggestions">Suggestions</option>
+                            <option value="experiences">Experiences</option>
+                        </select>
+                    </div>
+
+                    {posts.length === 0 ? (
+                        <div className="no-posts">
+                            <p>No posts found for this filter.</p>
+                        </div>
+                    ) : (
+                        <div className="posts-grid">
+                            {posts.map(renderPost)}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'edit' && (
+                <div className="profile-content profile-edit">
+                    <div className="edit-section">
+                        <h3>Update Biography</h3>
+                        <textarea
+                            value={newBio}
+                            placeholder="Write something about yourself..."
+                            rows="3"
+                            onChange={(e) => setNewBio(e.target.value)}
+                        />
+                        <button className="btn-primary" onClick={handleBioUpdate}>
+                            Save Biography
+                        </button>
+                    </div>
+
+                    <div className="edit-section">
+                        <h3>Update Profile Picture</h3>
+                        <div className="file-upload">
+                            <label className="file-upload-label">
+                                <input
+                                    id="profile-picture-input"
+                                    type="file"
+                                    accept=".jpg"
+                                    onChange={handleFileChange}
+                                    className="file-input"
+                                />
+                                <span>Choose File</span>
+                            </label>
+                            <span className="file-name">{selectedFile ? selectedFile.name : 'No file chosen'}</span>
+                        </div>
+                        <button
+                            className="btn-secondary"
+                            onClick={handlePictureUpload}
+                            disabled={!selectedFile}
+                        >
+                            Upload Picture
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <div className="profile-footer">
+                <button className="btn-outline" onClick={() => navigate('/')}>
+                    Back to Home
+                </button>
+            </div>
         </div>
     );
 };

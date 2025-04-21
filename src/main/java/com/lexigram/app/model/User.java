@@ -45,7 +45,12 @@ public class User {
   )
   private Set<User> following = new HashSet<>();
 
-  @ManyToMany(mappedBy = "following")
+  @ManyToMany
+  @JoinTable(
+      name = "user_following",
+      joinColumns = @JoinColumn(name = "following_id"),
+      inverseJoinColumns = @JoinColumn(name = "follower_id")
+  )
   private Set<User> followers = new HashSet<>();
 
   public Long getId() {
