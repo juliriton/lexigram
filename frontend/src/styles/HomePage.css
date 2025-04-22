@@ -1,10 +1,22 @@
+
 .container {
     position: relative;
     min-height: 100vh;
     width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
 }
 
-/* Estilos para el botón hamburguesa */
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
 .burger {
     position: fixed;
     top: 20px;
@@ -68,7 +80,6 @@
     left: 5px;
 }
 
-/* Estilos para el sidebar */
 .sidebar {
     position: fixed;
     top: 0;
@@ -118,6 +129,13 @@
     font-weight: bold;
 }
 
+.profile-image {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 .sidebar-menu-items {
     display: flex;
     flex-direction: column;
@@ -138,7 +156,6 @@
     background-color: #f5f5f5;
 }
 
-/* Overlay para cerrar el menú al hacer clic fuera */
 .sidebar-overlay {
     position: fixed;
     top: 0;
@@ -149,43 +166,69 @@
     z-index: 999;
 }
 
-/* Contenido principal - ajustado para dar espacio al botón */
 .main-content {
     padding: 20px 10px 20px;
+}
+
+.main-content h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.main-content p {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.btn-group {
+    margin-bottom: 20px;
+}
+
+.btn-outline-primary, .btn-outline-secondary {
+    border-color: #ff0000;
+    color: #ff0000;
+    background-color: transparent;
+    transition: all 0.3s ease;
+    margin-right: 5px;
+    border-radius: 8px;
+    padding: 8px 16px;
+}
+
+.btn-outline-primary:hover, .btn-outline-secondary:hover {
+    background-color: #ff0000;
+    color: white;
+}
+
+.btn-outline-primary.active, .btn-outline-secondary.active {
+    background-color: #ff0000;
+    color: white;
 }
 
 .create-post-icon {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #0055ff;
+    background-color: #000000;
     color: white;
     padding: 12px;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
-    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 90;
 }
 
 .create-post-icon:hover {
-    background-color: #000000;
+    background-color: #4c4c57;
+    transform: translateY(-3px);
 }
 
-.container {
-    position: relative;
-    min-height: 100vh;
-    width: 100%;
+.text-muted {
+    color: #999 !important;
 }
 
-.experience-card {
-    width: 100%;
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
 }
-
-.suggestion-card {
-    min-height: 130px;
-    flex-direction: row;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-

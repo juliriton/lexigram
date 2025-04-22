@@ -54,7 +54,7 @@ public class SuggestionService {
     return new SuggestionDTO(suggestion);
   }
 
-  public Set<SuggestionDTO> getAllSuggestions(Long id){
+  public Set<SuggestionDTO> getAllSuggestionsExcludingUser(Long id){
     Set<User> publicUsers = userRepository.findByUserPrivacySettingsVisibilityTrue();
     Set<SuggestionDTO> publicSuggestions = new HashSet<>();
 
@@ -72,6 +72,38 @@ public class SuggestionService {
     }
 
     return publicSuggestions;
+  }
+
+  public Set<SuggestionDTO> getAllPublicSuggestions(){
+    Set<User> publicUsers = userRepository.findByUserPrivacySettingsVisibilityTrue();
+    Set<SuggestionDTO> publicSuggestions = new HashSet<>();
+
+    for (User user : publicUsers) {
+      Long userId = user.getId();
+
+      Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
+      for (Suggestion suggestion : userSuggestions) {
+        publicSuggestions.add(new SuggestionDTO(suggestion));
+      }
+    }
+
+    return publicSuggestions;
+  }
+
+  public Set<SuggestionDTO> getAllFollowingSuggestions(Long id) {
+
+    User user = userRepository.findById(id).get();
+
+    Set<User> following = userRepository.findByFollowing(user);
+    Set<SuggestionDTO> followingSuggestions = new HashSet<>();
+    for (User u : following) {
+      Long userId = u.getId();
+      Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
+      for (Suggestion suggestion : userSuggestions) {
+        followingSuggestions.add(new SuggestionDTO(suggestion));
+      }
+    }
+    return followingSuggestions;
   }
 
 }

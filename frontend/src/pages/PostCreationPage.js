@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaPhotoVideo, FaQuestion } from 'react-icons/fa';
+import { FaPhotoVideo, FaQuestion, FaTimes } from 'react-icons/fa';
 import '../styles/PostCreationPage.css';
 
 const PostCreationPage = ({ user }) => {
@@ -18,10 +18,12 @@ const PostCreationPage = ({ user }) => {
     const [allowComments, setAllowComments] = useState(true);
     const [allowResonates, setAllowResonates] = useState(true);
     const [allowForks, setAllowForks] = useState(true);
-
-    // Suggestion states
     const [suggestionText, setSuggestionText] = useState('');
     const [suggestionTags, setSuggestionTags] = useState('');
+
+    const handleCancel = () => {
+        navigate('/');
+    };
 
     const handlePostSubmit = async (e) => {
         e.preventDefault();
@@ -65,12 +67,10 @@ const PostCreationPage = ({ user }) => {
             });
 
             if (response.ok) {
-                alert('Post created!');
                 navigate('/');
             } else {
                 const errorText = await response.text();
                 console.error('Server error:', errorText);
-                alert('Error creating post');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -85,7 +85,6 @@ const PostCreationPage = ({ user }) => {
         }
 
         if (!suggestionText.trim()) {
-            alert('Please provide a suggestion!');
             return;
         }
 
@@ -107,12 +106,10 @@ const PostCreationPage = ({ user }) => {
             });
 
             if (response.ok) {
-                alert('Suggestion submitted!');
-                navigate('/'); // ✅ Go to HomePage
+                navigate('/');
             } else {
                 const errorText = await response.text();
                 console.error('Server error:', errorText);
-                alert('Error submitting suggestion');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -163,7 +160,13 @@ const PostCreationPage = ({ user }) => {
                             <label><input type="checkbox" checked={allowResonates} onChange={() => setAllowResonates(!allowResonates)} /> Resonates</label>
                             <label><input type="checkbox" checked={allowForks} onChange={() => setAllowForks(!allowForks)} /> Forks</label>
                         </div>
-                        <button type="submit" className="submit-btn" disabled={!quote.trim()}>Share Experience</button>
+
+                        <div className="form-buttons">
+                            <button type="submit" className="submit-btn" disabled={!quote.trim()}>Share Experience</button>
+                            <button type="button" className="cancel-btn" onClick={handleCancel}>
+                                <FaTimes /> Cancel
+                            </button>
+                        </div>
                     </form>
                 </>
             )}
@@ -174,7 +177,13 @@ const PostCreationPage = ({ user }) => {
                     <form onSubmit={handleSuggestionSubmit} className="form-section">
                         <textarea placeholder="Write your suggestion..." value={suggestionText} onChange={(e) => setSuggestionText(e.target.value)} required />
                         <input type="text" placeholder="Tags (comma separated)" value={suggestionTags} onChange={(e) => setSuggestionTags(e.target.value)} />
-                        <button type="submit" className="submit-btn" disabled={!suggestionText.trim()}>Share Suggestion</button>
+
+                        <div className="form-buttons">
+                            <button type="submit" className="submit-btn" disabled={!suggestionText.trim()}>Share Suggestion</button>
+                            <button type="button" className="cancel-btn" onClick={handleCancel}>
+                                <FaTimes /> Cancel
+                            </button>
+                        </div>
                     </form>
                 </>
             )}

@@ -1,20 +1,59 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserCircle, FaCog, FaSignOutAlt, FaTimes, FaPenFancy } from 'react-icons/fa';
+import ExperienceCard from '../components/ExperienceCard';
+import SuggestionCard from '../components/SuggestionCard';
 import '../styles/HomePage.css';
 
 const HomePage = ({ user, setUser }) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-
+    const [profilePicture, setProfilePicture] = useState(null);
     const [experiences, setExperiences] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
     const [postFilter, setPostFilter] = useState('all');
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
+    const [feedType, setFeedType] = useState('my'); // 'my' | 'following'
 
     const baseApiUrl = 'http://localhost:8080';
+    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+
+    const fetchGuestFeed = async () => {
+        try {
+            const res = await fetch(`${baseApiUrl}/api/auth/feed`);
+            if (res.ok) {
+                const feedData = await res.json();
+                setExperiences(feedData.experiences || []);
+                setSuggestions(feedData.suggestions || []);
+            }
+        } catch (err) {
+            console.error('Error loading guest feed:', err);
+        }
+    };
+
+    const fetchProfilePicture = useCallback(async () => {
+        try {
+            const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                credentials: 'include',
+            });
+
+            if (profileRes.ok) {
+                const profileData = await profileRes.json();
+                setProfilePicture(
+                    profileData.profilePictureUrl
+                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        : defaultProfilePicture
+                );
+            } else {
+                setProfilePicture(defaultProfilePicture);
+            }
+        } catch (err) {
+            console.error('Error fetching profile picture:', err);
+            setProfilePicture(defaultProfilePicture);
+        }
+    }, [baseApiUrl, defaultProfilePicture]);
 
     useEffect(() => {
         const fetchUserAndFeed = async () => {
@@ -24,7 +63,12 @@ const HomePage = ({ user, setUser }) => {
                     const data = await res.json();
                     setUser(data);
 
-                    const feedRes = await fetch(`${baseApiUrl}/api/auth/me/feed`, { credentials: 'include' });
+                    fetchProfilePicture();
+
+                    let feedUrl = `${baseApiUrl}/api/auth/me/feed`;
+                    if (feedType === 'following') feedUrl += '/following';
+
+                    const feedRes = await fetch(feedUrl, { credentials: 'include' });
                     if (feedRes.ok) {
                         const feedData = await feedRes.json();
                         setExperiences(feedData.experiences || []);
@@ -32,6 +76,7 @@ const HomePage = ({ user, setUser }) => {
                     }
                 } else {
                     setUser(null);
+                    await fetchGuestFeed();
                 }
             } catch (err) {
                 console.error('Error loading user or feed:', err);
@@ -41,125 +86,49 @@ const HomePage = ({ user, setUser }) => {
             }
         };
         fetchUserAndFeed();
-    }, [setUser]);
+    }, [setUser, feedType, fetchProfilePicture, baseApiUrl]);
 
     const handleLogout = () => {
         fetch(`${baseApiUrl}/api/auth/me/logout`, {
             method: 'POST',
             credentials: 'include',
-        }).then(() => {
-            setUser(null);
-            navigate('/');
-            setSidebarOpen(false);
-        }).catch((err) => console.error('Logout failed:', err));
+        })
+            .then(() => {
+                setUser(null);
+                setSidebarOpen(false);
+                window.location.href = '/';
+            })
+            .catch(err => console.error('Logout failed:', err));
     };
+
+    const handleImageError = () => setProfilePicture(defaultProfilePicture);
 
     const goToProfile = () => { navigate(user ? '/profile' : '/login'); setSidebarOpen(false); };
     const goToSettings = () => { navigate(user ? '/settings' : '/login'); setSidebarOpen(false); };
     const goToLogin = () => { navigate('/login'); setSidebarOpen(false); };
-    const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
     const formatDate = ts => new Date(ts).toLocaleDateString();
+
     const renderTags = tags => (
         Array.isArray(tags) && tags.map((tag, i) => (
-            <span key={i} className="badge bg-secondary me-1">
-                {typeof tag === 'object' ? tag.name : tag}
-            </span>
+            <span key={i} className="tag-badge">
+        {typeof tag === 'object' ? tag.name : tag}
+      </span>
         ))
     );
-    const toggleQuote = id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }));
-    const toggleMentions = id => setShowMentions(prev => ({ ...prev, [id]: !prev[id] }));
-    const renderMentions = (mentions, id) => (
-        showMentions[id] && (
-            <div className="mt-2">
-                <h6>Mentions:</h6>
-                {mentions.map((m, idx) => (
-                    <span key={idx} className="badge bg-info me-1">{m}</span>
-                ))}
-            </div>
-        )
-    );
 
-    const renderExperience = exp => {
-        const id = exp.uuid;
-        const hidden = hiddenQuotes[id];
-        const author = exp.user?.username || 'Unknown';
-
-        return (
-            <div key={id} className="card shadow-sm mb-4">
-                <div className="card-img-top" style={{
-                    height: 250,
-                    backgroundImage: `url(${baseApiUrl}${exp.style?.backgroundMediaUrl || exp.imageUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    filter: hidden ? 'none' : 'brightness(70%)',
-                    position: 'relative'
-                }}>
-                    {!hidden && (
-                        <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-4">
-                            <div className="p-3 bg-dark bg-opacity-50 rounded">
-                                <h4 className="text-white fw-bold mb-0 text-center" style={{ fontSize: exp.style?.fontSize || '1.5rem' }}>
-                                    "{exp.quote || exp.title}"
-                                </h4>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <div className="card-body">
-                    <p>{exp.reflection || exp.content}</p>
-                    <div className="d-flex justify-content-between align-items-center">
-                        <span className="badge bg-primary">{exp.type}</span>
-                        <small className="text-muted">{formatDate(exp.creationDate)}</small>
-                    </div>
-                    <div className="mt-1">
-                        <small className="text-muted">Posted by <strong>{author}</strong></small>
-                    </div>
-                    <div className="mt-2">{renderTags(exp.tags)}</div>
-                    <div className="mt-2">
-                        <button className="btn btn-link p-0 me-3" onClick={() => toggleQuote(id)}>
-                            {hidden ? 'Show Quote' : 'Hide Quote'}
-                        </button>
-                        {exp.mentions?.length > 0 && (
-                            <button className="btn btn-link p-0" onClick={() => toggleMentions(id)}>
-                                {showMentions[id] ? 'Hide Mentions' : 'Show Mentions'}
-                            </button>
-                        )}
-                    </div>
-                    {renderMentions(exp.mentions || [], id)}
-                </div>
-            </div>
-        );
-    };
-
-    const renderSuggestion = sug => {
-        const id = sug.uuid;
-        const author = sug.user?.username || 'Unknown';
-
-        return (
-            <div key={id} className="card shadow-sm mb-3 d-flex flex-row suggestion-card">
-                <div className="card-body d-flex flex-column justify-content-between">
-                    <div>
-                        <h6 className="text-muted">{sug.header || 'Tell me about'}</h6>
-                        <p className="fw-bold fs-5 mb-2">{sug.body}</p>
-                        <div>{renderTags(sug.tags)}</div>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center mt-3">
-                        <span className="badge bg-primary">{sug.type}</span>
-                        <small className="text-muted">{formatDate(sug.creationDate)}</small>
-                    </div>
-                    <div>
-                        <small className="text-muted">Posted by <strong>{author}</strong></small>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const filteredExperiences = postFilter === 'all' || postFilter === 'experiences' ? experiences : [];
-    const filteredSuggestions = postFilter === 'all' || postFilter === 'suggestions' ? suggestions : [];
+    // Filter posts
+    const filteredExperiences = (postFilter === 'all' || postFilter === 'experiences') ? experiences : [];
+    const filteredSuggestions = (postFilter === 'all' || postFilter === 'suggestions') ? suggestions : [];
 
     if (loading) {
-        return <div className="container"><p>Loading...</p></div>;
+        return (
+            <div className="container">
+                <div className="spinner"></div>
+                <p>Loading...</p>
+            </div>
+        );
     }
 
     return (
@@ -171,9 +140,7 @@ const HomePage = ({ user, setUser }) => {
                     checked={sidebarOpen}
                     onChange={toggleSidebar}
                 />
-                <span></span>
-                <span></span>
-                <span></span>
+                <span></span><span></span><span></span>
             </label>
 
             <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -181,12 +148,20 @@ const HomePage = ({ user, setUser }) => {
                     <h3>Menu</h3>
                     <FaTimes className="close-btn" onClick={toggleSidebar} />
                 </div>
-
                 <div className="sidebar-content">
                     {user ? (
                         <>
                             <div className="user-info">
-                                <FaUserCircle size={40} />
+                                {profilePicture ? (
+                                    <img
+                                        src={profilePicture}
+                                        alt="Profile"
+                                        className="profile-image"
+                                        onError={handleImageError}
+                                    />
+                                ) : (
+                                    <FaUserCircle size={40} />
+                                )}
                                 <p>{user.username || 'Usuario'}</p>
                             </div>
                             <div className="sidebar-menu-items">
@@ -215,15 +190,71 @@ const HomePage = ({ user, setUser }) => {
 
             <div className="main-content">
                 <h2>Lexigram</h2>
-                <p>Feed</p>
+
                 <div className="btn-group mb-3">
-                    <button className={`btn btn-outline-primary ${postFilter === 'all' ? 'active' : ''}`} onClick={() => setPostFilter('all')}>All</button>
-                    <button className={`btn btn-outline-primary ${postFilter === 'experiences' ? 'active' : ''}`} onClick={() => setPostFilter('experiences')}>Experiences</button>
-                    <button className={`btn btn-outline-primary ${postFilter === 'suggestions' ? 'active' : ''}`} onClick={() => setPostFilter('suggestions')}>Suggestions</button>
+                    <button
+                        className={`btn btn-outline-primary ${feedType === 'my' ? 'active' : ''}`}
+                        onClick={() => setFeedType('my')}
+                    >My Feed</button>
+                    <button
+                        className={`btn btn-outline-primary ${feedType === 'following' ? 'active' : ''}`}
+                        onClick={() => setFeedType('following')}
+                    >Following</button>
                 </div>
 
-                {filteredExperiences.map(renderExperience)}
-                {filteredSuggestions.map(renderSuggestion)}
+                <div className="btn-group mb-3 ms-2">
+                    <button
+                        className={`btn btn-outline-secondary ${postFilter === 'all' ? 'active' : ''}`}
+                        onClick={() => setPostFilter('all')}
+                    >All</button>
+                    <button
+                        className={`btn btn-outline-secondary ${postFilter === 'experiences' ? 'active' : ''}`}
+                        onClick={() => setPostFilter('experiences')}
+                    >Experiences</button>
+                    <button
+                        className={`btn btn-outline-secondary ${postFilter === 'suggestions' ? 'active' : ''}`}
+                        onClick={() => setPostFilter('suggestions')}
+                    >Suggestions</button>
+                </div>
+
+                <div className="posts-grid">
+                    {filteredExperiences.map(exp => (
+                        <ExperienceCard
+                            key={exp.uuid || exp.id}
+                            post={exp}
+                            baseApiUrl={baseApiUrl}
+                            hiddenQuotes={hiddenQuotes}
+                            toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
+                            showMentions={showMentions}
+                            setShowMentions={setShowMentions}
+                            renderMentions={(mentions, id) => (
+                                showMentions[id] && (
+                                    <div className="post-mentions">
+                                        <h6>Mentions:</h6>
+                                        <div className="mentions-list">
+                                            {mentions.map((mention, i) => (
+                                                <span className="mention">@{mention}</span>
+
+                                            ))}
+                                        </div>
+                                    </div>
+                                )
+                            )}
+                            renderTags={renderTags}
+                            formatDate={formatDate}
+                        />
+                    ))}
+
+                    {filteredSuggestions.map(sug => (
+                        <SuggestionCard
+                            key={sug.uuid}
+                            post={sug}
+                            baseApiUrl={baseApiUrl}
+                            renderTags={renderTags}
+                            formatDate={formatDate}
+                        />
+                    ))}
+                </div>
             </div>
 
             <div className="create-post-icon" onClick={() => navigate(user ? '/post/create' : '/login')}>
