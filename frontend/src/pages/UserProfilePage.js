@@ -21,6 +21,7 @@ const UserProfilePage = () => {
     const [showMentions, setShowMentions] = useState({});
     const [activeTab, setActiveTab] = useState('posts');
     const [updateMessage, setUpdateMessage] = useState('');
+    const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
@@ -70,10 +71,10 @@ const UserProfilePage = () => {
             let url;
             switch (postFilter) {
                 case 'suggestions':
-                    url = `${baseApiUrl}/api/auth/me/profile/posts/suggestion`;
+                    url = `${baseApiUrl}/api/auth/me/profile/posts/suggestions`;
                     break;
                 case 'experiences':
-                    url = `${baseApiUrl}/api/auth/me/profile/posts/experience`;
+                    url = `${baseApiUrl}/api/auth/me/profile/posts/experiences`;
                     break;
                 default:
                     url = `${baseApiUrl}/api/auth/me/profile/posts`;
@@ -84,11 +85,38 @@ const UserProfilePage = () => {
                 if (!res.ok) throw new Error('Failed to fetch posts');
                 const data = await res.json();
 
-                const processed = postFilter === 'all'
-                    ? [...(data.experiences || []), ...(data.suggestions || [])]
-                    : data;
 
-                setPosts(processed);
+                let processedPosts = [];
+
+                if (postFilter === 'all') {
+                    if (data.experiences && Array.isArray(data.experiences)) {
+                        processedPosts = [...processedPosts, ...data.experiences.map(exp => ({...exp, type: 'Experience'}))];
+                    }
+                    if (data.suggestions && Array.isArray(data.suggestions)) {
+                        processedPosts = [...processedPosts, ...data.suggestions.map(sug => ({...sug, type: 'Suggestion'}))];
+                    }
+                    if (Array.isArray(data)) {
+                        processedPosts = data;
+                    }
+                } else {
+                    if (Array.isArray(data)) {
+                        processedPosts = data.map(item => ({
+                            ...item,
+                            type: postFilter === 'experiences' ? 'Experience' : 'Suggestion'
+                        }));
+                    } else if (typeof data === 'object' && data !== null) {
+                        const items = postFilter === 'experiences' ? data.experiences : data.suggestions;
+                        if (Array.isArray(items)) {
+                            processedPosts = items.map(item => ({
+                                ...item,
+                                type: postFilter === 'experiences' ? 'Experience' : 'Suggestion'
+                            }));
+                        }
+                    }
+                }
+
+                console.log("Processed posts:", processedPosts);
+                setPosts(processedPosts);
             } catch (err) {
                 console.error("Error fetching posts:", err);
                 setPosts([]);
@@ -185,6 +213,51 @@ const UserProfilePage = () => {
         }
     };
 
+    const handleDeletePost = async () => {
+        if (!deleteConfirmation) return;
+
+        const { uuid, type } = deleteConfirmation;
+
+        try {
+            const endpoint = type === 'Experience'
+                ? `${baseApiUrl}/api/auth/me/profile/posts/delete/experiences/${uuid}`
+                : `${baseApiUrl}/api/auth/me/profile/posts/delete/suggestions/${uuid}`;
+
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                throw new Error(`Failed to delete ${type.toLowerCase()}`);
+            }
+
+            setPosts(posts.filter(post => post.uuid !== uuid));
+            setUpdateMessage(`${type} successfully deleted`);
+            setDeleteConfirmation(null);
+
+        } catch (err) {
+            console.error(`Error deleting ${type.toLowerCase()}:`, err);
+            setUpdateMessage(`Error deleting ${type.toLowerCase()}: ${err.message}`);
+        }
+    };
+
+    const confirmDelete = (post, postType) => {
+        const uuid = post?.uuid;
+
+        if (!uuid) {
+            console.error("Cannot delete post: Missing UUID", post);
+            setUpdateMessage("Error: Cannot delete this post. Missing UUID.");
+            return;
+        }
+
+        setDeleteConfirmation({ uuid: uuid, type: postType });
+    };
+
+    const cancelDelete = () => {
+        setDeleteConfirmation(null);
+    };
+
     const getProfileImageUrl = () => {
         if (usingDefaultImage || !profile?.profilePictureUrl) {
             return defaultProfilePic;
@@ -231,6 +304,7 @@ const UserProfilePage = () => {
                     key={postId}
                     post={post}
                     baseApiUrl={baseApiUrl}
+                    username={'Me'}
                     hiddenQuotes={hiddenQuotes}
                     toggleQuote={toggleQuote}
                     showMentions={showMentions}
@@ -238,6 +312,8 @@ const UserProfilePage = () => {
                     renderMentions={renderMentions}
                     renderTags={renderTags}
                     formatDate={formatDate}
+                    onDelete={() => confirmDelete(post, 'Experience')}
+                    isOwner={true}
                 />
             );
         }
@@ -254,6 +330,8 @@ const UserProfilePage = () => {
                 renderMentions={renderMentions}
                 renderTags={renderTags}
                 formatDate={formatDate}
+                onDelete={() => confirmDelete(post, 'Suggestion')}
+                isOwner={true}
             />
         );
     };
@@ -299,13 +377,43 @@ const UserProfilePage = () => {
                 </div>
 
                 <div className="profile-bio">
-                    <p>{profile.biography || 'No biography yet. Add something about yourself!'}</p>
+                    <p>{profile.biography}</p>
                 </div>
             </div>
 
             {updateMessage && (
                 <div className="alert alert-info animate__animated animate__fadeInDown">
                     {updateMessage}
+                    <button
+                        onClick={() => setUpdateMessage('')}
+                        className="close-alert"
+                        aria-label="Close"
+                    >
+                        &times;
+                    </button>
+                </div>
+            )}
+
+            {deleteConfirmation && (
+                <div className="modal-backdrop">
+                    <div className="delete-confirmation-modal">
+                        <h3>Delete {deleteConfirmation.type}</h3>
+                        <p>Are you sure you want to delete this {deleteConfirmation.type.toLowerCase()}? This action cannot be undone.</p>
+                        <div className="modal-buttons">
+                            <button
+                                className="btn-secondary"
+                                onClick={cancelDelete}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="btn-danger"
+                                onClick={handleDeletePost}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 

@@ -1,10 +1,11 @@
 import React from 'react';
-import { FaPhotoVideo } from 'react-icons/fa';
+import { FaPhotoVideo, FaTrash } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
 import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
                             post,
+                            username,
                             baseApiUrl,
                             hiddenQuotes,
                             toggleQuote,
@@ -13,8 +14,10 @@ const ExperienceCard = ({
                             renderMentions,
                             renderTags,
                             formatDate,
+                            onDelete,
+                            isOwner
                         }) => {
-    const postId = post.uuid || post.id;
+    const postId = post.uuid;
     const isQuoteHidden = hiddenQuotes[postId];
     const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
     const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
@@ -61,13 +64,13 @@ const ExperienceCard = ({
             <div className="experience-card-content">
                 <div className="badges-container">
                     <div className="badge experience-badge">
-                        <FaPhotoVideo className="badge-icon" />
+                        <FaPhotoVideo className="badge-icon"/>
                         <span> Experience</span>
                     </div>
 
                     {post.origin && (
                         <div className="badge origin-badge">
-                            <FaStar className="badge-icon" />
+                            <FaStar className="badge-icon"/>
                             <span> Origin</span>
                         </div>
                     )}
@@ -75,6 +78,10 @@ const ExperienceCard = ({
 
                 <h3 className="experience-card-title">{post.title}</h3>
                 <p className="experience-card-reflection">{post.reflection || post.content}</p>
+
+                <div className="experience-card-header">
+                    <span className="username">{username}</span>
+                </div>
 
                 <div className="experience-card-footer">
                     {post.creationDate && (
@@ -104,8 +111,18 @@ const ExperienceCard = ({
                             {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
                         </button>
                     )}
-                </div>
 
+                    {isOwner && (
+                        <button
+                            className="btn-delete"
+                            onClick={onDelete}
+                            aria-label="Delete experience"
+                        >
+                            <FaTrash className="delete-icon"/> Delete
+                        </button>
+                    )}
+
+                </div>
                 {post.mentions?.length > 0 && showMentions[postId] && (
                     <div className="mentions-container">
                         {renderMentions(post.mentions, postId)}

@@ -15,7 +15,7 @@ const HomePage = ({ user, setUser }) => {
     const [postFilter, setPostFilter] = useState('all');
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
-    const [feedType, setFeedType] = useState('my'); // 'my' | 'following'
+    const [feedType, setFeedType] = useState('my');
 
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
@@ -118,7 +118,6 @@ const HomePage = ({ user, setUser }) => {
         ))
     );
 
-    // Filter posts
     const filteredExperiences = (postFilter === 'all' || postFilter === 'experiences') ? experiences : [];
     const filteredSuggestions = (postFilter === 'all' || postFilter === 'suggestions') ? suggestions : [];
 
@@ -191,16 +190,21 @@ const HomePage = ({ user, setUser }) => {
             <div className="main-content">
                 <h2>Lexigram</h2>
 
-                <div className="btn-group mb-3">
-                    <button
-                        className={`btn btn-outline-primary ${feedType === 'my' ? 'active' : ''}`}
-                        onClick={() => setFeedType('my')}
-                    >My Feed</button>
-                    <button
-                        className={`btn btn-outline-primary ${feedType === 'following' ? 'active' : ''}`}
-                        onClick={() => setFeedType('following')}
-                    >Following</button>
-                </div>
+                {user ? (
+                    <div className="btn-group mb-3">
+                        <button
+                            className={`btn btn-outline-primary ${feedType === 'my' ? 'active' : ''}`}
+                            onClick={() => setFeedType('my')}
+                        >My Feed</button>
+                        <button
+                            className={`btn btn-outline-primary ${feedType === 'following' ? 'active' : ''}`}
+                            onClick={() => setFeedType('following')}
+                        >Following</button>
+                    </div>
+                ) : (
+                    <div className="btn-group mb-3">
+                    </div>
+                )}
 
                 <div className="btn-group mb-3 ms-2">
                     <button
@@ -220,9 +224,10 @@ const HomePage = ({ user, setUser }) => {
                 <div className="posts-grid">
                     {filteredExperiences.map(exp => (
                         <ExperienceCard
-                            key={exp.uuid || exp.id}
+                            key={exp.uuid}
                             post={exp}
                             baseApiUrl={baseApiUrl}
+                            username={exp.user?.username ?? user?.username ?? 'Usuario'}
                             hiddenQuotes={hiddenQuotes}
                             toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
                             showMentions={showMentions}
@@ -233,8 +238,7 @@ const HomePage = ({ user, setUser }) => {
                                         <h6>Mentions:</h6>
                                         <div className="mentions-list">
                                             {mentions.map((mention, i) => (
-                                                <span className="mention">@{mention}</span>
-
+                                                <span key={i} className="mention">@{mention}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -242,6 +246,7 @@ const HomePage = ({ user, setUser }) => {
                             )}
                             renderTags={renderTags}
                             formatDate={formatDate}
+                            isOwner={false}
                         />
                     ))}
 
@@ -250,8 +255,10 @@ const HomePage = ({ user, setUser }) => {
                             key={sug.uuid}
                             post={sug}
                             baseApiUrl={baseApiUrl}
+                            username={sug.user?.username || user.username}
                             renderTags={renderTags}
                             formatDate={formatDate}
+                            isOwner={false}
                         />
                     ))}
                 </div>

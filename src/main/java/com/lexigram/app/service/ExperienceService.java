@@ -167,4 +167,15 @@ public class ExperienceService {
     return followingExperiences;
   }
 
+  public boolean deleteExperience(UUID experienceUuid, Long userId) {
+    Optional<Experience> experience = experienceRepository.findByUuid(experienceUuid);
+    if (experience.isEmpty()){
+      return false;
+    }
+    experienceRepository.deleteById(experience.get().getId());
+    User user = userRepository.findById(userId).get();
+    userRepository.save(user);
+    return true;
+  }
+
 }

@@ -257,3 +257,100 @@ input[type="file"]:hover {
     gap: 10px;
     margin-bottom: 40px;
 }
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.delete-confirmation-modal {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    max-width: 450px;
+    width: 100%;
+}
+
+.delete-confirmation-modal h3 {
+    margin-top: 0;
+    color: #d32f2f;
+}
+
+.delete-confirmation-modal p {
+    margin-bottom: 1.5rem;
+    color: #555;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .posts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .profile-cover {
+        height: 150px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .profile-bio {
+        padding: 3.5rem 1.5rem 1.5rem;
+    }
+
+    .profile-nav-item {
+        padding: 0.75rem 1.5rem;
+    }
+
+    .profile-content {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .posts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-avatar-container {
+        bottom: -40px;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+    }
+
+    .profile-username {
+        font-size: 1.2rem;
+    }
+
+    .profile-bio {
+        padding: 3rem 1rem 1rem;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+
+    .btn-primary, .btn-secondary, .btn-danger {
+        width: 100%;
+    }
+}

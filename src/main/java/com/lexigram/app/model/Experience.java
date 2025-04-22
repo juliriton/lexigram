@@ -65,11 +65,11 @@ public class Experience {
   @OneToMany(mappedBy = "origin", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Experience> forks = new ArrayList<>();
 
-  @OneToOne(cascade = CascadeType.ALL)
+  @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "style_id", referencedColumnName = "id")
   private ExperienceStyle style;
 
-  @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL)
+  @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   private ExperiencePrivacySettings privacySettings;
 
   @ManyToMany

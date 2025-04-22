@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class SuggestionService {
@@ -104,6 +105,17 @@ public class SuggestionService {
       }
     }
     return followingSuggestions;
+  }
+
+  public boolean deleteSuggestion(UUID suggestionUuid, Long userId) {
+    Optional<Suggestion> suggestion = suggestionRepository.findByUuid(suggestionUuid);
+    if (suggestion.isEmpty()){
+      return false;
+    }
+    suggestionRepository.deleteById(suggestion.get().getId());
+    User user = userRepository.findById(userId).get();
+    userRepository.save(user);
+    return true;
   }
 
 }

@@ -15,6 +15,16 @@
     box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
+.experience-card-header {
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.author-username {
+    font-size: 0.9rem;
+}
+
 .experience-media-wrapper {
     position: relative;
     height: 180px;
@@ -166,4 +176,18 @@
     border-radius: 12px;
     background-color: #6600ff;
     color: #ffffff;
+}
+
+.btn-delete {
+    background-color: #fff0f0;
+    color: #d32f2f;
+    margin-left: auto;
+}
+
+.btn-delete:hover {
+    background-color: #ffebee;
+}
+
+.delete-icon {
+    font-size: 0.75rem;
 }
