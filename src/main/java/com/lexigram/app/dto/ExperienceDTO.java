@@ -70,17 +70,4 @@ public class ExperienceDTO {
 
 }
 
-/*
 
-    const [showMentions, setShowMentions] = useState(false);
-
-       const renderMentions = (mentions) => (
-        <div>
-            <h6>Mentions:</h6>
-            {mentions.map((mention, i) => (
-                <span key={i} className="badge bg-info me-1">{mention}</span>
-            ))}
-        </div>
-    );
-
- */

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/UserPorfilePage.css';
+import '../styles/UserProfilePage.css';
+import ExperienceCard from '../components/ExperienceCard';
+import SuggestionCard from '../components/SuggestionCard';
 
 const UserProfilePage = () => {
     const navigate = useNavigate();
@@ -219,112 +221,40 @@ const UserProfilePage = () => {
         )
     );
 
-    const isVideo = (url) => {
-        return url?.match(/\.(mp4|webm|ogg)$/i);
-    };
-
     const renderPost = (post) => {
         const isExperience = post.type === 'Experience';
         const postId = post.uuid || post.id;
-        const isQuoteHidden = hiddenQuotes[postId];
-        const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
-        const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
 
         if (isExperience) {
             return (
-                <div key={postId} className="post-card">
-                    <div className="post-type">{post.type}</div>
-
-                    {fullMediaUrl && (
-                        <div className="post-media">
-                            {isVideo(mediaUrl) ? (
-                                <video
-                                    src={fullMediaUrl}
-                                    autoPlay
-                                    muted
-                                    loop
-                                    className="post-video"
-                                    style={{
-                                        filter: isQuoteHidden ? 'none' : 'brightness(70%)'
-                                    }}
-                                />
-                            ) : (
-                                <div
-                                    className="post-image"
-                                    style={{
-                                        backgroundImage: `url(${fullMediaUrl})`,
-                                        filter: isQuoteHidden ? 'none' : 'brightness(70%)'
-                                    }}
-                                />
-                            )}
-
-                            {!isQuoteHidden && (
-                                <div className="post-quote-overlay">
-                                    <div className="post-quote" style={{
-                                        fontSize: post.style?.fontSize ? `${post.style.fontSize}px` : 'inherit',
-                                        fontFamily: post.style?.fontFamily || 'inherit',
-                                        color: post.style?.fontColor || 'inherit'
-                                    }}>
-                                        "{post.quote || post.title}"
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="post-content">
-                        <h3 className="post-title">{post.title}</h3>
-                        <p>{post.reflection || post.content}</p>
-
-                        <div className="post-meta">
-                            {post.creationDate && (
-                                <small className="post-date">{formatDate(post.creationDate)}</small>
-                            )}
-                        </div>
-
-                        {post.tags?.length > 0 && (
-                            <div className="post-tags">{renderTags(post.tags)}</div>
-                        )}
-
-                        {post.mentions?.length > 0 && (
-                            <button
-                                className="btn-link"
-                                onClick={() => setShowMentions(prev => ({ ...prev, [postId]: !prev[postId] }))}
-                            >
-                                {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
-                            </button>
-                        )}
-
-                        {renderMentions(post.mentions, postId)}
-                    </div>
-
-                    {fullMediaUrl && (
-                        <button className="btn-toggle-quote" onClick={() => toggleQuote(postId)}>
-                            {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
-                        </button>
-                    )}
-                </div>
+                <ExperienceCard
+                    key={postId}
+                    post={post}
+                    baseApiUrl={baseApiUrl}
+                    hiddenQuotes={hiddenQuotes}
+                    toggleQuote={toggleQuote}
+                    showMentions={showMentions}
+                    setShowMentions={setShowMentions}
+                    renderMentions={renderMentions}
+                    renderTags={renderTags}
+                    formatDate={formatDate}
+                />
             );
         }
 
         return (
-            <div key={postId} className="post-card">
-                <div className="post-type">Suggestion</div>
-                <div className="post-content">
-                    <h5 className="post-subtitle">{post.header || "Tell me about"}</h5>
-                    <h3 className="post-title">{post.body}</h3>
-
-                    <div className="post-meta">
-                        {post.creationDate && (
-                            <small className="post-date">{formatDate(post.creationDate)}</small>
-                        )}
-                    </div>
-
-                    {post.tags?.length > 0 && (
-                        <div className="post-tags">{renderTags(post.tags)}</div>
-                    )}
-                </div>
-            </div>
+            <SuggestionCard
+                key={postId}
+                post={post}
+                baseApiUrl={baseApiUrl}
+                hiddenQuotes={hiddenQuotes}
+                toggleQuote={toggleQuote}
+                showMentions={showMentions}
+                setShowMentions={setShowMentions}
+                renderMentions={renderMentions}
+                renderTags={renderTags}
+                formatDate={formatDate}
+            />
         );
     };
 
@@ -425,46 +355,35 @@ const UserProfilePage = () => {
                         <h3>Update Biography</h3>
                         <textarea
                             value={newBio}
-                            placeholder="Write something about yourself..."
-                            rows="3"
                             onChange={(e) => setNewBio(e.target.value)}
+                            rows="4"
+                            placeholder="Write something about yourself..."
                         />
-                        <button className="btn-primary" onClick={handleBioUpdate}>
+                        <button
+                            className="btn-primary"
+                            onClick={handleBioUpdate}
+                        >
                             Save Biography
                         </button>
                     </div>
 
                     <div className="edit-section">
-                        <h3>Update Profile Picture</h3>
-                        <div className="file-upload">
-                            <label className="file-upload-label">
-                                <input
-                                    id="profile-picture-input"
-                                    type="file"
-                                    accept=".jpg"
-                                    onChange={handleFileChange}
-                                    className="file-input"
-                                />
-                                <span>Choose File</span>
-                            </label>
-                            <span className="file-name">{selectedFile ? selectedFile.name : 'No file chosen'}</span>
-                        </div>
+                        <h3>Change Profile Picture</h3>
+                        <input
+                            type="file"
+                            id="profile-picture-input"
+                            accept="image/jpeg"
+                            onChange={handleFileChange}
+                        />
                         <button
-                            className="btn-secondary"
+                            className="btn-primary"
                             onClick={handlePictureUpload}
-                            disabled={!selectedFile}
                         >
                             Upload Picture
                         </button>
                     </div>
                 </div>
             )}
-
-            <div className="profile-footer">
-                <button className="btn-outline" onClick={() => navigate('/')}>
-                    Back to Home
-                </button>
-            </div>
         </div>
     );
 };

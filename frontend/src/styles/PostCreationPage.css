@@ -45,16 +45,16 @@
     gap: 1rem;
 }
 
-textarea,
-input[type="text"],
-input[type="number"],
-select {
+.post-creation-container textarea,
+.post-creation-container input[type="text"],
+.post-creation-container input[type="number"],
+.post-creation-container select {
     padding: 0.5rem;
     border-radius: 8px;
     border: 1px solid #ccc;
 }
 
-textarea {
+.post-creation-container textarea {
     min-height: 60px;
 }
 

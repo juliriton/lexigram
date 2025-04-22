@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ← for navigation
+import { useNavigate } from 'react-router-dom';
 import '../styles/SettingsPage.css';
 
 const SettingsPage = () => {
@@ -14,16 +14,16 @@ const SettingsPage = () => {
     const [oldPassword, setOldPassword] = useState('');
     const [oldPrivacy, setOldPrivacy] = useState(null);
 
-    const navigate = useNavigate(); // ← Hook for navigation
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUserSettings = async () => {
             try {
-                const resUser = await fetch(`http://localhost:8080/api/auth/me`, {
-                    credentials: 'include'
+                const resUser = await fetch('http://localhost:8080/api/auth/me', {
+                    credentials: 'include',
                 });
-                const resPrivacy = await fetch(`http://localhost:8080/api/auth/me/privacy`, {
-                    credentials: 'include'
+                const resPrivacy = await fetch('http://localhost:8080/api/auth/me/privacy', {
+                    credentials: 'include',
                 });
 
                 if (!resUser.ok || !resPrivacy.ok) throw new Error('Error loading data');
@@ -60,7 +60,7 @@ const SettingsPage = () => {
                 });
                 if (!res.ok) throw new Error('Failed');
                 setMessage(`Username updated successfully. Old: ${oldUsername}, New: ${username}`);
-                setOldUsername(username); // Update old value to the new one
+                setOldUsername(username);
             } catch {
                 setMessage('Error updating username.');
             }
@@ -97,7 +97,7 @@ const SettingsPage = () => {
                 if (!res.ok) throw new Error('Failed');
                 setPassword('');
                 setMessage('Password updated successfully.');
-                setOldPassword(password); // Update old value to the new one
+                setOldPassword(password);
             } catch {
                 setMessage('Error updating password.');
             }
@@ -127,7 +127,7 @@ const SettingsPage = () => {
         try {
             const res = await fetch('http://localhost:8080/api/auth/me', {
                 method: 'DELETE',
-                credentials: 'include'
+                credentials: 'include',
             });
             if (!res.ok) throw new Error('Failed');
 
@@ -143,14 +143,10 @@ const SettingsPage = () => {
     if (loading) return <div className="container mt-4">Loading settings...</div>;
 
     return (
-        <div className="settings-page container mt-4" style={{ maxWidth: '600px' }}>
+        <div className="settings-page container mt-4">
             <h2 className="mb-4 text-center">Account Settings</h2>
 
-            {message && (
-                <div className="alert alert-info animate__animated animate__fadeInDown">
-                    {message}
-                </div>
-            )}
+            {message && <div className="alert alert-info">{message}</div>}
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
@@ -170,9 +166,7 @@ const SettingsPage = () => {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
-                    <button className="btn btn-primary w-100" onClick={updateUsername}>
-                        Save Changes
-                    </button>
+                    <button className="btn btn-primary w-100" onClick={updateUsername}>Save Changes</button>
                 </div>
             </div>
 
@@ -185,9 +179,7 @@ const SettingsPage = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
-                    <button className="btn btn-primary w-100" onClick={updateEmail}>
-                        Save Changes
-                    </button>
+                    <button className="btn btn-primary w-100" onClick={updateEmail}>Save Changes</button>
                 </div>
             </div>
 
@@ -200,9 +192,7 @@ const SettingsPage = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <button className="btn btn-primary w-100" onClick={updatePassword}>
-                        Save Changes
-                    </button>
+                    <button className="btn btn-primary w-100" onClick={updatePassword}>Save Changes</button>
                 </div>
             </div>
 
@@ -220,28 +210,12 @@ const SettingsPage = () => {
                 <div className="card-body">
                     <h5 className="card-title text-danger">Delete Account</h5>
                     <p className="text-muted">This action is irreversible.</p>
-                    <button className="btn btn-danger w-100" onClick={deleteAccount}>
-                        Delete My Account
-                    </button>
+                    <button className="btn btn-danger w-100" onClick={deleteAccount}>Delete My Account</button>
                 </div>
             </div>
-            <div className={"text-center"}>
-                <button
-                    className="btn btn-primary mt-2 d-inline-flex align-items-center gap-2 animate__animated animate__fadeIn"
-                    onClick={() => navigate('/')}
-                    style={{
-                        transition: 'transform 0.2s ease, box-shadow 0.3s ease',
-                    }}
-                    onMouseDown={(e) => {
-                        e.currentTarget.style.transform = 'scale(0.97)';
-                    }}
-                    onMouseUp={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                    }}
-                >
+
+            <div className="text-center">
+                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>
                     <i className="bi bi-house-door"></i> Back to Home
                 </button>
             </div>

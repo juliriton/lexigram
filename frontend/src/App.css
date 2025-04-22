@@ -5,32 +5,6 @@ body {
   padding: 20px;
 }
 
-.container {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-}
-
-.user-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.user-table th,
-.user-table td {
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-}
-
-.profile-container {
-  text-align: center;
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  max-width: 500px;
-  margin: auto;
-}
-
 .profile-pic {
   width: 150px;
   height: 150px;

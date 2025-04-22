@@ -1,0 +1,259 @@
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+.profile-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #6e8efb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.profile-header {
+    margin-bottom: 30px;
+}
+
+.profile-cover {
+    position: relative;
+    height: 175px;
+    background: linear-gradient(135deg, #5805ff, #fd4100);
+    border-radius: 12px 12px 0 0;
+}
+
+.profile-avatar-container {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    object-fit: cover;
+    background-color: white;
+}
+
+.profile-username {
+    margin-top: 55px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.profile-bio {
+    margin-top: 60px;
+    text-align: center;
+    padding: 0 20px;
+    font-style: italic;
+    color: #666;
+}
+
+.profile-nav {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-nav-item {
+    padding: 12px 24px;
+    margin: 0 5px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    color: #777;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.profile-nav-item:hover {
+    color: #6e8efb;
+}
+
+.profile-nav-item.active {
+    color: #6e8efb;
+}
+
+.profile-nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: #6e8efb;
+    border-radius: 3px 3px 0 0;
+}
+
+.profile-content {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.post-filter {
+    margin-bottom: 20px;
+}
+
+.post-filter select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1em;
+}
+
+.no-posts {
+    text-align: center;
+    padding: 30px;
+    color: #888;
+}
+
+.profile-footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .profile-nav-item {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    .profile-username {
+        font-size: 18px;
+    }
+}
+
+.profile-edit {
+    margin-top: 30px;
+    background-color: #fafafa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.edit-section {
+    margin-bottom: 30px;
+}
+
+.edit-section h3 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: vertical;
+    min-height: 120px;
+    background-color: #fff;
+}
+
+textarea:focus {
+    border-color: #6e8efb;
+    outline: none;
+    box-shadow: 0 0 5px rgba(110, 142, 251, 0.5);
+}
+
+button.btn-primary {
+    background-color: #6e8efb;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-primary:hover {
+    background-color: #5a7de8;
+}
+
+.edit-section {
+    margin-bottom: 40px; /* Increased margin */
+}
+
+.edit-section h3 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 20px; /* Increased margin */
+}
+
+button.btn-primary {
+    padding: 12px 30px;
+    background-color: #6e8efb;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-primary:hover {
+    background-color: #4e70d1;
+}
+
+input[type="file"] {
+    display: block;
+    margin-bottom: 20px; /* Increased margin */
+}
+
+input[type="file"]:hover {
+    cursor: pointer;
+}
+
+.upload-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 40px;
+}
