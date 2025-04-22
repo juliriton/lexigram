@@ -492,6 +492,11 @@ const UserProfilePage = () => {
                     </div>
                 </div>
             )}
+            <div className="text-center">
+                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>
+                    <i className="bi bi-house-door"></i> Back to Home
+                </button>
+            </div>
         </div>
     );
 };
