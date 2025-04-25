@@ -1,6 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaCog, FaSignOutAlt, FaTimes, FaPenFancy } from 'react-icons/fa';
+import {
+    FaUserCircle,
+    FaCog,
+    FaSignOutAlt,
+    FaTimes,
+    FaPenFancy,
+    FaPhotoVideo,
+    FaQuestion,
+    FaBorderAll
+} from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
 import '../styles/HomePage.css';
@@ -195,7 +204,7 @@ const HomePage = ({ user, setUser }) => {
                         <button
                             className={`btn btn-outline-primary ${feedType === 'my' ? 'active' : ''}`}
                             onClick={() => setFeedType('my')}
-                        >My Feed</button>
+                        >My feed</button>
                         <button
                             className={`btn btn-outline-primary ${feedType === 'following' ? 'active' : ''}`}
                             onClick={() => setFeedType('following')}
@@ -210,15 +219,15 @@ const HomePage = ({ user, setUser }) => {
                     <button
                         className={`btn btn-outline-secondary ${postFilter === 'all' ? 'active' : ''}`}
                         onClick={() => setPostFilter('all')}
-                    >All</button>
+                    > <FaBorderAll size={25} /> </button>
                     <button
                         className={`btn btn-outline-secondary ${postFilter === 'experiences' ? 'active' : ''}`}
                         onClick={() => setPostFilter('experiences')}
-                    >Experiences</button>
+                    > <FaPhotoVideo size={25} /></button>
                     <button
                         className={`btn btn-outline-secondary ${postFilter === 'suggestions' ? 'active' : ''}`}
                         onClick={() => setPostFilter('suggestions')}
-                    >Suggestions</button>
+                    > <FaQuestion size={25} /></button>
                 </div>
 
                 <div className="posts-grid">

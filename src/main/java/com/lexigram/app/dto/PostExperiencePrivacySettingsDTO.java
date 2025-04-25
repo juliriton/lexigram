@@ -1,6 +1,5 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.ExperiencePrivacySettings;
 import jakarta.validation.constraints.NotNull;
 
 public class PostExperiencePrivacySettingsDTO {
@@ -16,21 +15,19 @@ public class PostExperiencePrivacySettingsDTO {
 
   public PostExperiencePrivacySettingsDTO() {}
 
-  public PostExperiencePrivacySettingsDTO(ExperiencePrivacySettings experiencePrivacySettings) {
-    this.allowComments = experiencePrivacySettings.areCommentsAllowed();
-    this.allowForks = experiencePrivacySettings.areForksAllowed();
-    this.allowResonates = experiencePrivacySettings.areResonatesAllowed();
+  public PostExperiencePrivacySettingsDTO(boolean allowComments, boolean allowForks, boolean allowResonates) {
+    this.allowComments = allowComments;
+    this.allowForks = allowForks;
+    this.allowResonates = allowResonates;
   }
 
-  public boolean areCommentsAllowed(){
-    return allowComments;
-  }
+  public boolean getAllowComments(){ return allowComments; }
 
-  public boolean areForksAllowed(){
+  public boolean getAllowForks(){
     return allowForks;
   }
 
-  public boolean areResonatesAllowed(){
+  public boolean getAllowResonates(){
     return allowResonates;
   }
 

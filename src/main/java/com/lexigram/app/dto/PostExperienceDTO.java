@@ -7,7 +7,7 @@ import java.util.Set;
 public class PostExperienceDTO {
 
   @NotBlank
-  @Size(min = 10, max = 100, message = "Quote must be between 10 and 150 characters. Share something meaningful!")
+  @Size(min = 10, max = 100, message = "Quote must be between 10 and 100 characters. Share something meaningful!")
   private String quote;
 
   @NotBlank

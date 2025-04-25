@@ -35,6 +35,7 @@ const PostCreationPage = ({ user }) => {
         const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
         const mentionArray = mentions.split(',').map(m => m.trim().replace('@', '')).filter(m => m !== '');
 
+        // Create the post object
         const post = {
             quote,
             reflection,
@@ -55,8 +56,13 @@ const PostCreationPage = ({ user }) => {
             }
         };
 
+        console.log("Post object before stringify:", post);
+        console.log("Privacy settings in post:", post.privacySettings);
+
         const formData = new FormData();
+
         formData.append('post', new Blob([JSON.stringify(post)], { type: 'application/json' }));
+
         if (file) formData.append('file', file);
 
         try {
@@ -175,7 +181,7 @@ const PostCreationPage = ({ user }) => {
                 <>
                     <h2>Submit a Suggestion</h2>
                     <form onSubmit={handleSuggestionSubmit} className="form-section">
-                        <textarea placeholder="Write your suggestion..." value={suggestionText} onChange={(e) => setSuggestionText(e.target.value)} required />
+                        <textarea placeholder="Write your suggestion" value={suggestionText} onChange={(e) => setSuggestionText(e.target.value)} required />
                         <input type="text" placeholder="Tags (comma separated)" value={suggestionTags} onChange={(e) => setSuggestionTags(e.target.value)} />
 
                         <div className="form-buttons">

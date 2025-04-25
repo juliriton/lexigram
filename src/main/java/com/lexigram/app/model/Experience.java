@@ -58,13 +58,14 @@ public class Experience {
   )
   private Set<Tag> tags = new HashSet<>();
 
+
   @ManyToOne
   @JoinColumn(name = "origin_id", referencedColumnName = "id", nullable = true)
   private Experience origin;
 
   @OneToMany(mappedBy = "origin", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Experience> forks = new ArrayList<>();
-
+  
   @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "style_id", referencedColumnName = "id")
   private ExperienceStyle style;

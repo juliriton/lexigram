@@ -107,9 +107,9 @@ public class ExperienceService {
 
     ExperiencePrivacySettings privacy = new ExperiencePrivacySettings(
         experience,
-        privacySettingsDTO.areCommentsAllowed(),
-        privacySettingsDTO.areForksAllowed(),
-        privacySettingsDTO.areResonatesAllowed()
+        privacySettingsDTO.getAllowComments(),
+        privacySettingsDTO.getAllowForks(),
+        privacySettingsDTO.getAllowResonates()
     );
     experiencePrivacySettingsRepository.save(privacy);
     experience.setPrivacySettings(privacy);

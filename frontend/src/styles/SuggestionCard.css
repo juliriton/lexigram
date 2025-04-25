@@ -22,7 +22,7 @@
     color: #333;
 }
 
-.author-username {
+.username {
     font-size: 0.9rem;
 }
 
@@ -136,6 +136,6 @@
     background-color: #ffebee;
 }
 
-.delete-icon .sugggestion {
+.delete-icon .suggestion {
     font-size: 0.75rem;
 }

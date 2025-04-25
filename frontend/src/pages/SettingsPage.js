@@ -35,8 +35,6 @@ const SettingsPage = () => {
                 setOldUsername(userData.username);
                 setOldPrivacy(privacyData.visibility);
 
-                setEmail(userData.email);
-                setUsername(userData.username);
                 setPrivacy(privacyData.visibility);
             } catch (err) {
                 console.error(err);
@@ -150,42 +148,47 @@ const SettingsPage = () => {
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Current Information</h5>
-                    <p><strong>Username:</strong> {username}</p>
-                    <p><strong>Email:</strong> {email}</p>
-                    <p><strong>Privacy:</strong> {privacy === true ? 'Public' : 'Private'}</p>
+                    <h5 className="card-title">Account information</h5>
+                    <p><strong>Username:</strong> {oldUsername}</p>
+                    <p><strong>Email:</strong> {oldEmail}</p>
+                    <p><strong>Privacy:</strong> {oldPrivacy === true ? 'Public' : 'Private'}</p>
                 </div>
             </div>
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Update Username</h5>
+                    <h5 className="card-title">Update username</h5>
                     <input
                         type="text"
                         className="form-control mb-2"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        placeholder="Enter new username"
                     />
-                    <button className="btn btn-primary w-100" onClick={updateUsername}>Save Changes</button>
+                    <button className="btn btn-primary w-100" onClick={updateUsername}>Save
+                        Changes
+                    </button>
                 </div>
             </div>
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Update Email</h5>
+                    <h5 className="card-title">Update email</h5>
                     <input
                         type="email"
                         className="form-control mb-2"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter new email"
                     />
-                    <button className="btn btn-primary w-100" onClick={updateEmail}>Save Changes</button>
+                    <button className="btn btn-primary w-100" onClick={updateEmail}>Save Changes
+                    </button>
                 </div>
             </div>
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Change Password</h5>
+                    <h5 className="card-title">Change password</h5>
                     <input
                         type="password"
                         className="form-control mb-2"
@@ -198,7 +201,7 @@ const SettingsPage = () => {
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Profile Visibility</h5>
+                    <h5 className="card-title">Profile visibility</h5>
                     <p>Current: <strong>{privacy ? 'Public' : 'Private'}</strong></p>
                     <button className="btn btn-secondary w-100" onClick={togglePrivacy}>
                         {privacy ? 'Make Private' : 'Make Public'}
@@ -208,15 +211,15 @@ const SettingsPage = () => {
 
             <div className="card shadow border-danger mb-4">
                 <div className="card-body">
-                    <h5 className="card-title text-danger">Delete Account</h5>
+                    <h5 className="card-title text-danger">Delete account</h5>
                     <p className="text-muted">This action is irreversible.</p>
-                    <button className="btn btn-danger w-100" onClick={deleteAccount}>Delete My Account</button>
+                    <button className="btn btn-danger w-100" onClick={deleteAccount}>Delete my account</button>
                 </div>
             </div>
 
             <div className="text-center">
                 <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>
-                    <i className="bi bi-house-door"></i> Back to Home
+                    <i className="bi bi-house-door"></i> Home
                 </button>
             </div>
         </div>

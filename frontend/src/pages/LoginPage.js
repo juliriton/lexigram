@@ -25,14 +25,14 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
                 credentials: 'include',  // Esto asegura que la cookie de sesion se incluya
             });
 
-            if (!response.ok) throw new Error('Error al iniciar sesion');
+            if (!response.ok) throw new Error('Error signing in');
 
             const data = await response.json();
             localStorage.setItem('userId', data.userId);  // Almacenar el userId en localStorage
             setUser(data);  // Actualizar el estado de usuario
             navigate('/');  // Redirigir a la pagina principal después del login exitoso
         } catch (err) {
-            setErrorMessage('Usuario o contraseña incorrectos. Intenta de nuevo.');
+            setErrorMessage('Incorrect username or password. Try again.');
             setShowError(true);
 
             setTimeout(() => setShowError(false), 5000);
@@ -41,11 +41,11 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
 
     return (
         <div className="login-container">
-            <h2>Iniciar sesión</h2>
+            <h2>Lexigram</h2>
             <form onSubmit={handleLogin}>
                 <input
                     type="text"
-                    placeholder="Correo electrónico o Nombre de usuario"
+                    placeholder="Username or email"
                     value={credential}
                     onChange={(e) => {
                         setCredential(e.target.value);
@@ -70,10 +70,10 @@ const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
                         {errorMessage}
                     </div>
                 )}
-                <button type="submit" class={"boton-elegante"}>Iniciar sesión</button>
+                <button type="submit" class={"boton-elegante"}>Login</button>
             </form>
             <p className="mt-3">
-                Don't have an Account yet? <Link to="/signup">Sign-Up here</Link>
+                Don't have an account yet? <Link to="/signup">Sign-Up here</Link>
             </p>
         </div>
     );
