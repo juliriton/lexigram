@@ -64,6 +64,45 @@ const HomePage = ({ user, setUser }) => {
         }
     }, [baseApiUrl, defaultProfilePicture]);
 
+    const renderExperienceCards = () => {
+        return filteredExperiences.map(exp => {
+            // Debug log to see what we're getting from backend
+            console.log(`Experience post user data:`, exp.user);
+
+            // Determine if the user object has a UUID
+            const userUuid = exp.user?.uuid || null;
+
+            return (
+                <ExperienceCard
+                    key={exp.uuid}
+                    post={exp}
+                    baseApiUrl={baseApiUrl}
+                    username={exp.user?.username ?? user?.username ?? 'Usuario'}
+                    userUuid={userUuid}  // Pass the user UUID if available
+                    hiddenQuotes={hiddenQuotes}
+                    toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
+                    showMentions={showMentions}
+                    setShowMentions={setShowMentions}
+                    renderMentions={(mentions, id) => (
+                        showMentions[id] && (
+                            <div className="post-mentions">
+                                <h6>Mentions:</h6>
+                                <div className="mentions-list">
+                                    {mentions.map((mention, i) => (
+                                        <span key={i} className="mention">@{mention}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    )}
+                    renderTags={renderTags}
+                    formatDate={formatDate}
+                    isOwner={user && exp.user && user.uuid === exp.user.uuid}
+                />
+            );
+        });
+    };
+
     useEffect(() => {
         const fetchUserAndFeed = async () => {
             try {
@@ -231,33 +270,7 @@ const HomePage = ({ user, setUser }) => {
                 </div>
 
                 <div className="posts-grid">
-                    {filteredExperiences.map(exp => (
-                        <ExperienceCard
-                            key={exp.uuid}
-                            post={exp}
-                            baseApiUrl={baseApiUrl}
-                            username={exp.user?.username ?? user?.username ?? 'Usuario'}
-                            hiddenQuotes={hiddenQuotes}
-                            toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
-                            showMentions={showMentions}
-                            setShowMentions={setShowMentions}
-                            renderMentions={(mentions, id) => (
-                                showMentions[id] && (
-                                    <div className="post-mentions">
-                                        <h6>Mentions:</h6>
-                                        <div className="mentions-list">
-                                            {mentions.map((mention, i) => (
-                                                <span key={i} className="mention">@{mention}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )
-                            )}
-                            renderTags={renderTags}
-                            formatDate={formatDate}
-                            isOwner={false}
-                        />
-                    ))}
+                    {renderExperienceCards()}
 
                     {filteredSuggestions.map(sug => (
                         <SuggestionCard

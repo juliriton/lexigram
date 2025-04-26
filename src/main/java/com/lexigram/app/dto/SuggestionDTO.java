@@ -23,6 +23,7 @@ public class SuggestionDTO {
     this.uuid = suggestion.getUuid();
     this.user = new UserDTO(
         suggestion.getUser().getId(),
+        suggestion.getUser().getUuid(),
         suggestion.getUser().getUsername(),
         suggestion.getUser().getEmail()
     );
@@ -59,10 +60,7 @@ public class SuggestionDTO {
   }
 
   public UserDTO getUser() {
-    Long id = user.getId();
-    String username = user.getUsername();
-    String email = user.getEmail();
-    return new UserDTO(id, username, email);
+    return user;
   }
 
   public Set<TagDTO> getTags(){

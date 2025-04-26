@@ -15,4 +15,5 @@ public interface ExperienceRepository extends JpaRepository<Experience, Long> {
   Optional<Experience> findByUserId(Long id);
   Optional<Experience> findByUuid(UUID uuid);
   Set<Experience> getExperiencesByUserId(Long id);
+  Set<Experience> getExperiencesByUserUuid(UUID uuid);
 }

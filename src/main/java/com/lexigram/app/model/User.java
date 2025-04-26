@@ -4,14 +4,25 @@ import jakarta.persistence.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 public class User {
 
+  @PrePersist
+  public void onCreate() {
+    this.uuid = UUID.randomUUID();
+    this.followerAmount = 0L;
+    this.followingAmount = 0L;
+  }
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(nullable = false, unique = true, updatable = false)
+  private UUID uuid;
 
   @Column(unique = true, nullable = false)
   private String username;
@@ -47,14 +58,24 @@ public class User {
 
   @ManyToMany
   @JoinTable(
-      name = "user_following",
-      joinColumns = @JoinColumn(name = "following_id"),
-      inverseJoinColumns = @JoinColumn(name = "follower_id")
+      name = "user_followers",
+      joinColumns = @JoinColumn(name = "follower_id"),
+      inverseJoinColumns = @JoinColumn(name = "following_id")
   )
   private Set<User> followers = new HashSet<>();
 
+  private Long followingAmount;
+
+  private Long followerAmount;
+
+  public User() {}
+
   public Long getId() {
     return id;
+  }
+
+  public UUID getUuid() {
+    return uuid;
   }
 
   public String getUsername() {
@@ -105,18 +126,30 @@ public class User {
 
   public void addFollower(User user) {
     followers.add(user);
+    followerAmount += 1;
   }
 
   public void addFollowing(User user) {
     following.add(user);
+    followingAmount += 1;
   }
 
   public void removeFollowing(User user) {
     following.remove(user);
+    followingAmount -= 1;
   }
 
   public void removeFollower(User user) {
     followers.remove(user);
+    followerAmount -= 1;
+  }
+
+  public Long getFollowingAmount() {
+    return followingAmount;
+  }
+
+  public Long getFollowerAmount() {
+    return followerAmount;
   }
 
 }

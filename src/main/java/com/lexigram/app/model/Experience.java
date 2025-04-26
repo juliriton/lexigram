@@ -10,6 +10,7 @@ public class Experience {
   @PrePersist
   protected void onCreate() {
     this.creationDate = System.currentTimeMillis();
+    this.uuid = UUID.randomUUID();
   }
 
   @Id
@@ -17,7 +18,7 @@ public class Experience {
   private Long id;
 
   @Column(nullable = false, unique = true, updatable = false)
-  private UUID uuid = UUID.randomUUID();
+  private UUID uuid;
 
   @Column(nullable = false, columnDefinition = "Text")
   private String quote;

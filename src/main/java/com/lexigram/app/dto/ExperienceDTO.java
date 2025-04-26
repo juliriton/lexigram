@@ -36,6 +36,7 @@ public class ExperienceDTO {
     this.isOrigin = experience.isOrigin();
     this.user = new UserDTO(
         experience.getUser().getId(),
+        experience.getUser().getUuid(),
         experience.getUser().getUsername(),
         experience.getUser().getEmail()
     );

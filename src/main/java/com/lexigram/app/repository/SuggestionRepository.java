@@ -14,4 +14,5 @@ public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
   void deleteById(Long suggestionId);
   Set<Suggestion> getSuggestionsByUserId(Long id);
   Optional<Suggestion> findByUuid(UUID suggestionUuid);
+  Set<Suggestion> getSuggestionsByUserUuid(UUID uuid);
 }

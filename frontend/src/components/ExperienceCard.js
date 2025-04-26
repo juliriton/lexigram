@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { FaPhotoVideo, FaTrash } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
+import { useNavigate } from 'react-router-dom';
 import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
@@ -16,11 +17,15 @@ const ExperienceCard = ({
                             onDelete,
                             isOwner
                         }) => {
+    const navigate = useNavigate();
     const postId        = post.uuid;
     const isQuoteHidden = hiddenQuotes[postId];
     const mediaUrl      = post.style?.backgroundMediaUrl || post.imageUrl;
     const fullMediaUrl  = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
     const isVideo       = url => /\.(mp4|webm|ogg)$/i.test(url);
+
+    // Make sure we extract user UUID correctly
+    const userUuid = post.user?.uuid || null;
 
     const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
 
@@ -44,6 +49,22 @@ const ExperienceCard = ({
     const inlineTags  = allTags.slice(0, 5);
     const extraTags   = allTags.slice(5);
     const [showAllTags, setShowAllTags] = useState(false);
+
+    const navigateToUserProfile = () => {
+        // Try to extract user UUID again in case it wasn't passed properly
+        const profileUuid = userUuid || (post.user && post.user.uuid);
+
+        if (profileUuid) {
+            // Navigate to the relationship profile page
+            navigate(`/profile/${profileUuid}`);
+        } else if (username) {
+            // If we don't have a UUID but have a username, we can try to navigate by username
+            console.log(`Attempting to navigate to profile by username: ${username}`);
+            navigate(`/profile/user/${username}`);
+        } else {
+            console.warn("Could not navigate to profile: No user identifier available");
+        }
+    };
 
     return (
         <>
@@ -80,7 +101,7 @@ const ExperienceCard = ({
                                         color: post.style?.fontColor || '#fff'
                                     }}
                                 >
-                                    “{quotePreview}”
+                                    "{quotePreview}"
                                 </div>
                                 {needsQuoteTruncate && (
                                     <button
@@ -97,13 +118,13 @@ const ExperienceCard = ({
 
                 <div className="content">
                     <div className="badges">
-            <span className="badge exp-badge">
-              <FaPhotoVideo /> Experience
-            </span>
+                        <span className="badge exp-badge">
+                          <FaPhotoVideo /> Experience
+                        </span>
                         {post.origin && (
                             <span className="badge orig-badge">
-                <FaStar /> Origin
-              </span>
+                                <FaStar /> Origin
+                            </span>
                         )}
                     </div>
 
@@ -124,7 +145,24 @@ const ExperienceCard = ({
                     </div>
 
                     <div className="meta">
-                        <span className="user">@{username}</span>
+                        {/* Always make username clickable */}
+                        <button
+                            className="username-link-btn"
+                            onClick={navigateToUserProfile}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                padding: 0,
+                                color: '#0d6efd',
+                                textDecoration: 'underline',
+                                cursor: 'pointer',
+                                fontWeight: 'normal',
+                                fontSize: 'inherit'
+                            }}
+                        >
+                            @{username}
+                        </button>
+
                         {post.creationDate && (
                             <span className="date">{formatDate(post.creationDate)}</span>
                         )}
@@ -196,7 +234,7 @@ const ExperienceCard = ({
                                 color: post.style?.fontColor || '#000'
                             }}
                         >
-                            “{rawQuote}”
+                            "{rawQuote}"
                         </div>
                     </div>
                 </div>

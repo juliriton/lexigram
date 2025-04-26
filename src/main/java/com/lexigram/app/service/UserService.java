@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -42,7 +43,7 @@ public class UserService {
     List<User> users = userRepository.findAll();
     List<UserDTO> userDTOs = new ArrayList<>();
     for (User user : users) {
-      userDTOs.add(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
+      userDTOs.add(new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail()));
     }
     return userDTOs;
   }
@@ -53,7 +54,7 @@ public class UserService {
       return Optional.empty();
     }
     User user = userOptional.get();
-    return Optional.of(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
+    return Optional.of(new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail()));
   }
 
   public UserDTO signUp(UserSignUpDTO dto) {
@@ -81,7 +82,7 @@ public class UserService {
     userProfile.setProfilePictureUrl("http://localhost:8080/images/default-profile-picture.png");
     userPrivacySettingsRepository.save(userPrivacySettings);
     userProfileRepository.save(userProfile);
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
   }
 
   public UserDTO updateUserEmail(Long id, UserUpdateEmailDTO dto) {
@@ -102,7 +103,7 @@ public class UserService {
     }
 
     userRepository.save(user);
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
   }
 
   public boolean deleteUser(Long id) {
@@ -133,7 +134,7 @@ public class UserService {
     }
 
     userRepository.save(user);
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
   }
 
   public UserDTO updateUserPassword(Long id, UserUpdatePasswordDTO dto) {
@@ -151,7 +152,7 @@ public class UserService {
     }
 
     userRepository.save(user);
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
   }
 
   public UserDTO login(UserLoginDTO dto) {
@@ -174,12 +175,10 @@ public class UserService {
       throw new WrongPasswordException();
     }
 
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
   }
 
-  //Falta logica de aceptacion
-
-  public Optional<UserDTO> followUser(Long id, Long toFollowId) {
+  public Optional<ConnectionDTO> followUser(Long id, UUID toFollowUuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
     if (userOptional.isEmpty()) {
@@ -187,40 +186,54 @@ public class UserService {
     }
 
     User user = userOptional.get();
-    Optional<User> toFollowOptional = userRepository.findById(toFollowId);
+    Optional<User> toFollowOptional = userRepository.findByUuid(toFollowUuid);
 
     if (toFollowOptional.isPresent()) {
       User toFollow = toFollowOptional.get();
+
+      if (toFollow.getFollowers().contains(user)) {
+        throw new UnsupportedOperationException();
+      }
+
+      UserProfile toFollowProfile = userProfileRepository.findById(toFollow.getId()).get();
       user.addFollowing(toFollow);
       toFollow.addFollower(user);
       userRepository.save(user);
       userRepository.save(toFollow);
+      return Optional.of(new ConnectionDTO(toFollow.getUuid(),
+          toFollow.getUsername(),
+          toFollow.getEmail(),
+          toFollowProfile.getProfilePictureUrl()));
     }
     return Optional.empty();
   }
 
-  public Optional<UserDTO> unfollowUser(Long id, Long toUnfollowId) {
+  public Optional<ConnectionDTO> unfollowUser(Long id, UUID toUnfollowUuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
     if (userOptional.isEmpty()) {
       throw new UserNotFoundException();
     }
     User user = userOptional.get();
-    Optional<User> toUnfollowOptional = userRepository.findById(toUnfollowId);
+    Optional<User> toUnfollowOptional = userRepository.findByUuid(toUnfollowUuid);
 
     if (toUnfollowOptional.isPresent()) {
       User toUnfollow = toUnfollowOptional.get();
+      UserProfile toUnfollowProfile = userProfileRepository.findById(toUnfollow.getId()).get();
       user.removeFollowing(toUnfollow);
       toUnfollow.removeFollower(user);
 
       userRepository.save(user);
       userRepository.save(toUnfollow);
-      return Optional.of(new UserDTO(toUnfollow.getId(), toUnfollow.getUsername(), toUnfollow.getEmail()));
+      return Optional.of(new ConnectionDTO(toUnfollow.getUuid(),
+          toUnfollow.getUsername(),
+          toUnfollow.getEmail(),
+          toUnfollowProfile.getProfilePictureUrl()));
     }
     return Optional.empty();
   }
 
-  public Optional<UserDTO> removeFollower(Long id, Long toRemoveId) {
+  public Optional<ConnectionDTO> removeFollower(Long id, UUID toRemoveUuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
     if (userOptional.isEmpty()) {
@@ -228,13 +241,17 @@ public class UserService {
     }
 
     User user = userOptional.get();
-    Optional<User> toRemoveOptional = userRepository.findById(toRemoveId);
+    Optional<User> toRemoveOptional = userRepository.findByUuid(toRemoveUuid);
 
     if (toRemoveOptional.isPresent()) {
       User toRemove = toRemoveOptional.get();
+      UserProfile toRemoveProfile = userProfileRepository.findById(toRemove.getId()).get();
       user.removeFollower(toRemove);
       userRepository.save(user);
-      return Optional.of(new UserDTO(toRemove.getId(), toRemove.getUsername(), toRemove.getEmail()));
+      return Optional.of(new ConnectionDTO(toRemove.getUuid(),
+          toRemove.getUsername(),
+          toRemove.getEmail(),
+          toRemoveProfile.getProfilePictureUrl()));
     }
     return Optional.empty();
   }
