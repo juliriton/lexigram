@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { FaPhotoVideo, FaTrash } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
 import '../styles/ExperienceCard.css';
@@ -12,124 +12,196 @@ const ExperienceCard = ({
                             showMentions,
                             setShowMentions,
                             renderMentions,
-                            renderTags,
                             formatDate,
                             onDelete,
                             isOwner
                         }) => {
-    const postId = post.uuid;
+    const postId        = post.uuid;
     const isQuoteHidden = hiddenQuotes[postId];
-    const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
-    const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
-    const isVideo = url => url?.match(/\.(mp4|webm|ogg)$/i);
+    const mediaUrl      = post.style?.backgroundMediaUrl || post.imageUrl;
+    const fullMediaUrl  = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
+    const isVideo       = url => /\.(mp4|webm|ogg)$/i.test(url);
+
+    const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
+
+    const quoteFontSize = useMemo(() => {
+        const f = post.style?.fontSize || 20;
+        return Math.min(Math.max(f, 8), 30);
+    }, [post.style]);
+
+    const rawQuote           = post.quote || post.title || '';
+    const quotePreviewLen    = 30;
+    const needsQuoteTruncate = rawQuote.length > quotePreviewLen;
+    const quotePreview       = rawQuote.slice(0, quotePreviewLen) + (needsQuoteTruncate ? '…' : '');
+
+    const reflectionText     = post.reflection || post.content || '';
+    const reflPreviewLen     = 20;
+    const needsReflTruncate  = reflectionText.length > reflPreviewLen;
+    const reflPreview        = reflectionText.slice(0, reflPreviewLen) + (needsReflTruncate ? '…' : '');
+    const [showFullRefl, setShowFullRefl] = useState(false);
+
+    const allTags     = (post.tags || []).slice(0, 20);
+    const inlineTags  = allTags.slice(0, 5);
+    const extraTags   = allTags.slice(5);
+    const [showAllTags, setShowAllTags] = useState(false);
 
     return (
-        <div className="experience-card">
-            <div className="experience-media-wrapper">
+        <>
+            <div className="experience-card">
                 {fullMediaUrl && (
-                    isVideo(mediaUrl)
-                        ? <video src={fullMediaUrl} autoPlay muted loop className="experience-media" />
-                        : <div
-                            className={`experience-media ${isQuoteHidden ? '' : 'blurred'}`}
-                            style={{ backgroundImage: `url(${fullMediaUrl})` }}
-                        />
+                    <div className="media-wrapper">
+                        {isVideo(mediaUrl)
+                            ? <video
+                                src={fullMediaUrl}
+                                className={`media-element ${!isQuoteHidden ? 'blur-media' : ''}`}
+                                autoPlay muted loop
+                            />
+                            : <img
+                                src={fullMediaUrl}
+                                alt={post.title}
+                                className={`media-element ${!isQuoteHidden ? 'blur-media' : ''}`}
+                            />
+                        }
+
+                        {!isQuoteHidden && (
+                            <div
+                                className="quote-overlay"
+                                style={{
+                                    left:  `${post.style?.textPositionX || 50}%`,
+                                    top:   `${post.style?.textPositionY || 50}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                }}
+                            >
+                                <div
+                                    className="quote-text"
+                                    style={{
+                                        fontSize: `${quoteFontSize}px`,
+                                        fontFamily: post.style?.fontFamily || 'inherit',
+                                        color: post.style?.fontColor || '#fff'
+                                    }}
+                                >
+                                    “{quotePreview}”
+                                </div>
+                                {needsQuoteTruncate && (
+                                    <button
+                                        className="overlay-btn"
+                                        onClick={() => setQuoteModalOpen(true)}
+                                    >
+                                        View Full
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 )}
 
-                {!isQuoteHidden && (
-                    <div
-                        className="experience-quote-overlay"
-                        style={{
-                            position: 'absolute',
-                            left: `${post.style?.textPositionX || 50}%`,
-                            top: `${post.style?.textPositionY || 50}%`,
-                            transform: 'translate(-50%, -50%)',
-                            textAlign: 'center',
-                            width: '80%',
-                        }}
-                    >
+                <div className="content">
+                    <div className="badges">
+            <span className="badge exp-badge">
+              <FaPhotoVideo /> Experience
+            </span>
+                        {post.origin && (
+                            <span className="badge orig-badge">
+                <FaStar /> Origin
+              </span>
+                        )}
+                    </div>
+
+                    <h3 className="title">{post.title}</h3>
+
+                    <div className="reflection-section">
+                        <div className="reflection-text">
+                            {showFullRefl ? reflectionText : reflPreview}
+                        </div>
+                        {needsReflTruncate && (
+                            <button
+                                className="show-more-btn"
+                                onClick={() => setShowFullRefl(r => !r)}
+                            >
+                                {showFullRefl ? 'Show less' : 'Show more'}
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="meta">
+                        <span className="user">@{username}</span>
+                        {post.creationDate && (
+                            <span className="date">{formatDate(post.creationDate)}</span>
+                        )}
+                    </div>
+
+                    {allTags.length > 0 && (
+                        <div className="tags-section">
+                            <div className="tags-inline">
+                                {inlineTags.map((t,i) => <span key={i} className="tag">#{t.name}</span>)}
+                                {showAllTags && extraTags.map((t,i) =>
+                                    <span key={i+5} className="tag">#{t.name}</span>
+                                )}
+                            </div>
+                            {extraTags.length > 0 && (
+                                <button
+                                    className="show-more-btn"
+                                    onClick={() => setShowAllTags(x => !x)}
+                                >
+                                    {showAllTags ? 'Show less' : `+${extraTags.length} more`}
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="actions">
+                        <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => toggleQuote(postId)}
+                        >
+                            {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
+                        </button>
+                        {post.mentions?.length > 0 && (
+                            <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() =>
+                                    setShowMentions(p => ({ ...p, [postId]: !p[postId] }))
+                                }
+                            >
+                                {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
+                            </button>
+                        )}
+                        {isOwner && (
+                            <button
+                                className="btn btn-sm btn-outline-danger ms-auto"
+                                onClick={onDelete}
+                            >
+                                <FaTrash /> Delete
+                            </button>
+                        )}
+                    </div>
+
+                    {post.mentions?.length > 0 && showMentions[postId] && (
+                        <div className="mentions">{renderMentions(post.mentions, postId)}</div>
+                    )}
+                </div>
+            </div>
+
+            {isQuoteModalOpen && (
+                <div className="modal-overlay" onClick={() => setQuoteModalOpen(false)}>
+                    <div className="quote-modal-content" onClick={e => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setQuoteModalOpen(false)}>
+                            ×
+                        </button>
                         <div
-                            className="experience-quote"
+                            className="modal-quote-text"
                             style={{
+                                fontSize: `${quoteFontSize}px`,
                                 fontFamily: post.style?.fontFamily || 'inherit',
-                                fontSize: post.style?.fontSize ? `${post.style.fontSize}px` : '1.5rem',
-                                color: post.style?.fontColor || '#fff',
+                                color: post.style?.fontColor || '#000'
                             }}
                         >
-                            "{post.quote || post.title}"
+                            “{rawQuote}”
                         </div>
                     </div>
-                )}
-            </div>
-
-            <div className="experience-card-content">
-                <div className="badges-container">
-                    <div className="badge experience-badge">
-                        <FaPhotoVideo className="badge-icon"/>
-                        <span> Experience</span>
-                    </div>
-
-                    {post.origin && (
-                        <div className="badge origin-badge">
-                            <FaStar className="badge-icon"/>
-                            <span> Origin</span>
-                        </div>
-                    )}
                 </div>
-
-                <h3 className="experience-card-title">{post.title}</h3>
-                <p className="experience-card-reflection">{post.reflection || post.content}</p>
-
-                <div className="experience-card-header">
-                    <span className="username">{username}</span>
-                </div>
-
-                <div className="experience-card-footer">
-                    {post.creationDate && (
-                        <small className="post-date">{formatDate(post.creationDate)}</small>
-                    )}
-                    {post.tags?.length > 0 && (
-                        <div className="post-tags">{renderTags(post.tags)}</div>
-                    )}
-                </div>
-
-                <div className="experience-card-actions">
-                    <button
-                        className="btn-toggle-quote"
-                        onClick={() => toggleQuote(postId)}
-                    >
-                        {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
-                    </button>
-
-                    {post.mentions?.length > 0 && (
-                        <button
-                            className="btn-mentions"
-                            onClick={() => setShowMentions(prev => ({
-                                ...prev,
-                                [postId]: !prev[postId]
-                            }))}
-                        >
-                            {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
-                        </button>
-                    )}
-
-                    {isOwner && (
-                        <button
-                            className="btn-delete"
-                            onClick={onDelete}
-                            aria-label="Delete experience"
-                        >
-                            <FaTrash className="delete-icon"/> Delete
-                        </button>
-                    )}
-
-                </div>
-                {post.mentions?.length > 0 && showMentions[postId] && (
-                    <div className="mentions-container">
-                        {renderMentions(post.mentions, postId)}
-                    </div>
-                )}
-            </div>
-        </div>
+            )}
+        </>
     );
 };
 

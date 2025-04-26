@@ -208,7 +208,7 @@ button.btn-primary:hover {
 }
 
 .edit-section {
-    margin-bottom: 40px; /* Increased margin */
+    margin-bottom: 40px;
 }
 
 .edit-section h3 {
@@ -223,7 +223,7 @@ textarea {
     font-size: 16px;
     border-radius: 8px;
     border: 1px solid #ccc;
-    margin-bottom: 20px; /* Increased margin */
+    margin-bottom: 20px;
 }
 
 button.btn-primary {
@@ -243,7 +243,7 @@ button.btn-primary:hover {
 
 input[type="file"] {
     display: block;
-    margin-bottom: 20px; /* Increased margin */
+    margin-bottom: 20px;
 }
 
 input[type="file"]:hover {
@@ -296,7 +296,6 @@ input[type="file"]:hover {
     gap: 1rem;
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
     .posts-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));

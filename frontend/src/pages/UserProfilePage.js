@@ -323,6 +323,7 @@ const UserProfilePage = () => {
                 key={postId}
                 post={post}
                 baseApiUrl={baseApiUrl}
+                username={'Me'}
                 hiddenQuotes={hiddenQuotes}
                 toggleQuote={toggleQuote}
                 showMentions={showMentions}
