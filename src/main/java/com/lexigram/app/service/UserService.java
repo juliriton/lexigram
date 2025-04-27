@@ -115,12 +115,12 @@ public class UserService {
     User user = userOptional.get();
 
     for (User follower : new HashSet<>(user.getFollowers())) {
-      follower.getFollowing().remove(user);
+      follower.removeFollowing(user);
       userRepository.save(follower);
     }
 
     for (User following : new HashSet<>(user.getFollowing())) {
-      following.getFollowers().remove(user);
+      following.removeFollower(user);
       userRepository.save(following);
     }
 
