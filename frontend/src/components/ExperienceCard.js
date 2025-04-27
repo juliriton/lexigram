@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { FaPhotoVideo, FaTrash } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
-import {useLocation, useNavigate} from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
@@ -20,11 +20,11 @@ const ExperienceCard = ({
                         }) => {
     const location = useLocation();
     const navigate = useNavigate();
-    const postId        = post.uuid;
+    const postId = post.uuid;
     const isQuoteHidden = hiddenQuotes[postId];
-    const mediaUrl      = post.style?.backgroundMediaUrl || post.imageUrl;
-    const fullMediaUrl  = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
-    const isVideo       = url => /\.(mp4|webm|ogg)$/i.test(url);
+    const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
+    const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
+    const isVideo = url => /\.(mp4|webm|ogg)$/i.test(url);
 
     const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
 
@@ -33,20 +33,20 @@ const ExperienceCard = ({
         return Math.min(Math.max(f, 8), 30);
     }, [post.style]);
 
-    const rawQuote           = post.quote || post.title || '';
-    const quotePreviewLen    = 30;
+    const rawQuote = post.quote || post.title || '';
+    const quotePreviewLen = 30;
     const needsQuoteTruncate = rawQuote.length > quotePreviewLen;
-    const quotePreview       = rawQuote.slice(0, quotePreviewLen) + (needsQuoteTruncate ? '…' : '');
+    const quotePreview = rawQuote.slice(0, quotePreviewLen) + (needsQuoteTruncate ? '…' : '');
 
-    const reflectionText     = post.reflection || post.content || '';
-    const reflPreviewLen     = 20;
-    const needsReflTruncate  = reflectionText.length > reflPreviewLen;
-    const reflPreview        = reflectionText.slice(0, reflPreviewLen) + (needsReflTruncate ? '…' : '');
+    const reflectionText = post.reflection || post.content || '';
+    const reflPreviewLen = 20;
+    const needsReflTruncate = reflectionText.length > reflPreviewLen;
+    const reflPreview = reflectionText.slice(0, reflPreviewLen) + (needsReflTruncate ? '…' : '');
     const [showFullRefl, setShowFullRefl] = useState(false);
 
-    const allTags     = (post.tags || []).slice(0, 20);
-    const inlineTags  = allTags.slice(0, 5);
-    const extraTags   = allTags.slice(5);
+    const allTags = (post.tags || []).slice(0, 20);
+    const inlineTags = allTags.slice(0, 5);
+    const extraTags = allTags.slice(5);
     const [showAllTags, setShowAllTags] = useState(false);
 
     const navigateToUserProfile = (profileUuid) => {
@@ -68,6 +68,39 @@ const ExperienceCard = ({
                 navigate(targetPath)
             }
         }
+    };
+
+    const handleMentionClick = (mentionUuid) => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        navigate(`/profile/${mentionUuid}`);
+    };
+
+    // Custom renderMentions function for this component
+    const renderMentionsInCard = (mentions) => {
+        if (!Array.isArray(mentions) || mentions.length === 0) {
+            return null;
+        }
+
+        return (
+            <div className="post-mentions">
+                <h6>Mentions:</h6>
+                <div className="mentions-list">
+                    {mentions.map((mention, i) => (
+                        <span
+                            key={i}
+                            className="mention clickable"
+                            onClick={() => handleMentionClick(mention.uuid)}
+                        >
+                            @{mention.username}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -92,8 +125,8 @@ const ExperienceCard = ({
                             <div
                                 className="quote-overlay"
                                 style={{
-                                    left:  `${post.style?.textPositionX || 50}%`,
-                                    top:   `${post.style?.textPositionY || 50}%`,
+                                    left: `${post.style?.textPositionX || 50}%`,
+                                    top: `${post.style?.textPositionY || 50}%`,
                                     transform: 'translate(-50%, -50%)'
                                 }}
                             >
@@ -123,7 +156,7 @@ const ExperienceCard = ({
                 <div className="content">
                     <div className="badges">
                         <span className="badge exp-badge">
-                          <FaPhotoVideo /> Experience
+                            <FaPhotoVideo /> Experience
                         </span>
                         {post.origin && (
                             <span className="badge orig-badge">
@@ -174,9 +207,9 @@ const ExperienceCard = ({
                     {allTags.length > 0 && (
                         <div className="tags-section">
                             <div className="tags-inline">
-                                {inlineTags.map((t,i) => <span key={i} className="tag">#{t.name}</span>)}
-                                {showAllTags && extraTags.map((t,i) =>
-                                    <span key={i+5} className="tag">#{t.name}</span>
+                                {inlineTags.map((t, i) => <span key={i} className="tag">#{t.name}</span>)}
+                                {showAllTags && extraTags.map((t, i) =>
+                                    <span key={i + 5} className="tag">#{t.name}</span>
                                 )}
                             </div>
                             {extraTags.length > 0 && (
@@ -218,7 +251,9 @@ const ExperienceCard = ({
                     </div>
 
                     {post.mentions?.length > 0 && showMentions[postId] && (
-                        <div className="mentions">{renderMentions(post.mentions, postId)}</div>
+                        <div className="mentions">
+                            {renderMentionsInCard(post.mentions)}
+                        </div>
                     )}
                 </div>
             </div>
