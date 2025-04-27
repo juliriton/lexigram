@@ -33,10 +33,10 @@ public class User {
   @Column(nullable = false)
   private String password;
 
-  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private UserPrivacySettings userPrivacySettings;
 
-  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private UserProfile userProfile;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
@@ -45,7 +45,7 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private Set<Suggestion> suggestions = new HashSet<>();
 
-  @ManyToMany(mappedBy = "mentions")
+  @ManyToMany(mappedBy = "mentions", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private Set<Experience> mentionedIn = new HashSet<>();
 
   @ManyToMany

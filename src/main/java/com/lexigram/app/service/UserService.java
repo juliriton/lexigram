@@ -5,9 +5,11 @@ import com.lexigram.app.exception.EmailAlreadyUsedException;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.exception.UsernameAlreadyUsedException;
 import com.lexigram.app.exception.WrongPasswordException;
+import com.lexigram.app.model.Experience;
 import com.lexigram.app.model.User;
 import com.lexigram.app.model.UserPrivacySettings;
 import com.lexigram.app.model.UserProfile;
+import com.lexigram.app.repository.ExperienceRepository;
 import com.lexigram.app.repository.UserPrivacySettingsRepository;
 import com.lexigram.app.repository.UserProfileRepository;
 import com.lexigram.app.repository.UserRepository;
@@ -15,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -26,16 +25,19 @@ public class UserService {
   private final UserRepository userRepository;
   private final UserPrivacySettingsRepository userPrivacySettingsRepository;
   private final UserProfileRepository userProfileRepository;
-  private PasswordEncoder passwordEncoder;
+  private final ExperienceRepository experienceRepository;
+  private final PasswordEncoder passwordEncoder;
 
   @Autowired
   public UserService(UserRepository userRepository,
                      UserPrivacySettingsRepository userPrivacySettingsRepository,
                      UserProfileRepository userProfileRepository,
+                     ExperienceRepository experienceRepository,
                      PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.userPrivacySettingsRepository = userPrivacySettingsRepository;
     this.userProfileRepository = userProfileRepository;
+    this.experienceRepository = experienceRepository;
     this.passwordEncoder = passwordEncoder;
   }
 
@@ -108,12 +110,33 @@ public class UserService {
 
   public boolean deleteUser(Long id) {
     Optional<User> userOptional = userRepository.findById(id);
-    if (userOptional.isPresent()) {
-      userRepository.deleteById(id);
-      return true;
+    if (userOptional.isEmpty()) return false;
+
+    User user = userOptional.get();
+
+    for (User follower : new HashSet<>(user.getFollowers())) {
+      follower.getFollowing().remove(user);
+      userRepository.save(follower);
     }
-    return false;
+
+    for (User following : new HashSet<>(user.getFollowing())) {
+      following.getFollowers().remove(user);
+      userRepository.save(following);
+    }
+
+    for (Experience experience : new HashSet<>(user.getMentionedIn())) {
+      experience.getMentions().remove(user);
+      experienceRepository.save(experience);
+    }
+
+    user.getFollowers().clear();
+    user.getFollowing().clear();
+    user.getMentionedIn().clear();
+
+    userRepository.delete(user);
+    return true;
   }
+
 
   public UserDTO updateUserUsername(Long id, UserUpdateUsernameDTO dto) {
     Optional<User> userOptional = userRepository.findById(id);
