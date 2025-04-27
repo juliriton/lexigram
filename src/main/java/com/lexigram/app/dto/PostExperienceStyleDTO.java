@@ -9,7 +9,7 @@ public class PostExperienceStyleDTO {
   private String fontFamily;
 
   @Min(8)
-  @Max(48)
+  @Max(30)
   private int fontSize;
 
   @Pattern(regexp = "^#[0-9a-fA-F]{6}$")

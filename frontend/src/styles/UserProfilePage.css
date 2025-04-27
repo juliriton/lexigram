@@ -34,7 +34,7 @@
 .profile-cover {
     position: relative;
     height: 175px;
-    background: linear-gradient(135deg, #5805ff, #fd4100);
+    background: linear-gradient(135deg, #05ff69, #fd8f00);
     border-radius: 12px 12px 0 0;
 }
 
@@ -193,7 +193,7 @@ textarea:focus {
 }
 
 button.btn-primary {
-    background-color: #6e8efb;
+    background-color: #003aff;
     color: white;
     padding: 12px 20px;
     border: none;
@@ -204,11 +204,11 @@ button.btn-primary {
 }
 
 button.btn-primary:hover {
-    background-color: #5a7de8;
+    background-color: #003eff;
 }
 
 .edit-section {
-    margin-bottom: 40px; /* Increased margin */
+    margin-bottom: 40px;
 }
 
 .edit-section h3 {
@@ -223,7 +223,7 @@ textarea {
     font-size: 16px;
     border-radius: 8px;
     border: 1px solid #ccc;
-    margin-bottom: 20px; /* Increased margin */
+    margin-bottom: 20px;
 }
 
 button.btn-primary {
@@ -243,7 +243,7 @@ button.btn-primary:hover {
 
 input[type="file"] {
     display: block;
-    margin-bottom: 20px; /* Increased margin */
+    margin-bottom: 20px;
 }
 
 input[type="file"]:hover {
@@ -256,4 +256,214 @@ input[type="file"]:hover {
     align-items: flex-start;
     gap: 10px;
     margin-bottom: 40px;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.delete-confirmation-modal {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    max-width: 450px;
+    width: 100%;
+}
+
+.delete-confirmation-modal h3 {
+    margin-top: 0;
+    color: #d32f2f;
+}
+
+.delete-confirmation-modal p {
+    margin-bottom: 1.5rem;
+    color: #555;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .posts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .profile-cover {
+        height: 150px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .profile-bio {
+        padding: 3.5rem 1.5rem 1.5rem;
+    }
+
+    .profile-nav-item {
+        padding: 0.75rem 1.5rem;
+    }
+
+    .profile-content {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .posts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-avatar-container {
+        bottom: -40px;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+    }
+
+    .profile-username {
+        font-size: 1.2rem;
+    }
+
+    .profile-bio {
+        padding: 3rem 1rem 1rem;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+
+    .btn-primary, .btn-secondary, .btn-danger {
+        width: 100%;
+    }
+}
+
+.connections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px 0;
+}
+
+.connection-card {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.connection-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background-color: #f0f5ff;
+}
+
+.connection-avatar {
+    margin-right: 15px;
+}
+
+.connection-avatar img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.connection-info {
+    flex: 1;
+}
+
+.connection-username {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 5px;
+    color: #333;
+}
+
+.connection-email {
+    font-size: 14px;
+    color: #777;
+    margin: 0;
+}
+
+.no-connections {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+    color: #888;
+    font-style: italic;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.profile-connections h3 {
+    margin-bottom: 20px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.profile-nav-item svg {
+    margin-right: 5px;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .connection-card {
+        padding: 12px;
+    }
+
+    .connection-avatar img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .connection-username {
+        font-size: 16px;
+    }
+
+    .connection-email {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .connection-avatar img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .connection-username {
+        font-size: 15px;
+    }
+
+    .connection-email {
+        font-size: 12px;
+    }
 }

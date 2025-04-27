@@ -2,6 +2,7 @@ package com.lexigram.app.service;
 
 import com.lexigram.app.dto.*;
 import com.lexigram.app.model.User;
+import com.lexigram.app.repository.TagRepository;
 import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,14 +16,16 @@ public class FeedService {
   private final UserRepository userRepository;
   private final ExperienceService experienceService;
   private final SuggestionService suggestionService;
+  private final TagRepository tagRepository;
 
   @Autowired
   public FeedService(UserRepository userRepository,
                      ExperienceService experienceService,
-                     SuggestionService suggestionService) {
+                     SuggestionService suggestionService, TagRepository tagRepository) {
     this.userRepository = userRepository;
     this.suggestionService = suggestionService;
     this.experienceService = experienceService;
+    this.tagRepository = tagRepository;
   }
 
   public Optional<PostsDTO> getAllPostsExcludingUser(Long id){
@@ -56,5 +59,5 @@ public class FeedService {
     Set<Suggestion> suggestions = suggestionService.getAllDiscoverSuggestions(id);
   }
    */
-
 }
+

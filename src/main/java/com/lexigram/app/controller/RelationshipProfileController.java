@@ -1,7 +1,7 @@
 package com.lexigram.app.controller;
 
 import com.lexigram.app.dto.*;
-import com.lexigram.app.service.UserProfileService;
+import com.lexigram.app.service.RelationshipProfileService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,69 +9,68 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
-@RequestMapping("/api/auth/me/{id}/profile")
+@RequestMapping("/api/auth/me/users/{uuid}/profile")
 public class RelationshipProfileController {
 
-  private final UserProfileService userProfileService;
-
+  private final RelationshipProfileService relationshipProfileService;
   @Autowired
-  public RelationshipProfileController(UserProfileService userProfileService) {
-    this.userProfileService = userProfileService;
+  public RelationshipProfileController(RelationshipProfileService relationshipProfileService) {
+    this.relationshipProfileService = relationshipProfileService;
   }
 
   @GetMapping
-  public ResponseEntity<UserProfileDTO> getRelationshipProfile(@PathVariable Long relationshipId, HttpSession session) {
+  public ResponseEntity<ConnectionProfileDTO> getRelationshipProfile(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    Optional<UserProfileDTO> profile = userProfileService.getProfile(relationshipId);
+    Optional<ConnectionProfileDTO> profile = relationshipProfileService.getRelationshipProfile(id, uuid);
     if (profile.isEmpty()) return ResponseEntity.notFound().build();
 
     return ResponseEntity.ok(profile.get());
   }
 
-
   @GetMapping("/posts")
-  public ResponseEntity<UserPostsDTO> getAllPosts(@PathVariable Long relationshipId, HttpSession session) {
+  public ResponseEntity<UserPostsDTO> getAllPosts(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(userProfileService.getAllUserPosts(relationshipId));
+    return ResponseEntity.ok(relationshipProfileService.getAllRelationshipPosts(uuid));
   }
 
   @GetMapping("/posts/experiences")
-  public ResponseEntity<Set<ExperienceDTO>> getAllExperiences(@PathVariable Long relationshipId, HttpSession session) {
+  public ResponseEntity<Set<ExperienceDTO>> getAllExperiences(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(userProfileService.getAllUserExperiences(relationshipId));
+    return ResponseEntity.ok(relationshipProfileService.getAllRelationshipExperiences(uuid));
   }
 
   @GetMapping("/posts/suggestions")
-  public ResponseEntity<Set<SuggestionDTO>> getAllSuggestions(@PathVariable Long relationshipId, HttpSession session) {
+  public ResponseEntity<Set<SuggestionDTO>> getAllSuggestions(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(userProfileService.getAllUserSuggestions(relationshipId));
+    return ResponseEntity.ok(relationshipProfileService.getAllRelationshipSuggestions(uuid));
   }
 
   @GetMapping("/followers")
-  public ResponseEntity<Set<ConnectionDTO>> getFollowers(@PathVariable Long relationshipId, HttpSession session) {
+  public ResponseEntity<Set<ConnectionDTO>> getFollowers(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(userProfileService.getFollowers(relationshipId));
+    return ResponseEntity.ok(relationshipProfileService.getRelationshipFollowers(uuid));
   }
 
   @GetMapping("/following")
-  public ResponseEntity<Set<ConnectionDTO>> getFollowing(@PathVariable Long relationshipId, HttpSession session) {
+  public ResponseEntity<Set<ConnectionDTO>> getFollowing(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(userProfileService.getFollowing(relationshipId));
+    return ResponseEntity.ok(relationshipProfileService.getRelationshipFollowing(uuid));
   }
 
 }

@@ -107,9 +107,9 @@ public class ExperienceService {
 
     ExperiencePrivacySettings privacy = new ExperiencePrivacySettings(
         experience,
-        privacySettingsDTO.areCommentsAllowed(),
-        privacySettingsDTO.areForksAllowed(),
-        privacySettingsDTO.areResonatesAllowed()
+        privacySettingsDTO.getAllowComments(),
+        privacySettingsDTO.getAllowForks(),
+        privacySettingsDTO.getAllowResonates()
     );
     experiencePrivacySettingsRepository.save(privacy);
     experience.setPrivacySettings(privacy);
@@ -155,9 +155,8 @@ public class ExperienceService {
   public Set<ExperienceDTO> getAllFollowingExperiences(Long id) {
     User user = userRepository.findById(id).get();
 
-    Set<User> following = userRepository.findByFollowing(user);
     Set<ExperienceDTO> followingExperiences = new HashSet<>();
-    for (User u : following) {
+    for (User u : user.getFollowing()) {
       Long userId = u.getId();
       Set<Experience> userExperiences = experienceRepository.getExperiencesByUserId(userId);
       for (Experience experience : userExperiences) {
@@ -165,6 +164,17 @@ public class ExperienceService {
       }
     }
     return followingExperiences;
+  }
+
+  public boolean deleteExperience(UUID experienceUuid, Long userId) {
+    Optional<Experience> experience = experienceRepository.findByUuid(experienceUuid);
+    if (experience.isEmpty()){
+      return false;
+    }
+    experienceRepository.deleteById(experience.get().getId());
+    User user = userRepository.findById(userId).get();
+    userRepository.save(user);
+    return true;
   }
 
 }

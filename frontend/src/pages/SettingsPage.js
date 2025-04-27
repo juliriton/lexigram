@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SettingsPage.css';
+import {FaArrowLeft, FaHome} from "react-icons/fa";
 
 const SettingsPage = () => {
     const [privacy, setPrivacy] = useState(null);
@@ -35,8 +36,6 @@ const SettingsPage = () => {
                 setOldUsername(userData.username);
                 setOldPrivacy(privacyData.visibility);
 
-                setEmail(userData.email);
-                setUsername(userData.username);
                 setPrivacy(privacyData.visibility);
             } catch (err) {
                 console.error(err);
@@ -122,7 +121,6 @@ const SettingsPage = () => {
     };
 
     const deleteAccount = async () => {
-        if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
 
         try {
             const res = await fetch('http://localhost:8080/api/auth/me', {
@@ -150,55 +148,62 @@ const SettingsPage = () => {
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Current Information</h5>
-                    <p><strong>Username:</strong> {username}</p>
-                    <p><strong>Email:</strong> {email}</p>
-                    <p><strong>Privacy:</strong> {privacy === true ? 'Public' : 'Private'}</p>
+                    <h5 className="card-title">Account information</h5>
+                    <p><strong>Username:</strong> {oldUsername}</p>
+                    <p><strong>Email:</strong> {oldEmail}</p>
+                    <p><strong>Privacy:</strong> {oldPrivacy === true ? 'Public' : 'Private'}</p>
                 </div>
             </div>
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Update Username</h5>
+                    <h5 className="card-title">Update username</h5>
                     <input
                         type="text"
                         className="form-control mb-2"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        placeholder="Enter new username"
                     />
-                    <button className="btn btn-primary w-100" onClick={updateUsername}>Save Changes</button>
+                    <button className="btn btn-primary w-100" onClick={updateUsername}>Save
+                        Changes
+                    </button>
                 </div>
             </div>
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Update Email</h5>
+                    <h5 className="card-title">Update email</h5>
                     <input
                         type="email"
                         className="form-control mb-2"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter new email"
                     />
-                    <button className="btn btn-primary w-100" onClick={updateEmail}>Save Changes</button>
+                    <button className="btn btn-primary w-100" onClick={updateEmail}>Save Changes
+                    </button>
                 </div>
             </div>
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Change Password</h5>
+                    <h5 className="card-title">Change password</h5>
                     <input
                         type="password"
                         className="form-control mb-2"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <button className="btn btn-primary w-100" onClick={updatePassword}>Save Changes</button>
+                    <button className="btn btn-primary w-100" onClick={updatePassword}>Save
+                        Changes
+                    </button>
                 </div>
             </div>
 
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
-                    <h5 className="card-title">Profile Visibility</h5>
+                    <h5 className="card-title">Profile visibility</h5>
                     <p>Current: <strong>{privacy ? 'Public' : 'Private'}</strong></p>
                     <button className="btn btn-secondary w-100" onClick={togglePrivacy}>
                         {privacy ? 'Make Private' : 'Make Public'}
@@ -208,15 +213,24 @@ const SettingsPage = () => {
 
             <div className="card shadow border-danger mb-4">
                 <div className="card-body">
-                    <h5 className="card-title text-danger">Delete Account</h5>
+                    <h5 className="card-title text-danger">Delete account</h5>
                     <p className="text-muted">This action is irreversible.</p>
-                    <button className="btn btn-danger w-100" onClick={deleteAccount}>Delete My Account</button>
+                    <button className="btn btn-danger w-100" onClick={deleteAccount}>Delete my
+                        account
+                    </button>
                 </div>
             </div>
 
             <div className="text-center">
-                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>
-                    <i className="bi bi-house-door"></i> Back to Home
+                <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
+                    <FaArrowLeft/> Go back
+                </button>
+            </div>
+
+
+            <div className="text-center">
+                <button className="btn btn-success mt-3" onClick={() => navigate('/')}>
+                    <FaHome/> Home
                 </button>
             </div>
         </div>

@@ -12,17 +12,20 @@ const SignUpPage = () => {
 
     const validateForm = () => {
         if (password.length < 8) {
-            setError('La contraseña debe tener al menos 8 caracteres');
+            setError('Password must have at least 8 characters');
             return false;
         }
 
         if (/[A-Z]/.test(username)) {
-            setError('El nombre de usuario no debe contener mayúsculas');
+            setError('Username must be between 3 and 25 characters, ' +
+                'must be lowercase, ' +
+                'can only contain letters, ' +
+                'numbers, and underscores ');
             return false;
         }
 
         if (!/^\S+@\S+\.\S+$/.test(email)) {
-            setError('Por favor ingresa un email válido');
+            setError('Please enter a valid email');
             return false;
         }
 
@@ -53,9 +56,9 @@ const SignUpPage = () => {
                 if (data.message) {
                     setError(data.message);
                 } else if (response.status === 409) {
-                    setError('El nombre de usuario o email ya está en uso');
+                    setError('Username or email already in use');
                 } else {
-                    setError('Ha ocurrido un error al crear la cuenta');
+                    setError('An error has occurred creating your account');
                 }
                 setLoading(false);
                 return;
@@ -63,14 +66,14 @@ const SignUpPage = () => {
 
             navigate('/');
         } catch (err) {
-            setError('Error de conexión con el servidor');
+            setError('Error');
             setLoading(false);
         }
     };
 
     return (
         <div className="login-container">
-            <h2>Crear cuenta</h2>
+            <h2>Lexigram</h2>
             {error && (
                 <div className="error-message">
                     <p>{error}</p>
@@ -103,7 +106,7 @@ const SignUpPage = () => {
                     className="boton-elegante"
                     disabled={loading}
                 >
-                    {loading ? 'Procesando...' : 'Sign-Up'}
+                    {loading ? 'Processing...' : 'Sign-Up'}
                 </button>
             </form>
 
