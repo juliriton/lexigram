@@ -20,24 +20,21 @@ const PostCreationPage = ({ user }) => {
     const [allowForks, setAllowForks] = useState(true);
     const [suggestionText, setSuggestionText] = useState('');
     const [suggestionTags, setSuggestionTags] = useState('');
-
-    // Para mostrar error si fontSize queda fuera de rango
     const [fontSizeError, setFontSizeError] = useState('');
 
     const handleCancel = () => {
         navigate('/');
     };
 
-    // Clampa el valor entre min y max, y actualiza el error
     const handleFontSizeChange = e => {
         let val = parseInt(e.target.value, 10);
         if (isNaN(val)) val = 8;
         if (val < 8) {
             val = 8;
-            setFontSizeError('Font size mínimo es 8');
+            setFontSizeError('Minimum font size is 8');
         } else if (val > 30) {
             val = 30;
-            setFontSizeError('Font size máximo es 30');
+            setFontSizeError('Maximum font size is 30');
         } else {
             setFontSizeError('');
         }
@@ -50,7 +47,7 @@ const PostCreationPage = ({ user }) => {
             navigate('/login');
             return;
         }
-        // Validación final por si acaso
+
         if (fontSize < 8 || fontSize > 30) return;
 
         const tagArray     = tags.split(',').map(t => t.trim()).filter(t => t);
@@ -172,7 +169,6 @@ const PostCreationPage = ({ user }) => {
                             >
                                 <option value="Arial">Arial</option>
                                 <option value="Times New Roman">Times New Roman</option>
-                                {/* añade más si quieres */}
                             </select>
 
                             <input

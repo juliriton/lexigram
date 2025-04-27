@@ -155,9 +155,8 @@ public class UserProfileService {
 
     User user = userOptional.get();
     Set<ConnectionDTO> followers = new HashSet<>();
-    Set<User> users = userRepository.findByFollowers(user); //Encuentra los usuarios que sigue user
 
-    for (User u : users){
+    for (User u : user.getFollowers()){
       UserProfile userProfile = userProfileRepository.findById(u.getId()).get();
       String profilePicture = userProfile.getProfilePictureUrl();
       followers.add(new ConnectionDTO(u.getUuid(), u.getUsername(), u.getEmail(), profilePicture));
@@ -173,9 +172,8 @@ public class UserProfileService {
 
     User user = userOptional.get();
     Set<ConnectionDTO> following = new HashSet<>();
-    Set<User> users = userRepository.findByFollowing(user);
 
-    for (User u : users){
+    for (User u : user.getFollowing()){
       UserProfile userProfile = userProfileRepository.findById(u.getId()).get();
       String profilePicture = userProfile.getProfilePictureUrl();
       following.add(new ConnectionDTO(u.getUuid(), u.getUsername(), u.getEmail(), profilePicture));

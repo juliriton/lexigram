@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SettingsPage.css';
+import {FaArrowLeft, FaHome} from "react-icons/fa";
 
 const SettingsPage = () => {
     const [privacy, setPrivacy] = useState(null);
@@ -120,7 +121,6 @@ const SettingsPage = () => {
     };
 
     const deleteAccount = async () => {
-        if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
 
         try {
             const res = await fetch('http://localhost:8080/api/auth/me', {
@@ -195,7 +195,9 @@ const SettingsPage = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <button className="btn btn-primary w-100" onClick={updatePassword}>Save Changes</button>
+                    <button className="btn btn-primary w-100" onClick={updatePassword}>Save
+                        Changes
+                    </button>
                 </div>
             </div>
 
@@ -213,13 +215,22 @@ const SettingsPage = () => {
                 <div className="card-body">
                     <h5 className="card-title text-danger">Delete account</h5>
                     <p className="text-muted">This action is irreversible.</p>
-                    <button className="btn btn-danger w-100" onClick={deleteAccount}>Delete my account</button>
+                    <button className="btn btn-danger w-100" onClick={deleteAccount}>Delete my
+                        account
+                    </button>
                 </div>
             </div>
 
             <div className="text-center">
-                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>
-                    <i className="bi bi-house-door"></i> Home
+                <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
+                    <FaArrowLeft/> Go back
+                </button>
+            </div>
+
+
+            <div className="text-center">
+                <button className="btn btn-success mt-3" onClick={() => navigate('/')}>
+                    <FaHome/> Home
                 </button>
             </div>
         </div>

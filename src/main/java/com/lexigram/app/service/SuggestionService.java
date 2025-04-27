@@ -95,9 +95,8 @@ public class SuggestionService {
 
     User user = userRepository.findById(id).get();
 
-    Set<User> following = userRepository.findByFollowing(user);
     Set<SuggestionDTO> followingSuggestions = new HashSet<>();
-    for (User u : following) {
+    for (User u : user.getFollowing()) {
       Long userId = u.getId();
       Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
       for (Suggestion suggestion : userSuggestions) {

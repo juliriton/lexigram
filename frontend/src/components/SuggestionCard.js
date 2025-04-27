@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { FaQuestion, FaTrash } from 'react-icons/fa';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/SuggestionCard.css';
 
 const SuggestionCard = ({
+                            user,
                             post,
                             username,
                             baseApiUrl,
@@ -10,6 +12,8 @@ const SuggestionCard = ({
                             onDelete,
                             isOwner
                         }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
     const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
     const headerParts = post.header ? post.header.split('...') : ['', ''];
@@ -25,6 +29,27 @@ const SuggestionCard = ({
     const suggestionPreviewLen = 30;
     const needsSuggestionTruncate = suggestionText.length > suggestionPreviewLen;
     const suggestionPreview = suggestionText.slice(0, suggestionPreviewLen) + (needsSuggestionTruncate ? '…' : '');
+
+    const navigateToUserProfile = (profileUuid) => {
+        const targetUuid = profileUuid || post.user.uuid;
+
+        if (!user) {
+            if (location.pathname === `/profile/${targetUuid}`) {
+                return;
+            }
+            navigate('/login');
+            return;
+        }
+
+        if (targetUuid) {
+            const targetPath = `/profile/${targetUuid}`;
+            if (location.pathname === targetPath) {
+                return;
+            } else {
+                navigate(targetPath)
+            }
+        }
+    };
 
     return (
         <div className={`suggestion-card ${isExpanded ? 'expanded' : ''}`}>
@@ -43,7 +68,7 @@ const SuggestionCard = ({
             <div className="suggestion-card-content">
                 <div className="badges-container">
                     <div className="badge suggestion-badge">
-                        <FaQuestion className="badge-icon" />
+                        <FaQuestion className="badge-icon"/>
                         <span>{post.type || "Suggestion"}</span>
                     </div>
                 </div>
@@ -61,7 +86,23 @@ const SuggestionCard = ({
                 </div>
 
                 <div className="meta">
-                    <span className="user">@{username}</span>
+                    <button
+                        className="username-link-btn"
+                        onClick={() => navigateToUserProfile()}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            color: '#0d6efd',
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                            fontWeight: 'normal',
+                            fontSize: 'inherit'
+                        }}
+                    >
+                        @{username}
+                    </button>
+
                     {post.creationDate && (
                         <span className="date">{formatDate(post.creationDate)}</span>
                     )}
@@ -96,7 +137,7 @@ const SuggestionCard = ({
                             onClick={onDelete}
                             aria-label="Delete Suggestion"
                         >
-                            <FaTrash /> Delete
+                            <FaTrash/> Delete
                         </button>
                     </div>
                 )}

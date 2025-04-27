@@ -64,21 +64,30 @@ const HomePage = ({ user, setUser }) => {
         }
     }, [baseApiUrl, defaultProfilePicture]);
 
+    const handleMentionClick = (mentionUuid) => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        if (user.uuid !== mentionUuid){
+            navigate(`/profile/${mentionUuid}`);
+        }
+    };
+
     const renderExperienceCards = () => {
         return filteredExperiences.map(exp => {
-            // Debug log to see what we're getting from backend
             console.log(`Experience post user data:`, exp.user);
 
-            // Determine if the user object has a UUID
             const userUuid = exp.user?.uuid || null;
 
             return (
                 <ExperienceCard
                     key={exp.uuid}
+                    user={user}
                     post={exp}
                     baseApiUrl={baseApiUrl}
                     username={exp.user?.username ?? user?.username ?? 'Usuario'}
-                    userUuid={userUuid}  // Pass the user UUID if available
+                    userUuid={userUuid}
                     hiddenQuotes={hiddenQuotes}
                     toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
                     showMentions={showMentions}
@@ -89,7 +98,14 @@ const HomePage = ({ user, setUser }) => {
                                 <h6>Mentions:</h6>
                                 <div className="mentions-list">
                                     {mentions.map((mention, i) => (
-                                        <span key={i} className="mention">@{mention}</span>
+                                        <span
+                                            key={i}
+                                            className="mention clickable"
+                                            onClick={() => handleMentionClick(mention.uuid)}
+                                            style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
+                                        >
+                        @{mention.username}
+                    </span>
                                     ))}
                                 </div>
                             </div>
@@ -275,12 +291,13 @@ const HomePage = ({ user, setUser }) => {
                     {filteredSuggestions.map(sug => (
                         <SuggestionCard
                             key={sug.uuid}
+                            user={user}
                             post={sug}
                             baseApiUrl={baseApiUrl}
-                            username={sug.user?.username || user.username}
+                            username={sug.user?.username || user?.username || 'Usuario'}
                             renderTags={renderTags}
                             formatDate={formatDate}
-                            isOwner={false}
+                            isOwner={user && sug.user && user.uuid === sug.user.uuid}
                         />
                     ))}
                 </div>

@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { FaPhotoVideo, FaTrash } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
-import { useNavigate } from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
 import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
+                            user,
                             post,
                             username,
                             baseApiUrl,
@@ -17,15 +18,13 @@ const ExperienceCard = ({
                             onDelete,
                             isOwner
                         }) => {
+    const location = useLocation();
     const navigate = useNavigate();
     const postId        = post.uuid;
     const isQuoteHidden = hiddenQuotes[postId];
     const mediaUrl      = post.style?.backgroundMediaUrl || post.imageUrl;
     const fullMediaUrl  = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
     const isVideo       = url => /\.(mp4|webm|ogg)$/i.test(url);
-
-    // Make sure we extract user UUID correctly
-    const userUuid = post.user?.uuid || null;
 
     const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
 
@@ -50,19 +49,24 @@ const ExperienceCard = ({
     const extraTags   = allTags.slice(5);
     const [showAllTags, setShowAllTags] = useState(false);
 
-    const navigateToUserProfile = () => {
-        // Try to extract user UUID again in case it wasn't passed properly
-        const profileUuid = userUuid || (post.user && post.user.uuid);
+    const navigateToUserProfile = (profileUuid) => {
+        const targetUuid = profileUuid || post.user.uuid;
 
-        if (profileUuid) {
-            // Navigate to the relationship profile page
-            navigate(`/profile/${profileUuid}`);
-        } else if (username) {
-            // If we don't have a UUID but have a username, we can try to navigate by username
-            console.log(`Attempting to navigate to profile by username: ${username}`);
-            navigate(`/profile/user/${username}`);
-        } else {
-            console.warn("Could not navigate to profile: No user identifier available");
+        if (!user) {
+            if (location.pathname === `/profile/${targetUuid}`) {
+                return;
+            }
+            navigate('/login');
+            return;
+        }
+
+        if (targetUuid) {
+            const targetPath = `/profile/${targetUuid}`;
+            if (location.pathname === targetPath) {
+                return;
+            } else {
+                navigate(targetPath)
+            }
         }
     };
 
@@ -145,10 +149,9 @@ const ExperienceCard = ({
                     </div>
 
                     <div className="meta">
-                        {/* Always make username clickable */}
                         <button
                             className="username-link-btn"
-                            onClick={navigateToUserProfile}
+                            onClick={() => navigateToUserProfile()}
                             style={{
                                 background: 'none',
                                 border: 'none',

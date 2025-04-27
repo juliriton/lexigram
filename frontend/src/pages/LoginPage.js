@@ -4,7 +4,7 @@ import '../styles/LoginPage.css';
 
 
 const LoginPage = ({ setUser }) => {  // Accept setUser as a prop
-    const [credential, setCredential] = useState(''); // Credential for username or email
+    const [credential, setCredential] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState(''); // Mensaje de error
     const [showError, setShowError] = useState(false);

@@ -1,7 +1,6 @@
 package com.lexigram.app.controller;
 
 import com.lexigram.app.dto.ConnectionDTO;
-import com.lexigram.app.dto.UserDTO;
 import com.lexigram.app.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,4 +65,5 @@ public class RelationshipController {
     }
     return ResponseEntity.status(401).build();
   }
+
 }

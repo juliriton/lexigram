@@ -56,12 +56,7 @@ public class User {
   )
   private Set<User> following = new HashSet<>();
 
-  @ManyToMany
-  @JoinTable(
-      name = "user_followers",
-      joinColumns = @JoinColumn(name = "follower_id"),
-      inverseJoinColumns = @JoinColumn(name = "following_id")
-  )
+  @ManyToMany(mappedBy = "following")
   private Set<User> followers = new HashSet<>();
 
   private Long followingAmount;
@@ -98,6 +93,10 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public UserProfile getUserProfile() {
+    return userProfile;
   }
 
   public UserPrivacySettings getUserPrivacySettings() {

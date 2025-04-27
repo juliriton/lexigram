@@ -16,8 +16,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
   Boolean existsByUsername(String username);
   Boolean existsByEmail(String email);
   Set<User> findByUserPrivacySettingsVisibilityTrue();
-  Set<User> findByFollowers(User user);
-  Set<User> findByFollowing(User user);
   Optional<User> findByUuid(UUID uuid);
-  Optional<User> findFollowerById(Long id);
 }

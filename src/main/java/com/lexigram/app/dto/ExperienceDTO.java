@@ -3,6 +3,7 @@ package com.lexigram.app.dto;
 import com.lexigram.app.model.Experience;
 import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.User;
+import com.lexigram.app.model.UserProfile;
 
 import java.util.*;
 
@@ -19,7 +20,7 @@ public class ExperienceDTO {
   private final boolean isOrigin;
   private final UserDTO user;
   private final Set<TagDTO> tags;
-  private final Set<String> mentions;
+  private final Set<ConnectionDTO> mentions;
   private final String type = "Experience";
   private final ExperienceStyleDTO style;
   private final ExperiencePrivacySettingsDTO privacySettings;
@@ -47,7 +48,8 @@ public class ExperienceDTO {
     this.tags = tagDTO;
     this.mentions = new HashSet<>();
     for (User u : experience.getMentions()){
-      this.mentions.add(u.getUsername());
+      UserProfile p = u.getUserProfile();
+      this.mentions.add(new ConnectionDTO(u.getUuid(), u.getUsername(), u.getEmail(), p.getProfilePictureUrl()));
     }
     this.style = new ExperienceStyleDTO(experience.getStyle());
     this.privacySettings = new ExperiencePrivacySettingsDTO(experience.getPrivacySettings());
@@ -67,7 +69,7 @@ public class ExperienceDTO {
   public ExperienceStyleDTO getStyle() { return style; }
   public ExperiencePrivacySettingsDTO getPrivacySettings() { return privacySettings; }
   public String getType() { return type; }
-  public Set<String> getMentions() { return mentions;}
+  public Set<ConnectionDTO> getMentions() { return mentions;}
 
 }
 

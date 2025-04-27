@@ -33,7 +33,6 @@ public class RelationshipProfileController {
     return ResponseEntity.ok(profile.get());
   }
 
-
   @GetMapping("/posts")
   public ResponseEntity<UserPostsDTO> getAllPosts(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");

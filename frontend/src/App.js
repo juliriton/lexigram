@@ -6,7 +6,7 @@ import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import SettingsPage from './pages/SettingsPage';
 import PostCreationPage from './pages/PostCreationPage';
-import RelationshipProfile from './pages/RelationshipProfile';
+import RelationshipProfilePage from './pages/RelationshipProfilePage';
 
 import './App.css';
 
@@ -22,7 +22,7 @@ function App() {
                 <Route path="/signup" element={<SignUpPage setUser={setUser} />} />
                 <Route path="/post/create" element={<PostCreationPage user={user} />} />
                 <Route path="/settings" element={<SettingsPage user={user} />} />
-                <Route path="/profile/:userId" element={<RelationshipProfile user={user} />} />
+                <Route path="/profile/:userId" element={<RelationshipProfilePage user={user} />} />
             </Routes>
         </Router>
     );
