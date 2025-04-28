@@ -21,8 +21,25 @@ const RelationshipProfile = ({ user }) => {
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                    credentials: 'include',
+                });
+                if (!res.ok) navigate('/login');
+            } catch {
+                navigate('/login');
+            }
+        };
+        checkAuth();
+    }, [navigate]);
+
     const fetchProfileData = useCallback(async () => {
         try {
+
+
+
             const userRes = await fetch(`${baseApiUrl}/api/auth/me/users/${userId}/profile`, {
                 credentials: 'include'
             });

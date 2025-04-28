@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/SettingsPage.css';
 import {FaArrowLeft, FaHome} from "react-icons/fa";
 
-const SettingsPage = () => {
+const SettingsPage = ({user}) => {
     const [privacy, setPrivacy] = useState(null);
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
@@ -14,12 +14,27 @@ const SettingsPage = () => {
     const [oldUsername, setOldUsername] = useState('');
     const [oldPassword, setOldPassword] = useState('');
     const [oldPrivacy, setOldPrivacy] = useState(null);
-
     const navigate = useNavigate();
+    const baseApiUrl = 'http://localhost:8080';
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                    credentials: 'include',
+                });
+                if (!res.ok) navigate('/login');
+            } catch {
+                navigate('/login');
+            }
+        };
+        checkAuth();
+    }, [navigate]);
 
     useEffect(() => {
         const fetchUserSettings = async () => {
             try {
+
                 const resUser = await fetch('http://localhost:8080/api/auth/me', {
                     credentials: 'include',
                 });
