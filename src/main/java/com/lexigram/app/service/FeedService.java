@@ -12,9 +12,7 @@ import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class FeedService {
@@ -62,39 +60,33 @@ public class FeedService {
     Set<SuggestionDTO> suggestions = suggestionService.getAllPublicSuggestions();
     return new PostsDTO(experiences, suggestions);
   }
-
   public SearchDTO getSearchObject(String object) {
+    Map<UUID, Experience> uniqueExperiences = new HashMap<>();
+    Map<UUID, Suggestion> uniqueSuggestions = new HashMap<>();
+
     Set<Experience> experiencesByQuote = experienceRepository.findByQuoteStartingWithIgnoreCase(object);
     Set<Experience> experiencesByTag = experienceRepository.findByTagsNameStartingWithIgnoreCase(object);
     Set<Experience> experiencesByUser = experienceRepository.findByUserUsernameStartingWithIgnoreCase(object);
+
+    for (Experience e : experiencesByQuote) uniqueExperiences.put(e.getUuid(), e);
+    for (Experience e : experiencesByTag) uniqueExperiences.put(e.getUuid(), e);
+    for (Experience e : experiencesByUser) uniqueExperiences.put(e.getUuid(), e);
+
     Set<ExperienceDTO> experienceDTOS = new HashSet<>();
-
-    for (Experience e : experiencesByQuote) {
-      experienceDTOS.add(new ExperienceDTO(e));
-    }
-
-    for (Experience e : experiencesByTag) {
-      experienceDTOS.add(new ExperienceDTO(e));
-    }
-
-    for (Experience e : experiencesByUser) {
+    for (Experience e : uniqueExperiences.values()) {
       experienceDTOS.add(new ExperienceDTO(e));
     }
 
     Set<Suggestion> suggestionsByBody = suggestionRepository.findByBodyStartingWithIgnoreCase(object);
     Set<Suggestion> suggestionsByTag = suggestionRepository.findByTagsNameStartingWithIgnoreCase(object);
     Set<Suggestion> suggestionsByUser = suggestionRepository.findByUserUsernameStartingWithIgnoreCase(object);
+
+    for (Suggestion s : suggestionsByBody) uniqueSuggestions.put(s.getUuid(), s);
+    for (Suggestion s : suggestionsByTag) uniqueSuggestions.put(s.getUuid(), s);
+    for (Suggestion s : suggestionsByUser) uniqueSuggestions.put(s.getUuid(), s);
+
     Set<SuggestionDTO> suggestionDTOS = new HashSet<>();
-
-    for (Suggestion s : suggestionsByBody) {
-      suggestionDTOS.add(new SuggestionDTO(s));
-    }
-
-    for (Suggestion s : suggestionsByTag) {
-      suggestionDTOS.add(new SuggestionDTO(s));
-    }
-
-    for (Suggestion s : suggestionsByUser) {
+    for (Suggestion s : uniqueSuggestions.values()) {
       suggestionDTOS.add(new SuggestionDTO(s));
     }
 

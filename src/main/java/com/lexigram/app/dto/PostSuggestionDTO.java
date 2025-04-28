@@ -10,7 +10,6 @@ public class PostSuggestionDTO {
 
   @NotEmpty
   @Size(min = 1)
-  @NotBlank
   private Set<String> tags;
 
   @NotEmpty
