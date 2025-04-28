@@ -1,6 +1,7 @@
 package com.lexigram.app.controller;
 
 import com.lexigram.app.dto.PostsDTO;
+import com.lexigram.app.dto.SearchDTO;
 import com.lexigram.app.service.FeedService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,14 @@ public class FeedController {
     if (id == null) return ResponseEntity.status(401).build();
 
     return ResponseEntity.ok(feedService.getAllFollowingPosts(id));
+  }
+
+  @GetMapping("/me/feed/search/{object}")
+  public ResponseEntity<SearchDTO> getFeedSearchObject(HttpSession session, @PathVariable String object) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(feedService.getSearchObject(object));
   }
 
   /*

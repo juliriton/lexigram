@@ -1,5 +1,6 @@
 package com.lexigram.app.repository;
 
+import com.lexigram.app.dto.SuggestionDTO;
 import com.lexigram.app.model.Suggestion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,4 +16,7 @@ public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
   Set<Suggestion> getSuggestionsByUserId(Long id);
   Optional<Suggestion> findByUuid(UUID suggestionUuid);
   Set<Suggestion> getSuggestionsByUserUuid(UUID uuid);
+  Set<Suggestion> findByBodyStartingWithIgnoreCase(String prefix);
+  Set<Suggestion> findByTagsNameStartingWithIgnoreCase(String prefix);
+  Set<Suggestion> findByUserUsernameStartingWithIgnoreCase(String prefix);
 }

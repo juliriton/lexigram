@@ -8,7 +8,8 @@ import {
     FaPenFancy,
     FaPhotoVideo,
     FaQuestion,
-    FaBorderAll
+    FaBorderAll,
+    FaSearch
 } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
@@ -25,6 +26,9 @@ const HomePage = ({ user, setUser }) => {
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
     const [feedType, setFeedType] = useState('my');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState(null);
+    const [searching, setSearching] = useState(false);
 
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
@@ -64,6 +68,50 @@ const HomePage = ({ user, setUser }) => {
         }
     }, [baseApiUrl, defaultProfilePicture]);
 
+    const handleSearch = async (e) => {
+        e.preventDefault();
+        const cleanedQuery = searchQuery.trim().replace(/\s+/g, ' ');
+
+        if (!cleanedQuery) {
+            setSearchResults(null);
+            return;
+        }
+
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        setSearching(true);
+        try {
+            const response = await fetch(`${baseApiUrl}/api/auth/me/feed/search/${encodeURIComponent(cleanedQuery)}`, {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setSearchResults({
+                    users: data.connections || [],
+                    experiences: data.experiences || [],
+                    suggestions: data.suggestions || []
+                });
+            } else {
+                console.error('Search failed:', response.status);
+                setSearchResults({ users: [], experiences: [], suggestions: [] });
+            }
+        } catch (err) {
+            console.error('Error performing search:', err);
+            setSearchResults({ users: [], experiences: [], suggestions: [] });
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        setSearchResults(null);
+    };
+
     const handleMentionClick = (mentionUuid) => {
         if (!user) {
             navigate('/login');
@@ -74,10 +122,8 @@ const HomePage = ({ user, setUser }) => {
         }
     };
 
-    const renderExperienceCards = () => {
-        return filteredExperiences.map(exp => {
-            console.log(`Experience post user data:`, exp.user);
-
+    const renderExperienceCards = (experiencesArray) => {
+        return experiencesArray.map(exp => {
             const userUuid = exp.user?.uuid || null;
 
             return (
@@ -104,8 +150,8 @@ const HomePage = ({ user, setUser }) => {
                                             onClick={() => handleMentionClick(mention.uuid)}
                                             style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
                                         >
-                        @{mention.username}
-                    </span>
+                                            @{mention.username}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
@@ -177,13 +223,21 @@ const HomePage = ({ user, setUser }) => {
     const renderTags = tags => (
         Array.isArray(tags) && tags.map((tag, i) => (
             <span key={i} className="tag-badge">
-        {typeof tag === 'object' ? tag.name : tag}
-      </span>
+                {typeof tag === 'object' ? tag.name : tag}
+            </span>
         ))
     );
 
-    const filteredExperiences = (postFilter === 'all' || postFilter === 'experiences') ? experiences : [];
-    const filteredSuggestions = (postFilter === 'all' || postFilter === 'suggestions') ? suggestions : [];
+    let displayExperiences = [];
+    let displaySuggestions = [];
+
+    if (searchResults) {
+        displayExperiences = searchResults.experiences || [];
+        displaySuggestions = searchResults.suggestions || [];
+    } else {
+        displayExperiences = (postFilter === 'all' || postFilter === 'experiences') ? experiences : [];
+        displaySuggestions = (postFilter === 'all' || postFilter === 'suggestions') ? suggestions : [];
+    }
 
     if (loading) {
         return (
@@ -252,9 +306,29 @@ const HomePage = ({ user, setUser }) => {
             {sidebarOpen && <div className="sidebar-overlay" onClick={toggleSidebar}></div>}
 
             <div className="main-content">
-                <h2>Lexigram</h2>
+                <h1 className="app-title">Lexigram</h1>
 
-                {user ? (
+                <form onSubmit={handleSearch} className="search-form">
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            className="search-input"
+                            placeholder="Search users, posts, tags..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                        <button type="submit" className="search-button">
+                            <FaSearch />
+                        </button>
+                        {searchResults && (
+                            <button type="button" className="clear-search-button" onClick={clearSearch}>
+                                <FaTimes />
+                            </button>
+                        )}
+                    </div>
+                </form>
+
+                {!searchResults && user && (
                     <div className="btn-group mb-3">
                         <button
                             className={`btn btn-outline-primary ${feedType === 'my' ? 'active' : ''}`}
@@ -264,9 +338,6 @@ const HomePage = ({ user, setUser }) => {
                             className={`btn btn-outline-primary ${feedType === 'following' ? 'active' : ''}`}
                             onClick={() => setFeedType('following')}
                         >Following</button>
-                    </div>
-                ) : (
-                    <div className="btn-group mb-3">
                     </div>
                 )}
 
@@ -285,10 +356,53 @@ const HomePage = ({ user, setUser }) => {
                     > <FaQuestion size={25} /></button>
                 </div>
 
-                <div className="posts-grid">
-                    {renderExperienceCards()}
+                {searchResults && (
+                    <div className="search-results">
+                        <h3 className="search-results-title">Search Results for: "{searchQuery}"</h3>
 
-                    {filteredSuggestions.map(sug => (
+                        {searchResults.users && searchResults.users.length > 0 && (
+                            <div className="users-section">
+                                <h4>Users</h4>
+                                <div className="users-grid">
+                                    {searchResults.users.map(userResult => (
+                                        <div
+                                            key={userResult.uuid}
+                                            className="user-result"
+                                            onClick={() => navigate(`/profile/${userResult.uuid}`)}
+                                        >
+                                            {userResult.profilePictureUrl ? (
+                                                <img
+                                                    src={`${baseApiUrl}${userResult.profilePictureUrl}`}
+                                                    alt={userResult.username}
+                                                    className="user-avatar"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = defaultProfilePicture;
+                                                    }}
+                                                />
+                                            ) : (
+                                                <FaUserCircle size={30} />
+                                            )}
+                                            <span>{userResult.username}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {searching && (
+                    <div className="text-center mt-4">
+                        <div className="spinner"></div>
+                        <p>Searching...</p>
+                    </div>
+                )}
+
+                <div className="posts-grid">
+                    {renderExperienceCards(displayExperiences)}
+
+                    {displaySuggestions.map(sug => (
                         <SuggestionCard
                             key={sug.uuid}
                             user={user}
@@ -300,6 +414,15 @@ const HomePage = ({ user, setUser }) => {
                             isOwner={user && sug.user && user.uuid === sug.user.uuid}
                         />
                     ))}
+
+                    {searchResults &&
+                        displayExperiences.length === 0 &&
+                        displaySuggestions.length === 0 &&
+                        (!searchResults.users || searchResults.users.length === 0) && (
+                            <div className="no-results">
+                                <p>No results found for "{searchQuery}"</p>
+                            </div>
+                        )}
                 </div>
             </div>
 

@@ -21,6 +21,9 @@ const PostCreationPage = ({ user }) => {
     const [suggestionText, setSuggestionText] = useState('');
     const [suggestionTags, setSuggestionTags] = useState('');
     const [fontSizeError, setFontSizeError] = useState('');
+    const [quoteError, setQuoteError] = useState('');
+    const [reflectionError, setReflectionError] = useState('');
+    const [suggestionTextError, setSuggestionTextError] = useState('');
 
     const handleCancel = () => {
         navigate('/');
@@ -41,6 +44,40 @@ const PostCreationPage = ({ user }) => {
         setFontSize(val);
     };
 
+    const QUOTE_MIN_CHARS = 10;
+    const REFLECTION_MIN_CHARS = 100;
+    const SUGGESTION_MIN_CHARS = 1;
+
+    const validateTextContent = (value, minChars, errorSetter) => {
+        const trimmedValue = value.trim();
+        if (trimmedValue.length < minChars) {
+            errorSetter(`Must contain at least ${minChars} characters (excluding spaces at beginning and end)`);
+            return false;
+        }
+        errorSetter('');
+        return true;
+    };
+
+    const handleQuoteChange = e => {
+        const value = e.target.value;
+        setQuote(value);
+        validateTextContent(value, QUOTE_MIN_CHARS, setQuoteError);
+    };
+
+    const handleReflectionChange = e => {
+        const value = e.target.value;
+        setReflection(value);
+        if (REFLECTION_MIN_CHARS > 0) {
+            validateTextContent(value, REFLECTION_MIN_CHARS, setReflectionError);
+        }
+    };
+
+    const handleSuggestionTextChange = e => {
+        const value = e.target.value;
+        setSuggestionText(value);
+        validateTextContent(value, SUGGESTION_MIN_CHARS, setSuggestionTextError);
+    };
+
     const handlePostSubmit = async e => {
         e.preventDefault();
         if (!user) {
@@ -50,12 +87,21 @@ const PostCreationPage = ({ user }) => {
 
         if (fontSize < 8 || fontSize > 30) return;
 
-        const tagArray     = tags.split(',').map(t => t.trim()).filter(t => t);
+        // Validate quote and reflection
+        if (!validateTextContent(quote, QUOTE_MIN_CHARS, setQuoteError)) return;
+        if (REFLECTION_MIN_CHARS > 0 && !validateTextContent(reflection, REFLECTION_MIN_CHARS, setReflectionError)) return;
+
+        // Process tags and mentions
+        const tagArray = tags.split(',').map(t => t.trim()).filter(t => t);
         const mentionArray = mentions.split(',').map(m => m.trim().replace('@','')).filter(m => m);
 
+        // Trim spaces from quote and reflection for submission
+        const trimmedQuote = quote.trim();
+        const trimmedReflection = reflection.trim();
+
         const postObj = {
-            quote,
-            reflection,
+            quote: trimmedQuote,
+            reflection: trimmedReflection,
             isOrigin: true,
             tags: tagArray,
             mentions: mentionArray,
@@ -92,8 +138,14 @@ const PostCreationPage = ({ user }) => {
             navigate('/login');
             return;
         }
-        if (!suggestionText.trim()) return;
 
+        // Validate suggestion text
+        if (!validateTextContent(suggestionText, SUGGESTION_MIN_CHARS, setSuggestionTextError)) return;
+
+        // Trim spaces from suggestion text for submission
+        const trimmedSuggestionText = suggestionText.trim();
+
+        // Process tags
         const tagArray = suggestionTags
             .split(',')
             .map(t => t.trim())
@@ -103,7 +155,7 @@ const PostCreationPage = ({ user }) => {
             const resp = await fetch('http://localhost:8080/api/auth/me/post/suggestion', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ body: suggestionText, tags: tagArray }),
+                body: JSON.stringify({ body: trimmedSuggestionText, tags: tagArray }),
                 credentials: 'include'
             });
             if (resp.ok) navigate('/');
@@ -134,19 +186,24 @@ const PostCreationPage = ({ user }) => {
                 <>
                     <h2>Create a New Experience</h2>
                     <form onSubmit={handlePostSubmit} className="form-section">
+                        <div className="input-group">
+                            <textarea
+                                placeholder={`Quote (min ${QUOTE_MIN_CHARS} characters)`}
+                                value={quote}
+                                onChange={handleQuoteChange}
+                                required
+                            />
+                            {quoteError && <div className="error-text">{quoteError}</div>}
+                        </div>
 
-            <textarea
-                placeholder="Quote"
-                value={quote}
-                onChange={e=>setQuote(e.target.value)}
-                required
-            />
-
-                        <textarea
-                            placeholder="Reflection"
-                            value={reflection}
-                            onChange={e=>setReflection(e.target.value)}
-                        />
+                        <div className="input-group">
+                            <textarea
+                                placeholder={REFLECTION_MIN_CHARS > 0 ? `Reflection (min ${REFLECTION_MIN_CHARS} characters)` : "Reflection"}
+                                value={reflection}
+                                onChange={handleReflectionChange}
+                            />
+                            {reflectionError && <div className="error-text">{reflectionError}</div>}
+                        </div>
 
                         <input
                             type="text"
@@ -223,7 +280,7 @@ const PostCreationPage = ({ user }) => {
                             <button
                                 type="submit"
                                 className="submit-btn"
-                                disabled={!quote.trim()}
+                                disabled={!quote.trim() || !!quoteError || !!reflectionError}
                             >
                                 Share Experience
                             </button>
@@ -243,12 +300,15 @@ const PostCreationPage = ({ user }) => {
                 <>
                     <h2>Submit a Suggestion</h2>
                     <form onSubmit={handleSuggestionSubmit} className="form-section">
-            <textarea
-                placeholder="Write your suggestion"
-                value={suggestionText}
-                onChange={e=>setSuggestionText(e.target.value)}
-                required
-            />
+                        <div className="input-group">
+                            <textarea
+                                placeholder={`Write your suggestion (min ${SUGGESTION_MIN_CHARS} characters)`}
+                                value={suggestionText}
+                                onChange={handleSuggestionTextChange}
+                                required
+                            />
+                            {suggestionTextError && <div className="error-text">{suggestionTextError}</div>}
+                        </div>
                         <input
                             type="text"
                             placeholder="Tags (comma separated)"
@@ -259,7 +319,7 @@ const PostCreationPage = ({ user }) => {
                             <button
                                 type="submit"
                                 className="submit-btn"
-                                disabled={!suggestionText.trim()}
+                                disabled={!suggestionText.trim() || !!suggestionTextError}
                             >
                                 Share Suggestion
                             </button>
