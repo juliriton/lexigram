@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -50,6 +51,9 @@ public class ExperienceService {
 
     if (postExperienceDTO.getMentions() != null) {
       for (String username : postExperienceDTO.getMentions()) {
+        if (username.equals(user.getUsername())) {
+          throw new InvalidObjectException("Cannot mention yourself in a post!");
+        }
         Optional<User> mention = userRepository.findByUsername(username);
         if (mention.isPresent()) {
           mentions.add(mention.get());
