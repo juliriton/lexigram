@@ -17,7 +17,6 @@ const RelationshipProfile = ({ user }) => {
     const [showMentions, setShowMentions] = useState({});
     const [activeTab, setActiveTab] = useState('posts');
     const [postFilter, setPostFilter] = useState('all');
-
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 

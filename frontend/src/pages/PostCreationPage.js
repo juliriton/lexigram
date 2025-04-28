@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaPhotoVideo, FaQuestion, FaTimes } from 'react-icons/fa';
 import '../styles/PostCreationPage.css';
@@ -24,6 +24,21 @@ const PostCreationPage = ({ user }) => {
     const [quoteError, setQuoteError] = useState('');
     const [reflectionError, setReflectionError] = useState('');
     const [suggestionTextError, setSuggestionTextError] = useState('');
+    const baseApiUrl = 'http://localhost:8080';
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                    credentials: 'include',
+                });
+                if (!res.ok) navigate('/login');
+            } catch {
+                navigate('/login');
+            }
+        };
+        checkAuth();
+    }, [navigate]);
 
     const handleCancel = () => {
         navigate('/');
