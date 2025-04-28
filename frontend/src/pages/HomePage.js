@@ -82,6 +82,11 @@ const HomePage = ({ user, setUser }) => {
             return;
         }
 
+        // Prevent searching while already in progress
+        if (searching) {
+            return;
+        }
+
         setSearching(true);
         try {
             const response = await fetch(`${baseApiUrl}/api/auth/me/feed/search/${encodeURIComponent(cleanedQuery)}`, {
@@ -90,6 +95,7 @@ const HomePage = ({ user, setUser }) => {
 
             if (response.ok) {
                 const data = await response.json();
+                // Always completely replace previous results
                 setSearchResults({
                     users: data.connections || [],
                     experiences: data.experiences || [],
@@ -110,6 +116,7 @@ const HomePage = ({ user, setUser }) => {
     const clearSearch = () => {
         setSearchQuery('');
         setSearchResults(null);
+        // No need to refetch, the experiences and suggestions are still in state
     };
 
     const handleMentionClick = (mentionUuid) => {
@@ -228,15 +235,37 @@ const HomePage = ({ user, setUser }) => {
         ))
     );
 
+    // Filter the posts based on both search results and post filter
     let displayExperiences = [];
     let displaySuggestions = [];
 
     if (searchResults) {
-        displayExperiences = searchResults.experiences || [];
-        displaySuggestions = searchResults.suggestions || [];
+        // When searching, apply the postFilter to the search results
+        const allSearchExperiences = searchResults.experiences || [];
+        const allSearchSuggestions = searchResults.suggestions || [];
+
+        if (postFilter === 'all') {
+            displayExperiences = allSearchExperiences;
+            displaySuggestions = allSearchSuggestions;
+        } else if (postFilter === 'experiences') {
+            displayExperiences = allSearchExperiences;
+            displaySuggestions = [];
+        } else if (postFilter === 'suggestions') {
+            displayExperiences = [];
+            displaySuggestions = allSearchSuggestions;
+        }
     } else {
-        displayExperiences = (postFilter === 'all' || postFilter === 'experiences') ? experiences : [];
-        displaySuggestions = (postFilter === 'all' || postFilter === 'suggestions') ? suggestions : [];
+        // Normal feed filtering
+        if (postFilter === 'all') {
+            displayExperiences = experiences;
+            displaySuggestions = suggestions;
+        } else if (postFilter === 'experiences') {
+            displayExperiences = experiences;
+            displaySuggestions = [];
+        } else if (postFilter === 'suggestions') {
+            displayExperiences = [];
+            displaySuggestions = suggestions;
+        }
     }
 
     if (loading) {
