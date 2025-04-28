@@ -6,6 +6,7 @@ import java.util.Set;
 
 public class PostExperienceDTO {
 
+  @NotEmpty
   @NotBlank
   @Size(min = 10, max = 300, message = "Quote must be between 10 and 300 characters. Share something meaningful!")
   private String quote;
@@ -14,6 +15,7 @@ public class PostExperienceDTO {
   @Size(min = 100, max = 800, message = "Reflection must be between 100 and 800 characters. Share something meaningful!")
   private String reflection;
 
+  @NotEmpty
   @NotNull
   @Size(min = 1, message = "Experiences should have at least 1 tag.")
   @Size(max = 20, message = "Experiences should have at least 1 tag.")
