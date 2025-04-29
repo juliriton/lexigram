@@ -176,4 +176,19 @@ public class Experience {
   }
 
 
+  public void setQuote(String quote) {
+    this.quote = quote;
+  }
+
+  public void setReflection(String reflection) {
+    this.reflection = reflection;
+  }
+
+  public void setTags(Set<Tag> tags) {
+    this.tags = tags;
+  }
+
+  public void setMentions(Set<User> mentions) {
+    this.mentions = mentions;
+  }
 }

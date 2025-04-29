@@ -1,6 +1,7 @@
 package com.lexigram.app.controller;
 
 import com.lexigram.app.dto.*;
+import com.lexigram.app.service.ExperienceService;
 import com.lexigram.app.service.UserProfileService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,14 +23,16 @@ import java.util.UUID;
 @RequestMapping("/api/auth/me/profile")
 public class UserProfileController {
 
+  private final ExperienceService experienceService;
   @Value("${lexigram.upload.dir}")
   private String uploadDir;
 
   private final UserProfileService userProfileService;
 
   @Autowired
-  public UserProfileController(UserProfileService userProfileService) {
+  public UserProfileController(UserProfileService userProfileService, ExperienceService experienceService) {
     this.userProfileService = userProfileService;
+    this.experienceService = experienceService;
   }
 
   @GetMapping
@@ -54,6 +57,47 @@ public class UserProfileController {
 
     return ResponseEntity.ok(updated.get().getBiography());
   }
+  
+  @PutMapping("/edit/experience/{uuid}")
+  public ResponseEntity<ExperienceDTO> updateExperienceQuote(HttpSession session, @PathVariable UUID uuid, UpdateExperienceQuoteDTO dto){
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<ExperienceDTO> updated = experienceService.updateExperienceQuote(uuid, dto);
+    if (updated.isEmpty()) return ResponseEntity.notFound().build();
+    return ResponseEntity.ok(updated.get());
+  }
+
+  @PutMapping("/edit/experience/{uuid}")
+  public ResponseEntity<ExperienceDTO> updateExperienceReflection(HttpSession session, @PathVariable UUID uuid, UpdateExperienceReflectionDTO dto) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<ExperienceDTO> updated = experienceService.updateExperienceReflection(uuid, dto);
+    if (updated.isEmpty()) return ResponseEntity.notFound().build();
+    return ResponseEntity.ok(updated.get());
+  }
+
+  @PutMapping("/edit/experience/{uuid}")
+  public ResponseEntity<ExperienceDTO> updateExperienceTags(HttpSession session, @PathVariable UUID uuid, UpdateExperienceTagDTO dto) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<ExperienceDTO> updated = experienceService.updateExperienceTag(uuid, dto);
+    if (updated.isEmpty()) return ResponseEntity.notFound().build();
+    return ResponseEntity.ok(updated.get());
+  }
+
+  @PutMapping("/edit/experience/{uuid}")
+  public ResponseEntity<ExperienceDTO> updateExperienceMentions(HttpSession session, @PathVariable UUID uuid, UpdateExperienceMentionsDTO dto) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<ExperienceDTO> updated = experienceService.updateExperienceMentions(uuid, dto);
+    if (updated.isEmpty()) return ResponseEntity.notFound().build();
+    return ResponseEntity.ok(updated.get());
+  }
+
 
   @PostMapping("/edit/profile-picture")
   public ResponseEntity<String> updateProfilePicture(HttpSession session,
@@ -121,5 +165,6 @@ public class UserProfileController {
 
     return ResponseEntity.ok(userProfileService.getFollowing(id));
   }
+  
 
 }

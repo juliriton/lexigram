@@ -1,9 +1,6 @@
 package com.lexigram.app.service;
 
-import com.lexigram.app.dto.ExperienceDTO;
-import com.lexigram.app.dto.PostExperienceDTO;
-import com.lexigram.app.dto.PostExperiencePrivacySettingsDTO;
-import com.lexigram.app.dto.PostExperienceStyleDTO;
+import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.model.*;
 import com.lexigram.app.repository.*;
@@ -138,6 +135,75 @@ public class ExperienceService {
     }
 
     return publicExperiences;
+  }
+
+  public Optional<ExperienceDTO> updateExperienceQuote(UUID uuid, UpdateExperienceQuoteDTO experienceDTO) {
+    Optional<Experience> experienceOptional = experienceRepository.findExperienceByUuid(uuid);
+    if (experienceOptional.isPresent()) {
+      Experience experience = experienceOptional.get();
+      experience.setQuote(experienceDTO.getQuote());
+      experienceRepository.save(experience);
+      return Optional.of(new ExperienceDTO(experience));
+    }
+    return Optional.empty();
+  }
+
+  public Optional<ExperienceDTO> updateExperienceReflection(UUID uuid, UpdateExperienceReflectionDTO experienceDTO) {
+    Optional<Experience> experienceOptional = experienceRepository.findExperienceByUuid(uuid);
+    if (experienceOptional.isPresent()) {
+      Experience experience = experienceOptional.get();
+      experience.setReflection(experienceDTO.getReflection());
+      experienceRepository.save(experience);
+      return Optional.of(new ExperienceDTO(experience));
+    }
+    return Optional.empty();
+  }
+
+  public Optional<ExperienceDTO> updateExperienceTag(UUID uuid, UpdateExperienceTagDTO updateTagDTO) {
+    Set<Tag> tags = new HashSet<>();
+    Optional<Experience> experienceOptional = experienceRepository.findExperienceByUuid(uuid);
+    if (experienceOptional.isPresent()) {
+      Experience experience = experienceOptional.get();
+
+      for (String t : updateTagDTO.getTags()) {
+        Optional<Tag> tagOptional = tagRepository.findByName(t);
+        if (tagOptional.isPresent()) {
+          tags.add(tagOptional.get());
+        } else {
+          Tag tag = new Tag(t);
+          tagRepository.save(tag);
+          tags.add(tag);
+        }
+      }
+      experience.setTags(tags);
+      experienceRepository.save(experience);
+      return Optional.of(new ExperienceDTO(experience));
+    }
+    return Optional.empty();
+  }
+
+  public Optional<ExperienceDTO> updateExperienceMentions(UUID uuid, UpdateExperienceMentionsDTO updateMentionDTO) {
+    Set<User> mentions = new HashSet<>();
+    Optional<Experience> experienceOptional = experienceRepository.findExperienceByUuid(uuid);
+    if (experienceOptional.isPresent()) {
+      Experience experience = experienceOptional.get();
+
+      if (updateMentionDTO.getMentions() != null) {
+        for (String username : updateMentionDTO.getMentions()) {
+          Optional<User> mention = userRepository.findByUsername(username);
+          if (mention.isPresent()) {
+            mentions.add(mention.get());
+          } else {
+            throw new UserNotFoundException();
+          }
+        }
+      }
+
+      experience.setMentions(mentions);
+      experienceRepository.save(experience);
+      return Optional.of(new ExperienceDTO(experience));
+    }
+    return Optional.empty();
   }
 
 }
