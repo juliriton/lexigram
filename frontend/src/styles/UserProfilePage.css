@@ -1,0 +1,469 @@
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+.profile-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #6e8efb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.profile-header {
+    margin-bottom: 30px;
+}
+
+.profile-cover {
+    position: relative;
+    height: 175px;
+    background: linear-gradient(135deg, #05ff69, #fd8f00);
+    border-radius: 12px 12px 0 0;
+}
+
+.profile-avatar-container {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    object-fit: cover;
+    background-color: white;
+}
+
+.profile-username {
+    margin-top: 55px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.profile-bio {
+    margin-top: 60px;
+    text-align: center;
+    padding: 0 20px;
+    font-style: italic;
+    color: #666;
+}
+
+.profile-nav {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-nav-item {
+    padding: 12px 24px;
+    margin: 0 5px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    color: #777;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.profile-nav-item:hover {
+    color: #6e8efb;
+}
+
+.profile-nav-item.active {
+    color: #6e8efb;
+}
+
+.profile-nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: #6e8efb;
+    border-radius: 3px 3px 0 0;
+}
+
+.profile-content {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.post-filter {
+    margin-bottom: 20px;
+}
+
+.post-filter select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1em;
+}
+
+.no-posts {
+    text-align: center;
+    padding: 30px;
+    color: #888;
+}
+
+.profile-footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .profile-nav-item {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    .profile-username {
+        font-size: 18px;
+    }
+}
+
+.profile-edit {
+    margin-top: 30px;
+    background-color: #fafafa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.edit-section {
+    margin-bottom: 30px;
+}
+
+.edit-section h3 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: vertical;
+    min-height: 120px;
+    background-color: #fff;
+}
+
+textarea:focus {
+    border-color: #6e8efb;
+    outline: none;
+    box-shadow: 0 0 5px rgba(110, 142, 251, 0.5);
+}
+
+button.btn-primary {
+    background-color: #003aff;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-primary:hover {
+    background-color: #003eff;
+}
+
+.edit-section {
+    margin-bottom: 40px;
+}
+
+.edit-section h3 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+button.btn-primary {
+    padding: 12px 30px;
+    background-color: #6e8efb;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button.btn-primary:hover {
+    background-color: #4e70d1;
+}
+
+input[type="file"] {
+    display: block;
+    margin-bottom: 20px;
+}
+
+input[type="file"]:hover {
+    cursor: pointer;
+}
+
+.upload-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.delete-confirmation-modal {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    max-width: 450px;
+    width: 100%;
+}
+
+.delete-confirmation-modal h3 {
+    margin-top: 0;
+    color: #d32f2f;
+}
+
+.delete-confirmation-modal p {
+    margin-bottom: 1.5rem;
+    color: #555;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .posts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .profile-cover {
+        height: 150px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .profile-bio {
+        padding: 3.5rem 1.5rem 1.5rem;
+    }
+
+    .profile-nav-item {
+        padding: 0.75rem 1.5rem;
+    }
+
+    .profile-content {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .posts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-avatar-container {
+        bottom: -40px;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+    }
+
+    .profile-username {
+        font-size: 1.2rem;
+    }
+
+    .profile-bio {
+        padding: 3rem 1rem 1rem;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+
+    .btn-primary, .btn-secondary, .btn-danger {
+        width: 100%;
+    }
+}
+
+.connections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px 0;
+}
+
+.connection-card {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.connection-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background-color: #f0f5ff;
+}
+
+.connection-avatar {
+    margin-right: 15px;
+}
+
+.connection-avatar img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.connection-info {
+    flex: 1;
+}
+
+.connection-username {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 5px;
+    color: #333;
+}
+
+.connection-email {
+    font-size: 14px;
+    color: #777;
+    margin: 0;
+}
+
+.no-connections {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+    color: #888;
+    font-style: italic;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.profile-connections h3 {
+    margin-bottom: 20px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.profile-nav-item svg {
+    margin-right: 5px;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .connection-card {
+        padding: 12px;
+    }
+
+    .connection-avatar img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .connection-username {
+        font-size: 16px;
+    }
+
+    .connection-email {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .connection-avatar img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .connection-username {
+        font-size: 15px;
+    }
+
+    .connection-email {
+        font-size: 12px;
+    }
+}

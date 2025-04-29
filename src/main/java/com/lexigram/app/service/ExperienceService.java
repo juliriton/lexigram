@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -50,6 +51,9 @@ public class ExperienceService {
 
     if (postExperienceDTO.getMentions() != null) {
       for (String username : postExperienceDTO.getMentions()) {
+        if (username.equals(user.getUsername())) {
+          throw new InvalidObjectException("Cannot mention yourself in a post!");
+        }
         Optional<User> mention = userRepository.findByUsername(username);
         if (mention.isPresent()) {
           mentions.add(mention.get());
@@ -107,9 +111,9 @@ public class ExperienceService {
 
     ExperiencePrivacySettings privacy = new ExperiencePrivacySettings(
         experience,
-        privacySettingsDTO.areCommentsAllowed(),
-        privacySettingsDTO.areForksAllowed(),
-        privacySettingsDTO.areResonatesAllowed()
+        privacySettingsDTO.getAllowComments(),
+        privacySettingsDTO.getAllowForks(),
+        privacySettingsDTO.getAllowResonates()
     );
     experiencePrivacySettingsRepository.save(privacy);
     experience.setPrivacySettings(privacy);
@@ -135,6 +139,46 @@ public class ExperienceService {
     }
 
     return publicExperiences;
+  }
+
+  public Set<ExperienceDTO> getAllPublicExperiences(){
+    Set<User> publicUsers = userRepository.findByUserPrivacySettingsVisibilityTrue();
+    Set<ExperienceDTO> publicExperiences = new HashSet<>();
+
+    for (User user : publicUsers) {
+      Long userId = user.getId();
+      Set<Experience> userExperiences = experienceRepository.getExperiencesByUserId(userId);
+      for (Experience experience : userExperiences) {
+        publicExperiences.add(new ExperienceDTO(experience));
+      }
+    }
+
+    return publicExperiences;
+  }
+
+  public Set<ExperienceDTO> getAllFollowingExperiences(Long id) {
+    User user = userRepository.findById(id).get();
+
+    Set<ExperienceDTO> followingExperiences = new HashSet<>();
+    for (User u : user.getFollowing()) {
+      Long userId = u.getId();
+      Set<Experience> userExperiences = experienceRepository.getExperiencesByUserId(userId);
+      for (Experience experience : userExperiences) {
+        followingExperiences.add(new ExperienceDTO(experience));
+      }
+    }
+    return followingExperiences;
+  }
+
+  public boolean deleteExperience(UUID experienceUuid, Long userId) {
+    Optional<Experience> experience = experienceRepository.findByUuid(experienceUuid);
+    if (experience.isEmpty()){
+      return false;
+    }
+    experienceRepository.deleteById(experience.get().getId());
+    User user = userRepository.findById(userId).get();
+    userRepository.save(user);
+    return true;
   }
 
   public Optional<ExperienceDTO> updateExperienceQuote(UUID uuid, UpdateExperienceQuoteDTO experienceDTO) {

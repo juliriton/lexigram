@@ -25,9 +25,9 @@ public class ExperiencePrivacySettings {
   public ExperiencePrivacySettings() {}
 
   public ExperiencePrivacySettings(Experience experience,
-                                   Boolean allowComments,
-                                   Boolean allowForks,
-                                   Boolean allowResonates) {
+                                   boolean allowComments,
+                                   boolean allowForks,
+                                   boolean allowResonates) {
     this.experience = experience;
     this.allowComments = allowComments;
     this.allowForks = allowForks;

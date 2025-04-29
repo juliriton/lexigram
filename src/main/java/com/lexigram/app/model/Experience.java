@@ -10,6 +10,7 @@ public class Experience {
   @PrePersist
   protected void onCreate() {
     this.creationDate = System.currentTimeMillis();
+    this.uuid = UUID.randomUUID();
   }
 
   @Id
@@ -17,7 +18,7 @@ public class Experience {
   private Long id;
 
   @Column(nullable = false, unique = true, updatable = false)
-  private UUID uuid = UUID.randomUUID();
+  private UUID uuid;
 
   @Column(nullable = false, columnDefinition = "Text")
   private String quote;
@@ -58,18 +59,19 @@ public class Experience {
   )
   private Set<Tag> tags = new HashSet<>();
 
+
   @ManyToOne
   @JoinColumn(name = "origin_id", referencedColumnName = "id", nullable = true)
   private Experience origin;
 
   @OneToMany(mappedBy = "origin", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Experience> forks = new ArrayList<>();
-
-  @OneToOne(cascade = CascadeType.ALL)
+  
+  @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "style_id", referencedColumnName = "id")
   private ExperienceStyle style;
 
-  @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL)
+  @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   private ExperiencePrivacySettings privacySettings;
 
   @ManyToMany

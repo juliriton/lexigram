@@ -4,14 +4,25 @@ import jakarta.persistence.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 public class User {
 
+  @PrePersist
+  public void onCreate() {
+    this.uuid = UUID.randomUUID();
+    this.followerAmount = 0L;
+    this.followingAmount = 0L;
+  }
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(nullable = false, unique = true, updatable = false)
+  private UUID uuid;
 
   @Column(unique = true, nullable = false)
   private String username;
@@ -22,10 +33,10 @@ public class User {
   @Column(nullable = false)
   private String password;
 
-  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private UserPrivacySettings userPrivacySettings;
 
-  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private UserProfile userProfile;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
@@ -34,7 +45,7 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private Set<Suggestion> suggestions = new HashSet<>();
 
-  @ManyToMany(mappedBy = "mentions")
+  @ManyToMany(mappedBy = "mentions", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private Set<Experience> mentionedIn = new HashSet<>();
 
   @ManyToMany
@@ -48,8 +59,18 @@ public class User {
   @ManyToMany(mappedBy = "following")
   private Set<User> followers = new HashSet<>();
 
+  private Long followingAmount;
+
+  private Long followerAmount;
+
+  public User() {}
+
   public Long getId() {
     return id;
+  }
+
+  public UUID getUuid() {
+    return uuid;
   }
 
   public String getUsername() {
@@ -72,6 +93,10 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public UserProfile getUserProfile() {
+    return userProfile;
   }
 
   public UserPrivacySettings getUserPrivacySettings() {
@@ -100,18 +125,30 @@ public class User {
 
   public void addFollower(User user) {
     followers.add(user);
+    followerAmount += 1;
   }
 
   public void addFollowing(User user) {
     following.add(user);
+    followingAmount += 1;
   }
 
   public void removeFollowing(User user) {
     following.remove(user);
+    followingAmount -= 1;
   }
 
   public void removeFollower(User user) {
     followers.remove(user);
+    followerAmount -= 1;
+  }
+
+  public Long getFollowingAmount() {
+    return followingAmount;
+  }
+
+  public Long getFollowerAmount() {
+    return followerAmount;
   }
 
 }

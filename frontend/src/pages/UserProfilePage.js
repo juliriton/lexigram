@@ -1,22 +1,29 @@
 import React, { useEffect, useState } from 'react';
+import { FaHome, FaArrowLeft, FaUser, FaUsers } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import '../App.css';
+import '../styles/UserProfilePage.css';
+import ExperienceCard from '../components/ExperienceCard';
+import SuggestionCard from '../components/SuggestionCard';
 
-const UserProfilePage = () => {
+const UserProfilePage = ({ user }) => {
     const navigate = useNavigate();
-
     const [profile, setProfile] = useState(null);
     const [username, setUsername] = useState('');
     const [newBio, setNewBio] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
     const [posts, setPosts] = useState([]);
     const [postFilter, setPostFilter] = useState('all');
+    const [followers, setFollowers] = useState([]);
+    const [following, setFollowing] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [usingDefaultImage, setUsingDefaultImage] = useState(false);
     const [attemptedLoad, setAttemptedLoad] = useState(false);
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
+    const [activeTab, setActiveTab] = useState('posts');
+    const [updateMessage, setUpdateMessage] = useState('');
+    const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
@@ -63,21 +70,54 @@ const UserProfilePage = () => {
 
     useEffect(() => {
         const fetchPosts = async () => {
-            const base = `${baseApiUrl}/api/auth/me/profile/posts`;
-            const url = postFilter === 'all'
-                ? base
-                : `${base}/${postFilter}`;
+            let url;
+            switch (postFilter) {
+                case 'suggestions':
+                    url = `${baseApiUrl}/api/auth/me/profile/posts/suggestions`;
+                    break;
+                case 'experiences':
+                    url = `${baseApiUrl}/api/auth/me/profile/posts/experiences`;
+                    break;
+                default:
+                    url = `${baseApiUrl}/api/auth/me/profile/posts`;
+            }
 
             try {
                 const res = await fetch(url, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch posts');
                 const data = await res.json();
 
-                const processed = postFilter === 'all'
-                    ? [...(data.experiences || []), ...(data.suggestions || [])]
-                    : data;
+                let processedPosts = [];
 
-                setPosts(processed);
+                if (postFilter === 'all') {
+                    if (data.experiences && Array.isArray(data.experiences)) {
+                        processedPosts = [...processedPosts, ...data.experiences.map(exp => ({...exp, type: 'Experience'}))];
+                    }
+                    if (data.suggestions && Array.isArray(data.suggestions)) {
+                        processedPosts = [...processedPosts, ...data.suggestions.map(sug => ({...sug, type: 'Suggestion'}))];
+                    }
+                    if (Array.isArray(data)) {
+                        processedPosts = data;
+                    }
+                } else {
+                    if (Array.isArray(data)) {
+                        processedPosts = data.map(item => ({
+                            ...item,
+                            type: postFilter === 'experiences' ? 'Experience' : 'Suggestion'
+                        }));
+                    } else if (typeof data === 'object' && data !== null) {
+                        const items = postFilter === 'experiences' ? data.experiences : data.suggestions;
+                        if (Array.isArray(items)) {
+                            processedPosts = items.map(item => ({
+                                ...item,
+                                type: postFilter === 'experiences' ? 'Experience' : 'Suggestion'
+                            }));
+                        }
+                    }
+                }
+
+                console.log("Processed posts:", processedPosts);
+                setPosts(processedPosts);
             } catch (err) {
                 console.error("Error fetching posts:", err);
                 setPosts([]);
@@ -85,6 +125,32 @@ const UserProfilePage = () => {
         };
         fetchPosts();
     }, [postFilter]);
+
+    useEffect(() => {
+        const fetchConnections = async () => {
+            if (activeTab === 'followers' || activeTab === 'following') {
+                try {
+                    const endpoint = activeTab === 'followers'
+                        ? `${baseApiUrl}/api/auth/me/profile/followers`
+                        : `${baseApiUrl}/api/auth/me/profile/following`;
+
+                    const res = await fetch(endpoint, { credentials: 'include' });
+                    if (!res.ok) throw new Error(`Failed to fetch ${activeTab}`);
+
+                    const data = await res.json();
+                    if (activeTab === 'followers') {
+                        setFollowers(data);
+                    } else {
+                        setFollowing(data);
+                    }
+                } catch (err) {
+                    console.error(`Error fetching ${activeTab}:`, err);
+                }
+            }
+        };
+
+        fetchConnections();
+    }, [activeTab, baseApiUrl]);
 
     useEffect(() => {
         const validateImage = async () => {
@@ -103,18 +169,26 @@ const UserProfilePage = () => {
 
     const handleBioUpdate = async () => {
         try {
+            const previousBioValue = profile.biography || 'No bio yet — still searching for the right words.';
+            const bioToUpdate = newBio.trim() || 'No bio yet — still searching for the right words.';
+
             const res = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/biography`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ biography: newBio })
+                body: JSON.stringify({ biography: bioToUpdate })
             });
 
             if (!res.ok) throw new Error('Update failed');
-            alert("Biography updated");
+
+            setProfile(prev => ({
+                ...prev,
+                biography: bioToUpdate
+            }));
+
+            setUpdateMessage(`Your biography has been updated! Previous: "${previousBioValue}" New: "${bioToUpdate}"`);
         } catch (err) {
             console.error("Error updating biography:", err);
-            alert("Error updating biography");
         }
     };
 
@@ -151,13 +225,64 @@ const UserProfilePage = () => {
                 setProfile(profileData);
             }
 
-            alert("Profile picture updated");
             setUsingDefaultImage(false);
             setAttemptedLoad(false);
+
+            setSelectedFile(null);
+            const fileInput = document.getElementById('profile-picture-input');
+            if (fileInput) fileInput.value = '';
+
+            setUpdateMessage('Your profile picture has been updated!');
+
         } catch (err) {
             console.error("Error uploading picture:", err);
             alert("Error uploading picture");
         }
+    };
+
+    const handleDeletePost = async () => {
+        if (!deleteConfirmation) return;
+
+        const { uuid, type } = deleteConfirmation;
+
+        try {
+            const endpoint = type === 'Experience'
+                ? `${baseApiUrl}/api/auth/me/profile/posts/delete/experiences/${uuid}`
+                : `${baseApiUrl}/api/auth/me/profile/posts/delete/suggestions/${uuid}`;
+
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                throw new Error(`Failed to delete ${type.toLowerCase()}`);
+            }
+
+            setPosts(posts.filter(post => post.uuid !== uuid));
+            setUpdateMessage(`${type} successfully deleted`);
+            setDeleteConfirmation(null);
+
+        } catch (err) {
+            console.error(`Error deleting ${type.toLowerCase()}:`, err);
+            setUpdateMessage(`Error deleting ${type.toLowerCase()}: ${err.message}`);
+        }
+    };
+
+    const confirmDelete = (post, postType) => {
+        const uuid = post?.uuid;
+
+        if (!uuid) {
+            console.error("Cannot delete post: Missing UUID", post);
+            setUpdateMessage("Error: Cannot delete this post. Missing UUID.");
+            return;
+        }
+
+        setDeleteConfirmation({ uuid: uuid, type: postType });
+    };
+
+    const cancelDelete = () => {
+        setDeleteConfirmation(null);
     };
 
     const getProfileImageUrl = () => {
@@ -167,11 +292,22 @@ const UserProfilePage = () => {
         return `${baseApiUrl}${profile.profilePictureUrl}?t=${Date.now()}`;
     };
 
+    const handleNavigateToUserProfile = (uuid) => {
+        navigate(`/profile/${uuid}`);
+    };
+
+    const getConnectionProfileImageUrl = (connection) => {
+        if (!connection?.profilePictureUrl) {
+            return defaultProfilePic;
+        }
+        return `${baseApiUrl}${connection.profilePictureUrl}`;
+    };
+
     const formatDate = (timestamp) =>
         new Date(timestamp).toLocaleDateString();
 
     const renderTags = (tags) => Array.isArray(tags) && tags.map((tag, i) => (
-        <span key={i} className="badge bg-secondary me-1">
+        <span key={i} className="tag-badge">
             {typeof tag === 'object' ? tag.name : tag}
         </span>
     ));
@@ -183,13 +319,32 @@ const UserProfilePage = () => {
         }));
     };
 
-    const renderMentions = (mentions, postId) => (
-        showMentions[postId] && (
-            <div className="mt-2">
+    const handleMentionClick = (mentionUuid) => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        if (user.uuid !== mentionUuid){
+            navigate(`/profile/${mentionUuid}`);
+        }
+    };
+
+    const renderMentions = (mentions, id) => (
+        showMentions[id] && (
+            <div className="post-mentions">
                 <h6>Mentions:</h6>
-                {mentions.map((mention, i) => (
-                    <span key={i} className="badge bg-info me-1">{mention}</span>
-                ))}
+                <div className="mentions-list">
+                    {mentions.map((mention, i) => (
+                        <span
+                            key={i}
+                            className="mention clickable"
+                            onClick={() => handleMentionClick(mention.uuid)}
+                            style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
+                        >
+                        @{mention.username}
+                    </span>
+                    ))}
+                </div>
             </div>
         )
     );
@@ -197,170 +352,279 @@ const UserProfilePage = () => {
     const renderPost = (post) => {
         const isExperience = post.type === 'Experience';
         const postId = post.uuid || post.id;
-        const isQuoteHidden = hiddenQuotes[postId];
 
         if (isExperience) {
             return (
-                <div key={postId} className="card shadow-sm mb-4" style={{ overflow: 'hidden' }}>
-                    <div style={{ position: 'relative', height: '300px', overflow: 'hidden' }}>
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                height: '100%',
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                backgroundImage: `url(${baseApiUrl}${post.style?.backgroundMediaUrl || post.imageUrl})`,
-                                filter: isQuoteHidden ? 'none' : 'brightness(70%)'
-                            }}
-                        />
-                        {!isQuoteHidden && (
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '2rem'
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        padding: '1rem',
-                                        borderRadius: post.style?.borderRadius || '10px',
-                                        backgroundColor: 'rgba(0,0,0,0.3)',
-                                        maxWidth: '80%',
-                                        textAlign: 'center'
-                                    }}
-                                >
-                                    <h4
-                                        style={{
-                                            color: post.style?.fontColor || '#ffffff',
-                                            fontSize: post.style?.fontSize || '1.5rem',
-                                            fontFamily: post.style?.fontFamily || 'inherit',
-                                            fontWeight: 'bold',
-                                            textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
-                                            margin: 0
-                                        }}
-                                    >
-                                        "{post.quote || post.title}"
-                                    </h4>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className="card-body bg-white">
-                        <p className="card-text">{post.reflection || post.content}</p>
-                        <div className="d-flex justify-content-between align-items-center">
-                            <span className="badge bg-primary">{post.type}</span>
-                            {post.creationDate && (
-                                <small className="text-muted">{formatDate(post.creationDate)}</small>
-                            )}
-                        </div>
-                        {post.tags?.length > 0 && (
-                            <div className="mt-2">{renderTags(post.tags)}</div>
-                        )}
-                        {post.mentions?.length > 0 && (
-                            <button
-                                className="btn btn-link mt-2"
-                                onClick={() => setShowMentions(prev => ({ ...prev, [postId]: !prev[postId] }))}
-                            >
-                                {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
-                            </button>
-                        )}
-                        {renderMentions(post.mentions, postId)}
-                    </div>
+                <ExperienceCard
+                    key={postId}
+                    user={user}
+                    post={post}
+                    baseApiUrl={baseApiUrl}
+                    username={'Me'}
+                    hiddenQuotes={hiddenQuotes}
+                    toggleQuote={toggleQuote}
+                    showMentions={showMentions}
+                    setShowMentions={setShowMentions}
+                    renderMentions={renderMentions}
+                    renderTags={renderTags}
+                    formatDate={formatDate}
+                    onDelete={() => confirmDelete(post, 'Experience')}
+                    isOwner={true}
+                />
+            );
+        }
 
-                    <button className="btn btn-link" onClick={() => toggleQuote(postId)}>
-                        {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
-                    </button>
+        return (
+            <SuggestionCard
+                key={postId}
+                user={user}
+                post={post}
+                baseApiUrl={baseApiUrl}
+                username={'Me'}
+                hiddenQuotes={hiddenQuotes}
+                toggleQuote={toggleQuote}
+                showMentions={showMentions}
+                setShowMentions={setShowMentions}
+                renderMentions={renderMentions}
+                renderTags={renderTags}
+                formatDate={formatDate}
+                onDelete={() => confirmDelete(post, 'Suggestion')}
+                isOwner={true}
+            />
+        );
+    };
+
+    const renderConnectionList = (connections, connectionType) => {
+        if (connections.length === 0) {
+            return (
+                <div className="no-connections">
+                    <p>No {connectionType} found.</p>
                 </div>
             );
         }
 
         return (
-            <div key={postId} className="card shadow-sm mb-4">
-                <div className="card-body">
-                    <h5 className="card-title text-muted small">{post.header || "Tell me about"}</h5>
-                    <p className="card-text fw-bold fs-5">{post.body}</p>
-                    <div className="d-flex justify-content-between align-items-center">
-                        <span className="badge bg-primary">Suggestion</span>
-                        {post.creationDate && (
-                            <small className="text-muted">{formatDate(post.creationDate)}</small>
-                        )}
+            <div className="connections-list">
+                {connections.map(connection => (
+                    <div
+                        key={connection.uuid}
+                        className="connection-card"
+                        onClick={() => handleNavigateToUserProfile(connection.uuid)}
+                    >
+                        <div className="connection-avatar">
+                            <img
+                                src={getConnectionProfileImageUrl(connection)}
+                                alt={connection.username}
+                                onError={(e) => {
+                                    e.target.src = defaultProfilePic;
+                                }}
+                            />
+                        </div>
+                        <div className="connection-info">
+                            <h4 className="connection-username">{connection.username}</h4>
+                            <p className="connection-email">{connection.email}</p>
+                        </div>
                     </div>
-                    {post.tags?.length > 0 && (
-                        <div className="mt-2">{renderTags(post.tags)}</div>
-                    )}
-                </div>
+                ))}
             </div>
         );
     };
 
-    if (loading) return <div className="container mt-4">Loading user profile...</div>;
+    if (loading) {
+        return (
+            <div className="profile-loading">
+                <div className="spinner"></div>
+                <p>Loading profile...</p>
+            </div>
+        );
+    }
 
     if (error || !profile) {
         return (
-            <div className="container mt-4">
-                <div className={`alert alert-${error ? 'danger' : 'warning'}`}>
-                    <strong>{error ? 'Error:' : 'Notice:'}</strong> {error || 'User profile not found'}
-                </div>
-                <button className="btn btn-primary mt-2" onClick={() => navigate('/')}>Back to Home</button>
+            <div className="profile-error">
+                <div className="error-icon"> </div>
+                <h3>Error Loading Profile</h3>
+                <p>{error || "No profile data found"}</p>
+                <button className="btn-primary" onClick={() => navigate('/')}>
+                    Home
+                </button>
             </div>
         );
     }
 
     return (
-        <div className="container mt-4" style={{ maxWidth: '600px' }}>
-            <h3>{username}'s Profile</h3>
+        <div className="profile-container">
+            <div className="profile-header">
+                <div className="profile-cover">
+                    <div className="profile-avatar-container">
+                        <img
+                            src={getProfileImageUrl()}
+                            alt="Profile"
+                            className="profile-avatar"
+                            onError={(e) => {
+                                setUsingDefaultImage(true);
+                                e.target.src = defaultProfilePic;
+                            }}
+                        />
+                        <div className="profile-username">{username}</div>
+                    </div>
+                </div>
 
-            <div className="text-center mb-3">
-                <img
-                    src={getProfileImageUrl()}
-                    alt="Profile"
-                    className="profile-pic"
-                    style={{ maxWidth: '150px', borderRadius: '50%' }}
-                    onError={(e) => { setUsingDefaultImage(true); e.target.src = defaultProfilePic; }}
-                />
+                <div className="profile-bio">
+                    <p>{profile.biography}</p>
+                </div>
             </div>
 
-            <p><strong>Biography:</strong> {profile.biography || 'No biography'}</p>
+            {updateMessage && (
+                <div className="alert alert-info animate__animated animate__fadeInDown">
+                    {updateMessage}
+                    <button
+                        onClick={() => setUpdateMessage('')}
+                        className="close-alert"
+                        aria-label="Close"
+                    >
+                        &times;
+                    </button>
+                </div>
+            )}
 
-            <hr />
-            <h5>Edit Profile</h5>
+            {deleteConfirmation && (
+                <div className="modal-backdrop">
+                    <div className="delete-confirmation-modal">
+                        <h3>Delete {deleteConfirmation.type}</h3>
+                        <p>Are you sure you want to delete
+                            this {deleteConfirmation.type.toLowerCase()}? This action cannot be
+                            undone.</p>
+                        <div className="modal-buttons">
+                            <button
+                                className="btn-secondary"
+                                onClick={cancelDelete}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="btn-danger"
+                                onClick={handleDeletePost}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            <div className="form-group mb-2">
-                <label>New biography:</label>
-                <textarea
-                    className="form-control"
-                    value={newBio}
-                    rows="3"
-                    onChange={(e) => setNewBio(e.target.value)}
-                />
-                <button className="btn btn-primary mt-2" onClick={handleBioUpdate}>Update Biography</button>
+            <div className="profile-nav">
+                <button
+                    className={`profile-nav-item ${activeTab === 'posts' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('posts')}
+                >
+                    Posts
+                </button>
+                <button
+                    className={`profile-nav-item ${activeTab === 'followers' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('followers')}
+                >
+                    <FaUser /> Followers
+                </button>
+                <button
+                    className={`profile-nav-item ${activeTab === 'following' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('following')}
+                >
+                    <FaUsers /> Following
+                </button>
+                <button
+                    className={`profile-nav-item ${activeTab === 'edit' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('edit')}
+                >
+                    Edit Profile
+                </button>
             </div>
 
-            <div className="form-group mt-3">
-                <label>Change profile picture:</label>
-                <input type="file" className="form-control" onChange={handleFileChange} />
-                <button className="btn btn-secondary mt-2" onClick={handlePictureUpload}>Upload Picture</button>
+            {activeTab === 'posts' && (
+                <div className="profile-content profile-posts">
+                    <div className="post-filter">
+                        <select
+                            value={postFilter}
+                            onChange={(e) => setPostFilter(e.target.value)}
+                        >
+                            <option value="all">All Posts</option>
+                            <option value="suggestions">Suggestions</option>
+                            <option value="experiences">Experiences</option>
+                        </select>
+                    </div>
+
+                    {posts.length === 0 ? (
+                        <div className="no-posts">
+                            <p>No posts found for this filter.</p>
+                        </div>
+                    ) : (
+                        <div className="posts-grid">
+                            {posts.map(renderPost)}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'followers' && (
+                <div className="profile-content profile-connections">
+                    <h3>People who follow you</h3>
+                    {renderConnectionList(followers, 'followers')}
+                </div>
+            )}
+
+            {activeTab === 'following' && (
+                <div className="profile-content profile-connections">
+                    <h3>People you follow</h3>
+                    {renderConnectionList(following, 'following')}
+                </div>
+            )}
+
+            {activeTab === 'edit' && (
+                <div className="profile-content profile-edit">
+                    <div className="edit-section">
+                        <h3>Update Biography</h3>
+                        <textarea
+                            value={newBio}
+                            onChange={(e) => setNewBio(e.target.value)}
+                            rows="4"
+                            placeholder="Write something about yourself..."
+                        />
+                        <button
+                            className="btn-primary"
+                            onClick={handleBioUpdate}
+                        >
+                            Save Biography
+                        </button>
+                    </div>
+
+                    <div className="edit-section">
+                        <h3>Change Profile Picture</h3>
+                        <input
+                            type="file"
+                            id="profile-picture-input"
+                            accept="image/jpeg"
+                            onChange={handleFileChange}
+                        />
+                        <button
+                            className="btn-primary"
+                            onClick={handlePictureUpload}
+                        >
+                            Upload Picture
+                        </button>
+                    </div>
+                </div>
+            )}
+            <div className="text-center">
+                <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
+                    <FaArrowLeft/> Go back
+                </button>
             </div>
 
-            <hr />
-            <h5>Your Posts</h5>
-            <div className="btn-group mb-3">
-                <button className={`btn btn-outline-primary ${postFilter === 'all' ? 'active' : ''}`} onClick={() => setPostFilter('all')}>All</button>
-                <button className={`btn btn-outline-primary ${postFilter === 'experiences' ? 'active' : ''}`} onClick={() => setPostFilter('experiences')}>Experiences</button>
-                <button className={`btn btn-outline-primary ${postFilter === 'suggestions' ? 'active' : ''}`} onClick={() => setPostFilter('suggestions')}>Suggestions</button>
+            <div className="text-center">
+                <button className="btn btn-success mt-3" onClick={() => navigate('/')}>
+                    <FaHome/> Home
+                </button>
             </div>
-
-            {posts.length > 0 ? posts.map(renderPost) : (<p>No posts found for this filter.</p>)}
         </div>
     );
 };

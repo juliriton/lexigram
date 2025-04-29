@@ -1,0 +1,360 @@
+.relationship-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+.relationship-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+}
+
+.relationship-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #6e8efb;
+    border-radius: 50%;
+    animation: relationship-spin 1s linear infinite;
+}
+
+@keyframes relationship-spin {
+    to { transform: rotate(360deg); }
+}
+
+.relationship-header {
+    margin-bottom: 30px;
+}
+
+.relationship-cover {
+    position: relative;
+    height: 175px;
+    background: linear-gradient(135deg, #05ff82, #fd9800);
+    border-radius: 12px 12px 0 0;
+}
+
+.relationship-avatar-container {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.relationship-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    object-fit: cover;
+    background-color: white;
+}
+
+.relationship-username {
+    margin-top: 55px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.relationship-bio {
+    margin-top: 60px;
+    text-align: center;
+    padding: 0 20px;
+    font-style: italic;
+    color: #666;
+}
+
+.relationship-nav {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.relationship-nav-item {
+    padding: 12px 24px;
+    margin: 0 5px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    color: #777;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.relationship-nav-item:hover {
+    color: #6e8efb;
+}
+
+.relationship-nav-item.active {
+    color: #6e8efb;
+}
+
+.relationship-nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: #6e8efb;
+    border-radius: 3px 3px 0 0;
+}
+
+.relationship-content {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.relationship-post-filter {
+    margin-bottom: 20px;
+}
+
+.relationship-post-filter select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1em;
+}
+
+.relationship-no-posts {
+    text-align: center;
+    padding: 30px;
+    color: #888;
+}
+
+.relationship-footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.relationship-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: #6e8efb;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 16px;
+}
+
+.relationship-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.relationship-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.relationship-stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.relationship-stat-label {
+    font-size: 14px;
+    color: #777;
+}
+
+.relationship-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.relationship-btn-primary {
+    background-color: #6e8efb;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.3s ease;
+}
+
+.relationship-btn-primary:hover {
+    background-color: #5a7de8;
+}
+
+.relationship-btn-outline-danger {
+    background-color: transparent;
+    color: #d32f2f;
+    padding: 10px 20px;
+    border: 1px solid #d32f2f;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.relationship-btn-outline-danger:hover {
+    background-color: #fde0e0;
+}
+
+.relationship-posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.relationship-tag-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    background-color: #f0f2f5;
+    color: #4267B2;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.relationship-post-mentions {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.relationship-mentions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.relationship-mention {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #e8f0fe;
+    color: #1a73e8;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.relationship-loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+}
+
+.relationship-default-icon {
+    width: 100px;
+    height: 100px;
+    color: #999;
+}
+
+.relationship-content-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .relationship-posts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .relationship-cover {
+        height: 150px;
+    }
+
+    .relationship-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .relationship-bio {
+        padding: 3.5rem 1.5rem 1.5rem;
+    }
+
+    .relationship-nav-item {
+        padding: 0.75rem 1.5rem;
+    }
+
+    .relationship-content {
+        padding: 1.5rem;
+    }
+
+    .relationship-nav-item {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    .relationship-username {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .relationship-posts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .relationship-avatar-container {
+        bottom: -40px;
+    }
+
+    .relationship-avatar {
+        width: 80px;
+        height: 80px;
+    }
+
+    .relationship-username {
+        font-size: 1.2rem;
+    }
+
+    .relationship-bio {
+        padding: 3rem 1rem 1rem;
+    }
+
+    .relationship-actions {
+        flex-direction: column;
+    }
+
+    .relationship-btn-primary,
+    .relationship-btn-outline-danger {
+        width: 100%;
+        justify-content: center;
+    }
+}

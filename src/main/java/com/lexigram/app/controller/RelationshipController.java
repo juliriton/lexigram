@@ -1,6 +1,6 @@
 package com.lexigram.app.controller;
 
-import com.lexigram.app.dto.UserDTO;
+import com.lexigram.app.dto.ConnectionDTO;
 import com.lexigram.app.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
@@ -21,47 +22,48 @@ public class RelationshipController {
     this.userService = userService;
   }
 
-  @PostMapping("/{id}/follow")
-  public ResponseEntity<UserDTO> follow(@PathVariable Long toFollowId, HttpSession session) {
+  @PostMapping("/users/{uuid}/follow")
+  public ResponseEntity<ConnectionDTO> follow(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
 
     if (id == null) return ResponseEntity.status(401).build();
 
-    Optional<UserDTO> optionalUser = userService.followUser(id, toFollowId);
+    Optional<ConnectionDTO> optionalConnection = userService.followUser(id, uuid);
 
-    if (optionalUser.isPresent()) {
-      UserDTO user = optionalUser.get();
-      return ResponseEntity.ok(user);
+    if (optionalConnection.isPresent()) {
+      ConnectionDTO connection = optionalConnection.get();
+      return ResponseEntity.ok(connection);
     }
     return ResponseEntity.status(401).build();
   }
 
-  @DeleteMapping("/{id}/unfollow")
-  public ResponseEntity<UserDTO> unfollow(@PathVariable Long userId, HttpSession session) {
+  @DeleteMapping("/users/{uuid}/unfollow")
+  public ResponseEntity<ConnectionDTO> unfollow(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
 
     if (id == null) return ResponseEntity.status(401).build();
 
-    Optional<UserDTO> optionalUser = userService.unfollowUser(id, userId);
-    if (optionalUser.isPresent()) {
-      UserDTO user = optionalUser.get();
-      return ResponseEntity.ok(user);
+    Optional<ConnectionDTO> optionalConnection = userService.unfollowUser(id, uuid);
+    if (optionalConnection.isPresent()) {
+      ConnectionDTO connectionDTO = optionalConnection.get();
+      return ResponseEntity.ok(connectionDTO);
     }
     return ResponseEntity.status(401).build();
   }
 
-  @DeleteMapping("/{id}/remove")
-  public ResponseEntity<UserDTO> removeFollower(@PathVariable Long userId, HttpSession session) {
+  @DeleteMapping("/users/profile/followers/{uuid}/remove")
+  public ResponseEntity<ConnectionDTO> removeFollower(@PathVariable UUID uuid, HttpSession session) {
     Long id = (Long) session.getAttribute("user");
 
     if (id == null) return ResponseEntity.status(401).build();
 
-    Optional<UserDTO> optionalUser = userService.removeFollower(id, userId);
+    Optional<ConnectionDTO> optionalConnection = userService.removeFollower(id, uuid);
 
-    if (optionalUser.isPresent()) {
-      UserDTO user = optionalUser.get();
-      return ResponseEntity.ok(user);
+    if (optionalConnection.isPresent()) {
+      ConnectionDTO connection = optionalConnection.get();
+      return ResponseEntity.ok(connection);
     }
     return ResponseEntity.status(401).build();
   }
+
 }

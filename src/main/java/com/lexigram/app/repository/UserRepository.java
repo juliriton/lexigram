@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -15,6 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   Boolean existsByUsername(String username);
   Boolean existsByEmail(String email);
   Set<User> findByUserPrivacySettingsVisibilityTrue();
-  Set<User> getFollowers();
-  Set<User> getFollowing();
+  Optional<User> findByUuid(UUID uuid);
+  Set<User> findByUsernameStartingWith(String prefix);
+
 }

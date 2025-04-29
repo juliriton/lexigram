@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
-public class UserProfileService {
+public class RelationshipProfileService {
 
   private final UserRepository userRepository;
   private final UserProfileRepository userProfileRepository;
@@ -24,7 +24,7 @@ public class UserProfileService {
   private final SuggestionRepository suggestionRepository;
 
   @Autowired
-  public UserProfileService(UserRepository userRepository,
+  public RelationshipProfileService(UserRepository userRepository,
                             UserProfileRepository userProfileRepository,
                             ExperienceRepository experienceRepository,
                             SuggestionRepository suggestionRepository) {
@@ -34,67 +34,47 @@ public class UserProfileService {
     this.suggestionRepository = suggestionRepository;
   }
 
-  public Optional<UserProfileDTO> getProfile(Long id) {
-    Optional<User> userOptional = userRepository.findById(id);
-    if (userOptional.isPresent()) {
-      Optional<UserProfile> profileOptional = userProfileRepository.findById(id);
-      UserProfile profile = profileOptional.get();
 
-      String biography = profile.getBiography();
-      String profilePicture = profile.getProfilePictureUrl();
-      UserProfileDTO userProfileDTO = new UserProfileDTO(biography, profilePicture);
-
-      return Optional.of(userProfileDTO);
-    }
-    return Optional.empty();
-  }
-
-  public Optional<UserProfileDTO> updateUserProfileBio(Long id, UserUpdateProfileBioDTO dto) {
-    Optional<User> userOptional = userRepository.findById(id);
-    Optional<UserProfile> profileOptional = userProfileRepository.findById(id);
-
-    if (userOptional.isPresent()) {
-      UserProfile userProfile = profileOptional.get();
-
-      String newBiography = dto.getBiography();
-
-      userProfile.setBiography(newBiography);
-      userProfileRepository.save(userProfile);
-      return Optional.of(new UserProfileDTO(userProfile.getBiography(),
-          userProfile.getProfilePictureUrl()));
-    }
-    return Optional.empty();
-  }
-
-  public Optional<UserProfileDTO> updateProfilePicture(Long id, String imageUrl) {
-    Optional<User> userOptional = userRepository.findById(id);
-    Optional<UserProfile> userProfileOptional = userProfileRepository.findById(id);
-
-    if (userOptional.isPresent()) {
-      String profilePictureUrl = imageUrl;
-      UserProfile userProfile = userProfileOptional.get();
-
-      userProfile.setProfilePictureUrl(profilePictureUrl);
-
-      userProfileRepository.save(userProfile);
-
-      return Optional.of(new UserProfileDTO(userProfile.getBiography(),
-          userProfile.getProfilePictureUrl()));
-    }
-    return Optional.empty();
-  }
-
-  public UserPostsDTO getAllUserPosts(Long id) {
+  public Optional<ConnectionProfileDTO> getRelationshipProfile(Long id, UUID uuid) {
     User user = userRepository.findById(id).get();
+    Optional<User> targetUserOptional = userRepository.findByUuid(uuid);
 
-    Set<Experience> experiences = experienceRepository.getExperiencesByUserId(id);
+    if (targetUserOptional.isPresent()) {
+      User targetUser = targetUserOptional.get();
+
+      Optional<UserProfile> targetProfileOptional = userProfileRepository.findByUserUuid(uuid);
+      UserProfile targetProfile = targetProfileOptional.get();
+
+      String username = targetUser.getUsername();
+      String biography = targetProfile.getBiography();
+      String profilePicture = targetProfile.getProfilePictureUrl();
+      boolean isFollowing = targetUser.getFollowers().contains(user);
+      Long targetFollowingAmount = targetUser.getFollowingAmount();
+      Long targetFollowerAmount = targetUser.getFollowerAmount();
+
+      ConnectionProfileDTO connectionProfileDTO = new ConnectionProfileDTO(
+          username,
+          biography,
+          profilePicture,
+          isFollowing,
+          targetFollowingAmount,
+          targetFollowerAmount);
+      return Optional.of(connectionProfileDTO);
+    }
+    return Optional.empty();
+  }
+
+  public UserPostsDTO getAllRelationshipPosts(UUID uuid) {
+    User user = userRepository.findByUuid(uuid).get();
+
+    Set<Experience> experiences = experienceRepository.getExperiencesByUserUuid(uuid);
 
     Set<ExperienceDTO> experienceDTOs = new HashSet<>();
     for (Experience experience : experiences) {
       experienceDTOs.add(new ExperienceDTO(experience));
     }
 
-    Set<Suggestion> suggestions = suggestionRepository.getSuggestionsByUserId(id);
+    Set<Suggestion> suggestions = suggestionRepository.getSuggestionsByUserUuid(uuid);
 
     Set<SuggestionDTO> suggestionDTOs = new HashSet<>();
 
@@ -107,14 +87,14 @@ public class UserProfileService {
     return dto;
   }
 
-  public Set<ExperienceDTO> getAllUserExperiences(Long id) {
-    Optional<User> userOptional = userRepository.findById(id);
+  public Set<ExperienceDTO> getAllRelationshipExperiences(UUID uuid) {
+    Optional<User> userOptional = userRepository.findByUuid(uuid);
 
     if (userOptional.isEmpty()){
       throw new UserNotFoundException();
     }
 
-    Set<Experience> experiences = experienceRepository.getExperiencesByUserId(id);
+    Set<Experience> experiences = experienceRepository.getExperiencesByUserUuid(uuid);
 
     if (experiences.isEmpty()) return Collections.emptySet();
 
@@ -127,14 +107,14 @@ public class UserProfileService {
     return experiencesDTOset;
   }
 
-  public Set<SuggestionDTO> getAllUserSuggestions(Long id){
-    Optional<User> userOptional = userRepository.findById(id);
+  public Set<SuggestionDTO> getAllRelationshipSuggestions(UUID uuid){
+    Optional<User> userOptional = userRepository.findByUuid(uuid);
 
     if (userOptional.isEmpty()){
       throw new UserNotFoundException();
     }
 
-    Set<Suggestion> suggestions = suggestionRepository.getSuggestionsByUserId(id);
+    Set<Suggestion> suggestions = suggestionRepository.getSuggestionsByUserUuid(uuid);
 
     if (suggestions.isEmpty()) return Collections.emptySet();
 
@@ -147,8 +127,8 @@ public class UserProfileService {
     return suggestionDTOset;
   }
 
-  public Set<ConnectionDTO> getFollowers(Long id) {
-    Optional<User> userOptional = userRepository.findById(id);
+  public Set<ConnectionDTO> getRelationshipFollowers(UUID uuid) {
+    Optional<User> userOptional = userRepository.findByUuid(uuid);
     if (userOptional.isEmpty()){
       throw new UserNotFoundException();
     }
@@ -164,8 +144,8 @@ public class UserProfileService {
     return followers;
   }
 
-  public Set<ConnectionDTO> getFollowing(Long id){
-    Optional<User> userOptional = userRepository.findById(id);
+  public Set<ConnectionDTO> getRelationshipFollowing(UUID uuid){
+    Optional<User> userOptional = userRepository.findByUuid(uuid);
     if (userOptional.isEmpty()){
       throw new UserNotFoundException();
     }
@@ -181,4 +161,3 @@ public class UserProfileService {
     return following;
   }
 }
-

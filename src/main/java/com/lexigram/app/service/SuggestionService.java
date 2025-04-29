@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class SuggestionService {
@@ -54,7 +55,7 @@ public class SuggestionService {
     return new SuggestionDTO(suggestion);
   }
 
-  public Set<SuggestionDTO> getAllSuggestions(Long id){
+  public Set<SuggestionDTO> getAllSuggestionsExcludingUser(Long id){
     Set<User> publicUsers = userRepository.findByUserPrivacySettingsVisibilityTrue();
     Set<SuggestionDTO> publicSuggestions = new HashSet<>();
 
@@ -72,6 +73,48 @@ public class SuggestionService {
     }
 
     return publicSuggestions;
+  }
+
+  public Set<SuggestionDTO> getAllPublicSuggestions(){
+    Set<User> publicUsers = userRepository.findByUserPrivacySettingsVisibilityTrue();
+    Set<SuggestionDTO> publicSuggestions = new HashSet<>();
+
+    for (User user : publicUsers) {
+      Long userId = user.getId();
+
+      Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
+      for (Suggestion suggestion : userSuggestions) {
+        publicSuggestions.add(new SuggestionDTO(suggestion));
+      }
+    }
+
+    return publicSuggestions;
+  }
+
+  public Set<SuggestionDTO> getAllFollowingSuggestions(Long id) {
+
+    User user = userRepository.findById(id).get();
+
+    Set<SuggestionDTO> followingSuggestions = new HashSet<>();
+    for (User u : user.getFollowing()) {
+      Long userId = u.getId();
+      Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
+      for (Suggestion suggestion : userSuggestions) {
+        followingSuggestions.add(new SuggestionDTO(suggestion));
+      }
+    }
+    return followingSuggestions;
+  }
+
+  public boolean deleteSuggestion(UUID suggestionUuid, Long userId) {
+    Optional<Suggestion> suggestion = suggestionRepository.findByUuid(suggestionUuid);
+    if (suggestion.isEmpty()){
+      return false;
+    }
+    suggestionRepository.deleteById(suggestion.get().getId());
+    User user = userRepository.findById(userId).get();
+    userRepository.save(user);
+    return true;
   }
 
 }

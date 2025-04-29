@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaPhotoVideo, FaQuestion } from 'react-icons/fa';
+import { FaPhotoVideo, FaQuestion, FaTimes } from 'react-icons/fa';
 import '../styles/PostCreationPage.css';
 
 const PostCreationPage = ({ user }) => {
@@ -18,32 +18,109 @@ const PostCreationPage = ({ user }) => {
     const [allowComments, setAllowComments] = useState(true);
     const [allowResonates, setAllowResonates] = useState(true);
     const [allowForks, setAllowForks] = useState(true);
-
-    // Suggestion states
     const [suggestionText, setSuggestionText] = useState('');
     const [suggestionTags, setSuggestionTags] = useState('');
+    const [fontSizeError, setFontSizeError] = useState('');
+    const [quoteError, setQuoteError] = useState('');
+    const [reflectionError, setReflectionError] = useState('');
+    const [suggestionTextError, setSuggestionTextError] = useState('');
+    const baseApiUrl = 'http://localhost:8080';
 
-    const handlePostSubmit = async (e) => {
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                    credentials: 'include',
+                });
+                if (!res.ok) navigate('/login');
+            } catch {
+                navigate('/login');
+            }
+        };
+        checkAuth();
+    }, [navigate]);
+
+    const handleCancel = () => {
+        navigate('/');
+    };
+
+    const handleFontSizeChange = e => {
+        let val = parseInt(e.target.value, 10);
+        if (isNaN(val)) val = 8;
+        if (val < 8) {
+            val = 8;
+            setFontSizeError('Minimum font size is 8');
+        } else if (val > 30) {
+            val = 30;
+            setFontSizeError('Maximum font size is 30');
+        } else {
+            setFontSizeError('');
+        }
+        setFontSize(val);
+    };
+
+    const QUOTE_MIN_CHARS = 10;
+    const REFLECTION_MIN_CHARS = 100;
+    const SUGGESTION_MIN_CHARS = 1;
+
+    const validateTextContent = (value, minChars, errorSetter) => {
+        const trimmedValue = value.trim();
+        if (trimmedValue.length < minChars) {
+            errorSetter(`Must contain at least ${minChars} characters (excluding spaces at beginning and end)`);
+            return false;
+        }
+        errorSetter('');
+        return true;
+    };
+
+    const handleQuoteChange = e => {
+        const value = e.target.value;
+        setQuote(value);
+        validateTextContent(value, QUOTE_MIN_CHARS, setQuoteError);
+    };
+
+    const handleReflectionChange = e => {
+        const value = e.target.value;
+        setReflection(value);
+        if (REFLECTION_MIN_CHARS > 0) {
+            validateTextContent(value, REFLECTION_MIN_CHARS, setReflectionError);
+        }
+    };
+
+    const handleSuggestionTextChange = e => {
+        const value = e.target.value;
+        setSuggestionText(value);
+        validateTextContent(value, SUGGESTION_MIN_CHARS, setSuggestionTextError);
+    };
+
+    const handlePostSubmit = async e => {
         e.preventDefault();
         if (!user) {
             navigate('/login');
             return;
         }
 
-        const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
-        const mentionArray = mentions.split(',').map(m => m.trim().replace('@', '')).filter(m => m !== '');
+        if (fontSize < 8 || fontSize > 30) return;
 
-        const post = {
-            quote,
-            reflection,
+        // Validate quote and reflection
+        if (!validateTextContent(quote, QUOTE_MIN_CHARS, setQuoteError)) return;
+        if (REFLECTION_MIN_CHARS > 0 && !validateTextContent(reflection, REFLECTION_MIN_CHARS, setReflectionError)) return;
+
+        // Process tags and mentions
+        const tagArray = tags.split(',').map(t => t.trim()).filter(t => t);
+        const mentionArray = mentions.split(',').map(m => m.trim().replace('@','')).filter(m => m);
+
+        // Trim spaces from quote and reflection for submission
+        const trimmedQuote = quote.trim();
+        const trimmedReflection = reflection.trim();
+
+        const postObj = {
+            quote: trimmedQuote,
+            reflection: trimmedReflection,
             isOrigin: true,
             tags: tagArray,
             mentions: mentionArray,
-            privacySettings: {
-                allowComments,
-                allowForks,
-                allowResonates
-            },
+            privacySettings: { allowComments, allowForks, allowResonates },
             style: {
                 fontFamily,
                 fontSize,
@@ -54,68 +131,52 @@ const PostCreationPage = ({ user }) => {
         };
 
         const formData = new FormData();
-        formData.append('post', new Blob([JSON.stringify(post)], { type: 'application/json' }));
+        formData.append('post', new Blob([JSON.stringify(postObj)], { type: 'application/json' }));
         if (file) formData.append('file', file);
 
         try {
-            const response = await fetch('http://localhost:8080/api/auth/me/post/experience', {
+            const resp = await fetch('http://localhost:8080/api/auth/me/post/experience', {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
             });
-
-            if (response.ok) {
-                alert('Post created!');
-                navigate('/');
-            } else {
-                const errorText = await response.text();
-                console.error('Server error:', errorText);
-                alert('Error creating post');
-            }
-        } catch (error) {
-            console.error('Error:', error);
+            if (resp.ok) navigate('/');
+            else console.error('Server error:', await resp.text());
+        } catch (err) {
+            console.error('Error:', err);
         }
     };
 
-    const handleSuggestionSubmit = async (e) => {
+    const handleSuggestionSubmit = async e => {
         e.preventDefault();
         if (!user) {
             navigate('/login');
             return;
         }
 
-        if (!suggestionText.trim()) {
-            alert('Please provide a suggestion!');
-            return;
-        }
+        // Validate suggestion text
+        if (!validateTextContent(suggestionText, SUGGESTION_MIN_CHARS, setSuggestionTextError)) return;
 
-        const tagArray = suggestionTags.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+        // Trim spaces from suggestion text for submission
+        const trimmedSuggestionText = suggestionText.trim();
 
-        const suggestionPayload = {
-            body: suggestionText,
-            tags: tagArray,
-        };
+        // Process tags
+        const tagArray = suggestionTags
+            .split(',')
+            .map(t => t.trim())
+            .filter(t => t);
 
         try {
-            const response = await fetch('http://localhost:8080/api/auth/me/post/suggestion', {
+            const resp = await fetch('http://localhost:8080/api/auth/me/post/suggestion', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(suggestionPayload),
-                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ body: trimmedSuggestionText, tags: tagArray }),
+                credentials: 'include'
             });
-
-            if (response.ok) {
-                alert('Suggestion submitted!');
-                navigate('/'); // ✅ Go to HomePage
-            } else {
-                const errorText = await response.text();
-                console.error('Server error:', errorText);
-                alert('Error submitting suggestion');
-            }
-        } catch (error) {
-            console.error('Error:', error);
+            if (resp.ok) navigate('/');
+            else console.error('Server error:', await resp.text());
+        } catch (err) {
+            console.error('Error:', err);
         }
     };
 
@@ -123,58 +184,168 @@ const PostCreationPage = ({ user }) => {
         <div className="post-creation-container">
             <div className="form-toggle-buttons">
                 <div
-                    className={`toggle-button ${activeForm === 'experience' ? 'active' : ''}`}
-                    onClick={() => setActiveForm('experience')}
+                    className={`toggle-button ${activeForm==='experience'?'active':''}`}
+                    onClick={()=>setActiveForm('experience')}
                 >
-                    <FaPhotoVideo size={18} />
-                    <span>Experience</span>
+                    <FaPhotoVideo size={18}/> <span>Experience</span>
                 </div>
                 <div
-                    className={`toggle-button ${activeForm === 'suggestion' ? 'active' : ''}`}
-                    onClick={() => setActiveForm('suggestion')}
+                    className={`toggle-button ${activeForm==='suggestion'?'active':''}`}
+                    onClick={()=>setActiveForm('suggestion')}
                 >
-                    <FaQuestion size={18} />
-                    <span>Suggestion</span>
+                    <FaQuestion size={18}/> <span>Suggestion</span>
                 </div>
             </div>
 
-            {activeForm === 'experience' && (
+            {activeForm==='experience' && (
                 <>
                     <h2>Create a New Experience</h2>
                     <form onSubmit={handlePostSubmit} className="form-section">
-                        <textarea placeholder="Quote" value={quote} onChange={(e) => setQuote(e.target.value)} required />
-                        <textarea placeholder="Reflection" value={reflection} onChange={(e) => setReflection(e.target.value)} />
-                        <input type="text" placeholder="Tags (comma separated)" value={tags} onChange={(e) => setTags(e.target.value)} />
-                        <input type="text" placeholder="Mentions (e.g. @user1, @user2)" value={mentions} onChange={(e) => setMentions(e.target.value)} />
+                        <div className="input-group">
+                            <textarea
+                                placeholder={`Quote (min ${QUOTE_MIN_CHARS} characters)`}
+                                value={quote}
+                                onChange={handleQuoteChange}
+                                required
+                            />
+                            {quoteError && <div className="error-text">{quoteError}</div>}
+                        </div>
+
+                        <div className="input-group">
+                            <textarea
+                                placeholder={REFLECTION_MIN_CHARS > 0 ? `Reflection (min ${REFLECTION_MIN_CHARS} characters)` : "Reflection"}
+                                value={reflection}
+                                onChange={handleReflectionChange}
+                            />
+                            {reflectionError && <div className="error-text">{reflectionError}</div>}
+                        </div>
+
+                        <input
+                            type="text"
+                            placeholder="Tags (comma separated)"
+                            value={tags}
+                            onChange={e=>setTags(e.target.value)}
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="Mentions (e.g. @user1, @user2)"
+                            value={mentions}
+                            onChange={e=>setMentions(e.target.value)}
+                        />
 
                         <div className="style-controls">
-                            <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)}>
+                            <select
+                                value={fontFamily}
+                                onChange={e=>setFontFamily(e.target.value)}
+                            >
                                 <option value="Arial">Arial</option>
                                 <option value="Times New Roman">Times New Roman</option>
                             </select>
-                            <input type="number" value={fontSize} min={8} onChange={(e) => setFontSize(parseInt(e.target.value))} />
-                            <input type="color" value={fontColor} onChange={(e) => setFontColor(e.target.value)} />
+
+                            <input
+                                type="number"
+                                value={fontSize}
+                                min={8}
+                                max={30}
+                                onChange={handleFontSizeChange}
+                            />
+                            {fontSizeError && (
+                                <div className="error-text">{fontSizeError}</div>
+                            )}
+
+                            <input
+                                type="color"
+                                value={fontColor}
+                                onChange={e=>setFontColor(e.target.value)}
+                            />
                         </div>
 
-                        <input type="file" accept="image/jpeg,video/mp4,video/webm,image/gif" onChange={(e) => setFile(e.target.files[0])} />
+                        <input
+                            type="file"
+                            accept="image/jpeg,video/mp4,video/webm,image/gif"
+                            onChange={e=>setFile(e.target.files[0])}
+                        />
 
                         <div className="checkbox-group">
-                            <label><input type="checkbox" checked={allowComments} onChange={() => setAllowComments(!allowComments)} /> Comments</label>
-                            <label><input type="checkbox" checked={allowResonates} onChange={() => setAllowResonates(!allowResonates)} /> Resonates</label>
-                            <label><input type="checkbox" checked={allowForks} onChange={() => setAllowForks(!allowForks)} /> Forks</label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowComments}
+                                    onChange={()=>setAllowComments(c=>!c)}
+                                /> Comments
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowResonates}
+                                    onChange={()=>setAllowResonates(r=>!r)}
+                                /> Resonates
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowForks}
+                                    onChange={()=>setAllowForks(f=>!f)}
+                                /> Forks
+                            </label>
                         </div>
-                        <button type="submit" className="submit-btn" disabled={!quote.trim()}>Share Experience</button>
+
+                        <div className="form-buttons">
+                            <button
+                                type="submit"
+                                className="submit-btn"
+                                disabled={!quote.trim() || !!quoteError || !!reflectionError}
+                            >
+                                Share Experience
+                            </button>
+                            <button
+                                type="button"
+                                className="cancel-btn"
+                                onClick={handleCancel}
+                            >
+                                <FaTimes /> Cancel
+                            </button>
+                        </div>
                     </form>
                 </>
             )}
 
-            {activeForm === 'suggestion' && (
+            {activeForm==='suggestion' && (
                 <>
                     <h2>Submit a Suggestion</h2>
                     <form onSubmit={handleSuggestionSubmit} className="form-section">
-                        <textarea placeholder="Write your suggestion..." value={suggestionText} onChange={(e) => setSuggestionText(e.target.value)} required />
-                        <input type="text" placeholder="Tags (comma separated)" value={suggestionTags} onChange={(e) => setSuggestionTags(e.target.value)} />
-                        <button type="submit" className="submit-btn" disabled={!suggestionText.trim()}>Share Suggestion</button>
+                        <div className="input-group">
+                            <textarea
+                                placeholder={`Write your suggestion (min ${SUGGESTION_MIN_CHARS} characters)`}
+                                value={suggestionText}
+                                onChange={handleSuggestionTextChange}
+                                required
+                            />
+                            {suggestionTextError && <div className="error-text">{suggestionTextError}</div>}
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Tags (comma separated)"
+                            value={suggestionTags}
+                            onChange={e=>setSuggestionTags(e.target.value)}
+                        />
+                        <div className="form-buttons">
+                            <button
+                                type="submit"
+                                className="submit-btn"
+                                disabled={!suggestionText.trim() || !!suggestionTextError}
+                            >
+                                Share Suggestion
+                            </button>
+                            <button
+                                type="button"
+                                className="cancel-btn"
+                                onClick={handleCancel}
+                            >
+                                <FaTimes /> Cancel
+                            </button>
+                        </div>
                     </form>
                 </>
             )}
