@@ -6,12 +6,10 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.UUID;
 
 public class UpdateExperienceQuoteDTO {
-  @NotBlank
-  @NotEmpty
+
   private UUID uuid;
 
-  @NotBlank
-  @NotEmpty
+
   private String quote;
 
   UpdateExperienceQuoteDTO(UUID uuid, String quote) {

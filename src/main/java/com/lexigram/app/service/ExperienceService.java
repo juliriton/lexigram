@@ -182,7 +182,7 @@ public class ExperienceService {
   }
 
   public Optional<ExperienceDTO> updateExperienceQuote(UUID uuid, UpdateExperienceQuoteDTO experienceDTO) {
-    Optional<Experience> experienceOptional = experienceRepository.findExperienceByUuid(uuid);
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
     if (experienceOptional.isPresent()) {
       Experience experience = experienceOptional.get();
       experience.setQuote(experienceDTO.getQuote());
@@ -193,7 +193,7 @@ public class ExperienceService {
   }
 
   public Optional<ExperienceDTO> updateExperienceReflection(UUID uuid, UpdateExperienceReflectionDTO experienceDTO) {
-    Optional<Experience> experienceOptional = experienceRepository.findExperienceByUuid(uuid);
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
     if (experienceOptional.isPresent()) {
       Experience experience = experienceOptional.get();
       experience.setReflection(experienceDTO.getReflection());
@@ -205,7 +205,7 @@ public class ExperienceService {
 
   public Optional<ExperienceDTO> updateExperienceTag(UUID uuid, UpdateExperienceTagDTO updateTagDTO) {
     Set<Tag> tags = new HashSet<>();
-    Optional<Experience> experienceOptional = experienceRepository.findExperienceByUuid(uuid);
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
     if (experienceOptional.isPresent()) {
       Experience experience = experienceOptional.get();
 
@@ -228,7 +228,7 @@ public class ExperienceService {
 
   public Optional<ExperienceDTO> updateExperienceMentions(UUID uuid, UpdateExperienceMentionsDTO updateMentionDTO) {
     Set<User> mentions = new HashSet<>();
-    Optional<Experience> experienceOptional = experienceRepository.findExperienceByUuid(uuid);
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
     if (experienceOptional.isPresent()) {
       Experience experience = experienceOptional.get();
 
