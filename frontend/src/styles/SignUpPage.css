@@ -75,7 +75,7 @@
     font-size: 0.95rem;
 }
 
-/* Responsive design */
+
 @media (max-width: 500px) {
     .login-container {
         margin: 40px 20px;
@@ -92,24 +92,10 @@
     }
 }
 
-.fade-error {
-    opacity: 1;
-    transition: opacity 0.5s ease-in-out;
-}
-
-.fade-error.hidden {
-    opacity: 0;
-    pointer-events: none;
-    height: 0;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
 .error-message {
     background-color: #ffebee;
     border-left: 4px solid #f44336;
-    color: #721c24;
+    color: #0095ff;
     padding: 12px;
     margin-bottom: 15px;
     border-radius: 4px;
@@ -123,14 +109,6 @@
 .form-group {
     margin-bottom: 15px;
     width: 100%;
-}
-
-small {
-    color: #666;
-    font-size: 12px;
-    margin-top: 4px;
-    display: block;
-    text-align: left;
 }
 
 button:disabled {

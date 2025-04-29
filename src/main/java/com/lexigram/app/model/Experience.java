@@ -10,6 +10,7 @@ public class Experience {
   @PrePersist
   protected void onCreate() {
     this.creationDate = System.currentTimeMillis();
+    this.uuid = UUID.randomUUID();
   }
 
   @Id
@@ -17,7 +18,7 @@ public class Experience {
   private Long id;
 
   @Column(nullable = false, unique = true, updatable = false)
-  private UUID uuid = UUID.randomUUID();
+  private UUID uuid;
 
   @Column(nullable = false, columnDefinition = "Text")
   private String quote;
@@ -58,19 +59,20 @@ public class Experience {
   )
   private Set<Tag> tags = new HashSet<>();
 
+
   @ManyToOne
-  @JoinColumn(name = "origin_id", nullable = false)
+  @JoinColumn(name = "origin_id", referencedColumnName = "id", nullable = true)
   private Experience origin;
 
   @OneToMany(mappedBy = "origin", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Experience> forks = new ArrayList<>();
-
-  @OneToOne(cascade = CascadeType.ALL)
+  
+  @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "style_id", referencedColumnName = "id")
   private ExperienceStyle style;
 
-  @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL)
-  private ExperiencePrivacySettings experiencePrivacySettings;
+  @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
+  private ExperiencePrivacySettings privacySettings;
 
   @ManyToMany
   @JoinTable(
@@ -82,20 +84,13 @@ public class Experience {
 
   public Experience() {}
 
-  public Experience(User user, ExperienceStyle style,
-                    ExperiencePrivacySettings experiencePrivacySettings,
-                    Experience origin,
-                    Set<User> mentions,
-                    Set<Tag> tags,
-                    String quote,
-                    String reflection,
-                    Boolean isOrigin) {
-
+  public Experience(User user,
+                     Set<User> mentions,
+                     Set<Tag> tags,
+                     String quote,
+                     String reflection
+                     ){
     this.user = user;
-    this.style = style;
-    this.experiencePrivacySettings = experiencePrivacySettings;
-    this.isOrigin = isOrigin;
-    this.origin = origin;
     this.mentions = mentions;
     this.tags = tags;
     this.quote = quote;
@@ -154,10 +149,6 @@ public class Experience {
     return tags;
   }
 
-  public Experience getOrigin() {
-    return origin;
-  }
-
   public List<Experience> getForks() {
     return forks;
   }
@@ -165,8 +156,9 @@ public class Experience {
   public ExperienceStyle getStyle() {
     return style;
   }
-  public ExperiencePrivacySettings getExperiencePrivacySettings() {
-    return experiencePrivacySettings;
+
+  public ExperiencePrivacySettings getPrivacySettings() {
+    return privacySettings;
   }
 
   public Set<User> getMentions() {
@@ -178,7 +170,12 @@ public class Experience {
   }
 
   public void setPrivacySettings(ExperiencePrivacySettings privacySettings) {
-    this.experiencePrivacySettings = privacySettings;
+    this.privacySettings = privacySettings;
   }
+
+  public void setOrigin(Experience origin) {
+    this.origin = origin;
+  }
+
 
 }

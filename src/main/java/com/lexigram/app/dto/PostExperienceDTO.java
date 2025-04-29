@@ -1,75 +1,53 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.Tag;
 import jakarta.validation.constraints.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
 public class PostExperienceDTO {
 
+  @NotEmpty
   @NotBlank
+  @Size(min = 10, max = 300, message = "Quote must be between 10 and 300 characters. Share something meaningful!")
   private String quote;
 
   @NotBlank
-  @Size(min = 200, max = 800, message = "Reflection must be between 200 and 800 characters. Share something meaningful!")
+  @Size(min = 100, max = 800, message = "Reflection must be between 100 and 800 characters. Share something meaningful!")
   private String reflection;
 
+  @NotEmpty
   @NotNull
   @Size(min = 1, message = "Experiences should have at least 1 tag.")
-  private Set<Tag> tags;
+  @Size(max = 20, message = "Experiences should have at least 1 tag.")
+  private Set<String> tags;
 
   private Set<String> mentions;
 
-  @NotBlank
-  private String fontFamily;
-
-  @Min(8)
-  @Max(48)
-  private int fontSize;
-
-  @Pattern(regexp = "^#[0-9a-fA-F]{6}$")
-  private String fontColor;
-
-  @Min(0)
-  private int textPositionX;
-
-  @Min(0)
-  private int textPositionY;
+  @NotNull
+  private boolean isOrigin;
 
   @NotNull
-  private MultipartFile file;
+  private PostExperienceStyleDTO style;
 
-  private boolean allowComments;
-  private boolean allowForks;
-  private boolean allowResonates;
+  @NotNull
+  private PostExperiencePrivacySettingsDTO privacySettings;
+
+  public PostExperienceDTO() {}
 
   public PostExperienceDTO(String quote,
-                           String experience,
-                           Set<Tag> tags,
+                           String reflection,
+                           Set<String> tags,
                            Set<String> mentions,
-                           String fontFamily,
-                           int fontSize,
-                           String fontColor,
-                           int textPositionX,
-                           int textPositionY,
-                           MultipartFile file,
-                           boolean allowComments,
-                           boolean allowResonates,
-                           boolean allowForks) {
+                           boolean isOrigin,
+                           PostExperiencePrivacySettingsDTO privacySettings,
+                           PostExperienceStyleDTO style) {
     this.quote = quote;
-    this.reflection = experience;
+    this.reflection = reflection;
     this.tags = tags;
     this.mentions = mentions;
-    this.fontFamily = fontFamily;
-    this.fontSize = fontSize;
-    this.fontColor = fontColor;
-    this.textPositionX = textPositionX;
-    this.textPositionY = textPositionY;
-    this.file = file;
-    this.allowComments = allowComments;
-    this.allowResonates = allowResonates;
-    this.allowForks = allowForks;
+    this.isOrigin = isOrigin;
+    this.privacySettings = privacySettings;
+    this.style = style;
   }
 
   public String getQuote() {
@@ -80,7 +58,7 @@ public class PostExperienceDTO {
     return reflection;
   }
 
-  public Set<Tag> getTags() {
+  public Set<String> getTags() {
     return tags;
   }
 
@@ -88,40 +66,16 @@ public class PostExperienceDTO {
     return mentions;
   }
 
-  public String getFontFamily() {
-    return fontFamily;
+  public boolean isOrigin(){
+    return isOrigin;
   }
 
-  public int getFontSize() {
-    return fontSize;
+  public PostExperienceStyleDTO getStyle() {
+    return style;
   }
 
-  public String getFontColor() {
-    return fontColor;
-  }
-
-  public int getTextPositionX() {
-    return textPositionX;
-  }
-
-  public int getTextPositionY() {
-    return textPositionY;
-  }
-
-  public MultipartFile getFile() {
-    return file;
-  }
-
-  public boolean areCommentsAllowed() {
-    return allowComments;
-  }
-
-  public boolean areResonatesAllowed() {
-    return allowResonates;
-  }
-
-  public boolean areForksAllowed() {
-    return allowForks;
+  public PostExperiencePrivacySettingsDTO getPrivacySettings() {
+    return privacySettings;
   }
 
 }

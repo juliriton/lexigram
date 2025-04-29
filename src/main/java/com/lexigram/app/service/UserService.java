@@ -5,9 +5,11 @@ import com.lexigram.app.exception.EmailAlreadyUsedException;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.exception.UsernameAlreadyUsedException;
 import com.lexigram.app.exception.WrongPasswordException;
+import com.lexigram.app.model.Experience;
 import com.lexigram.app.model.User;
 import com.lexigram.app.model.UserPrivacySettings;
 import com.lexigram.app.model.UserProfile;
+import com.lexigram.app.repository.ExperienceRepository;
 import com.lexigram.app.repository.UserPrivacySettingsRepository;
 import com.lexigram.app.repository.UserProfileRepository;
 import com.lexigram.app.repository.UserRepository;
@@ -15,9 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -25,16 +25,19 @@ public class UserService {
   private final UserRepository userRepository;
   private final UserPrivacySettingsRepository userPrivacySettingsRepository;
   private final UserProfileRepository userProfileRepository;
-  private PasswordEncoder passwordEncoder;
+  private final ExperienceRepository experienceRepository;
+  private final PasswordEncoder passwordEncoder;
 
   @Autowired
   public UserService(UserRepository userRepository,
                      UserPrivacySettingsRepository userPrivacySettingsRepository,
                      UserProfileRepository userProfileRepository,
+                     ExperienceRepository experienceRepository,
                      PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.userPrivacySettingsRepository = userPrivacySettingsRepository;
     this.userProfileRepository = userProfileRepository;
+    this.experienceRepository = experienceRepository;
     this.passwordEncoder = passwordEncoder;
   }
 
@@ -42,7 +45,7 @@ public class UserService {
     List<User> users = userRepository.findAll();
     List<UserDTO> userDTOs = new ArrayList<>();
     for (User user : users) {
-      userDTOs.add(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
+      userDTOs.add(new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail()));
     }
     return userDTOs;
   }
@@ -53,7 +56,7 @@ public class UserService {
       return Optional.empty();
     }
     User user = userOptional.get();
-    return Optional.of(new UserDTO(user.getId(), user.getUsername(), user.getEmail()));
+    return Optional.of(new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail()));
   }
 
   public UserDTO signUp(UserSignUpDTO dto) {
@@ -81,7 +84,7 @@ public class UserService {
     userProfile.setProfilePictureUrl("http://localhost:8080/images/default-profile-picture.png");
     userPrivacySettingsRepository.save(userPrivacySettings);
     userProfileRepository.save(userProfile);
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
   }
 
   public UserDTO updateUserEmail(Long id, UserUpdateEmailDTO dto) {
@@ -102,17 +105,38 @@ public class UserService {
     }
 
     userRepository.save(user);
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
   }
 
   public boolean deleteUser(Long id) {
     Optional<User> userOptional = userRepository.findById(id);
-    if (userOptional.isPresent()) {
-      userRepository.deleteById(id);
-      return true;
+    if (userOptional.isEmpty()) return false;
+
+    User user = userOptional.get();
+
+    for (User follower : new HashSet<>(user.getFollowers())) {
+      follower.removeFollowing(user);
+      userRepository.save(follower);
     }
-    return false;
+
+    for (User following : new HashSet<>(user.getFollowing())) {
+      following.removeFollower(user);
+      userRepository.save(following);
+    }
+
+    for (Experience experience : new HashSet<>(user.getMentionedIn())) {
+      experience.getMentions().remove(user);
+      experienceRepository.save(experience);
+    }
+
+    user.getFollowers().clear();
+    user.getFollowing().clear();
+    user.getMentionedIn().clear();
+
+    userRepository.delete(user);
+    return true;
   }
+
 
   public UserDTO updateUserUsername(Long id, UserUpdateUsernameDTO dto) {
     Optional<User> userOptional = userRepository.findById(id);
@@ -133,7 +157,7 @@ public class UserService {
     }
 
     userRepository.save(user);
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
   }
 
   public UserDTO updateUserPassword(Long id, UserUpdatePasswordDTO dto) {
@@ -151,7 +175,7 @@ public class UserService {
     }
 
     userRepository.save(user);
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
   }
 
   public UserDTO login(UserLoginDTO dto) {
@@ -174,7 +198,85 @@ public class UserService {
       throw new WrongPasswordException();
     }
 
-    return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
+    return new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
+  }
+
+  public Optional<ConnectionDTO> followUser(Long id, UUID toFollowUuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<User> toFollowOptional = userRepository.findByUuid(toFollowUuid);
+
+    if (toFollowOptional.isPresent()) {
+      User toFollow = toFollowOptional.get();
+
+      if (toFollow.getFollowers().contains(user)) {
+        throw new UnsupportedOperationException();
+      }
+
+      UserProfile toFollowProfile = userProfileRepository.findById(toFollow.getId()).get();
+      user.addFollowing(toFollow);
+      toFollow.addFollower(user);
+      userRepository.save(user);
+      userRepository.save(toFollow);
+      return Optional.of(new ConnectionDTO(toFollow.getUuid(),
+          toFollow.getUsername(),
+          toFollow.getEmail(),
+          toFollowProfile.getProfilePictureUrl()));
+    }
+    return Optional.empty();
+  }
+
+  public Optional<ConnectionDTO> unfollowUser(Long id, UUID toUnfollowUuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+    User user = userOptional.get();
+    Optional<User> toUnfollowOptional = userRepository.findByUuid(toUnfollowUuid);
+
+    if (toUnfollowOptional.isPresent()) {
+      User toUnfollow = toUnfollowOptional.get();
+      UserProfile toUnfollowProfile = userProfileRepository.findById(toUnfollow.getId()).get();
+      user.removeFollowing(toUnfollow);
+      toUnfollow.removeFollower(user);
+
+      userRepository.save(user);
+      userRepository.save(toUnfollow);
+      return Optional.of(new ConnectionDTO(toUnfollow.getUuid(),
+          toUnfollow.getUsername(),
+          toUnfollow.getEmail(),
+          toUnfollowProfile.getProfilePictureUrl()));
+    }
+    return Optional.empty();
+  }
+
+  public Optional<ConnectionDTO> removeFollower(Long id, UUID toRemoveUuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<User> toRemoveOptional = userRepository.findByUuid(toRemoveUuid);
+
+    if (toRemoveOptional.isPresent()) {
+      User toRemove = toRemoveOptional.get();
+      UserProfile toRemoveProfile = userProfileRepository.findById(toRemove.getId()).get();
+      user.removeFollower(toRemove);
+      userRepository.save(user);
+      return Optional.of(new ConnectionDTO(toRemove.getUuid(),
+          toRemove.getUsername(),
+          toRemove.getEmail(),
+          toRemoveProfile.getProfilePictureUrl()));
+    }
+    return Optional.empty();
   }
 
 }

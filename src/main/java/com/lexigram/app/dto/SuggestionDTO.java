@@ -2,7 +2,6 @@ package com.lexigram.app.dto;
 
 import com.lexigram.app.model.Suggestion;
 import com.lexigram.app.model.Tag;
-import com.lexigram.app.model.User;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -10,19 +9,30 @@ import java.util.UUID;
 
 public class SuggestionDTO {
 
-  private UUID uuid;
-  private User user;
-  private Set<Tag> tags;
-  private String header;
-  private long creationDate;
-  private long resonatesAmount;
-  private long experienceAmount;
-
+  private final UUID uuid;
+  private final UserDTO user;
+  private final Set<TagDTO> tags;
+  private final String header;
+  private final String body;
+  private final String type = "Suggestion";
+  private final long creationDate;
+  private final long resonatesAmount;
+  private final long experienceAmount;
 
   public SuggestionDTO(Suggestion suggestion) {
     this.uuid = suggestion.getUuid();
-    this.user = suggestion.getUser();
-    this.tags = suggestion.getTags();
+    this.user = new UserDTO(
+        suggestion.getUser().getId(),
+        suggestion.getUser().getUuid(),
+        suggestion.getUser().getUsername(),
+        suggestion.getUser().getEmail()
+    );
+    this.body = suggestion.getBody();
+    Set<TagDTO> tagDTO = new HashSet<>();
+    for (Tag tag : suggestion.getTags()) {
+      tagDTO.add(new TagDTO(tag.getName(), tag.isInFeed()));
+    }
+    this.tags = tagDTO;
     this.header = suggestion.getHeader();
     this.creationDate = suggestion.getCreationDate();
     this.resonatesAmount = suggestion.getResonatesAmount();
@@ -50,17 +60,15 @@ public class SuggestionDTO {
   }
 
   public UserDTO getUser() {
-    Long id = user.getId();
-    String username = user.getUsername();
-    String email = user.getEmail();
-    return new UserDTO(id, username, email);
+    return user;
   }
 
   public Set<TagDTO> getTags(){
-    Set<TagDTO> tagsDTO = new HashSet<>();
-    for (Tag t : tags){
-      tagsDTO.add(new TagDTO(t.getName(), t.isInFeed()));
-    }
-    return tagsDTO;
+    return tags;
   }
+
+  public String getBody() {
+    return body;
+  }
+
 }

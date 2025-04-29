@@ -75,7 +75,6 @@
     font-size: 0.95rem;
 }
 
-/* Responsive design */
 @media (max-width: 500px) {
     .login-container {
         margin: 40px 20px;

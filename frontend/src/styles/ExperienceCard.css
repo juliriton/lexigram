@@ -1,0 +1,267 @@
+.experience-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    max-width: 400px;
+    margin: 20px auto;
+    width: 100%;
+    transition: transform .3s, box-shadow .3s;
+}
+
+.experience-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.media-wrapper {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+}
+
+.media-element {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: filter .3s ease;
+}
+
+.blur-media {
+    filter: blur(2px);
+}
+
+.quote-overlay {
+    position: absolute;
+    text-align: center;
+    width: 80%;
+    transform: translate(-50%, -50%);
+}
+
+.quote-text {
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.overlay-btn {
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    margin-top: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.content {
+    padding-bottom: 16px;
+}
+
+.badges {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px 0;
+}
+
+.exp-badge {
+    background: #18BC9C;
+    color: #fff;
+}
+
+.orig-badge {
+    background: #000000;
+    color: #fff;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: .8rem;
+}
+
+.title {
+    padding: 8px 16px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2C3E50;
+    margin: 0;
+}
+
+.reflection-section {
+    margin: 12px 16px;
+}
+
+.reflection-text {
+    word-wrap: break-word;
+    white-space: normal;
+    color: #555;
+    line-height: 1.4;
+}
+
+.show-more-btn {
+    background: none;
+    border: none;
+    color: #0500ff;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.meta {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 16px 12px;
+    font-size: .85rem;
+    color: #777;
+}
+
+.tags-section {
+    padding: 0 16px 12px;
+}
+
+.tags-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    background: #2C3E50;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: .75rem;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 0 16px 12px;
+}
+
+.btn-sm {
+    font-size: .8rem;
+    cursor: pointer;
+}
+
+/* Mention styles from RelationshipProfilePage.css */
+.mentions {
+    padding: 12px 16px;
+    background: #F7F9FA;
+    border-radius: 10px;
+    margin: 0 16px 16px;
+}
+
+.post-mentions {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.mentions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.mention {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #e8f0fe;
+    color: #1a73e8;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.mention.clickable:hover {
+    background-color: #d0e7fd;
+    text-decoration: underline;
+}
+
+.mention-item {
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.mention-item:last-child {
+    border-bottom: none;
+}
+
+.mention-profile-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #0d6efd;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: inherit;
+    display: inline-block;
+}
+
+.mention-profile-link:hover {
+    color: #0a58ca;
+}
+
+.mention-text {
+    color: #555;
+}
+
+.username-link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #0d6efd;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: normal;
+    font-size: inherit;
+}
+
+.username-link-btn:hover {
+    color: #0a58ca;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.quote-modal-content {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.modal-quote-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}

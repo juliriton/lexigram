@@ -1,10 +1,13 @@
 package com.lexigram.app.service;
 
 import com.lexigram.app.dto.*;
+import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.model.Experience;
 import com.lexigram.app.model.Suggestion;
 import com.lexigram.app.model.User;
 import com.lexigram.app.model.UserProfile;
+import com.lexigram.app.repository.ExperienceRepository;
+import com.lexigram.app.repository.SuggestionRepository;
 import com.lexigram.app.repository.UserProfileRepository;
 import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +20,18 @@ public class UserProfileService {
 
   private final UserRepository userRepository;
   private final UserProfileRepository userProfileRepository;
+  private final ExperienceRepository experienceRepository;
+  private final SuggestionRepository suggestionRepository;
 
   @Autowired
   public UserProfileService(UserRepository userRepository,
-                            UserProfileRepository userProfileRepository) {
+                            UserProfileRepository userProfileRepository,
+                            ExperienceRepository experienceRepository,
+                            SuggestionRepository suggestionRepository) {
     this.userRepository = userRepository;
     this.userProfileRepository = userProfileRepository;
+    this.experienceRepository = experienceRepository;
+    this.suggestionRepository = suggestionRepository;
   }
 
   public Optional<UserProfileDTO> getProfile(Long id) {
@@ -76,10 +85,25 @@ public class UserProfileService {
   }
 
   public UserPostsDTO getAllUserPosts(Long id) {
-    Set<Experience> experiences = userProfileRepository.getExperiencesByUserId(id);
-    Set<Suggestion> suggestions = userProfileRepository.getSuggestionsByUserId(id);
+    User user = userRepository.findById(id).get();
 
-    UserPostsDTO dto = new UserPostsDTO(experiences, suggestions);
+    Set<Experience> experiences = experienceRepository.getExperiencesByUserId(id);
+
+    Set<ExperienceDTO> experienceDTOs = new HashSet<>();
+    for (Experience experience : experiences) {
+      experienceDTOs.add(new ExperienceDTO(experience));
+    }
+
+    Set<Suggestion> suggestions = suggestionRepository.getSuggestionsByUserId(id);
+
+    Set<SuggestionDTO> suggestionDTOs = new HashSet<>();
+
+    for (Suggestion suggestion : suggestions) {
+      suggestionDTOs.add(new SuggestionDTO(suggestion));
+    }
+
+    UserDTO userDTO = new UserDTO(user.getId(), user.getUuid(), user.getUsername(), user.getEmail());
+    UserPostsDTO dto = new UserPostsDTO(userDTO, experienceDTOs, suggestionDTOs);
     return dto;
   }
 
@@ -87,31 +111,33 @@ public class UserProfileService {
     Optional<User> userOptional = userRepository.findById(id);
 
     if (userOptional.isEmpty()){
-      return Collections.emptySet();
+      throw new UserNotFoundException();
     }
 
-    Set<Experience> experiences = userProfileRepository.getExperiencesByUserId(id);
+    Set<Experience> experiences = experienceRepository.getExperiencesByUserId(id);
 
     if (experiences.isEmpty()) return Collections.emptySet();
 
-    Set<Experience> experienceSet = userProfileRepository.getExperiencesByUserId(id);
-    Set<ExperienceDTO> experienceDTOset = new HashSet<>();
+    Set<ExperienceDTO> experiencesDTOset = new HashSet<>();
 
-    for (Experience e : experienceSet){
-      experienceDTOset.add(new ExperienceDTO(e));
+    for (Experience e : experiences){
+      experiencesDTOset.add(new ExperienceDTO(e));
     }
 
-    return experienceDTOset;
+    return experiencesDTOset;
   }
 
   public Set<SuggestionDTO> getAllUserSuggestions(Long id){
     Optional<User> userOptional = userRepository.findById(id);
 
     if (userOptional.isEmpty()){
-      return Collections.emptySet();
+      throw new UserNotFoundException();
     }
 
-    Set<Suggestion> suggestions = userProfileRepository.getSuggestionsByUserId(id);
+    Set<Suggestion> suggestions = suggestionRepository.getSuggestionsByUserId(id);
+
+    if (suggestions.isEmpty()) return Collections.emptySet();
+
     Set<SuggestionDTO> suggestionDTOset = new HashSet<>();
 
     for (Suggestion s : suggestions){
@@ -121,5 +147,38 @@ public class UserProfileService {
     return suggestionDTOset;
   }
 
+  public Set<ConnectionDTO> getFollowers(Long id) {
+    Optional<User> userOptional = userRepository.findById(id);
+    if (userOptional.isEmpty()){
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Set<ConnectionDTO> followers = new HashSet<>();
+
+    for (User u : user.getFollowers()){
+      UserProfile userProfile = userProfileRepository.findById(u.getId()).get();
+      String profilePicture = userProfile.getProfilePictureUrl();
+      followers.add(new ConnectionDTO(u.getUuid(), u.getUsername(), u.getEmail(), profilePicture));
+    }
+    return followers;
+  }
+
+  public Set<ConnectionDTO> getFollowing(Long id){
+    Optional<User> userOptional = userRepository.findById(id);
+    if (userOptional.isEmpty()){
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Set<ConnectionDTO> following = new HashSet<>();
+
+    for (User u : user.getFollowing()){
+      UserProfile userProfile = userProfileRepository.findById(u.getId()).get();
+      String profilePicture = userProfile.getProfilePictureUrl();
+      following.add(new ConnectionDTO(u.getUuid(), u.getUsername(), u.getEmail(), profilePicture));
+    }
+    return following;
+  }
 }
 
