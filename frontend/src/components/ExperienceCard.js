@@ -1,31 +1,65 @@
-import React, { useState } from 'react';
-import { FaQuoteLeft, FaEllipsisH, FaUser, FaTag, FaUserTag, FaEdit, FaTrash } from 'react-icons/fa';
+import React, { useState, useMemo } from 'react';
+import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaTag, FaUserTag } from 'react-icons/fa';
+import { FaStar } from 'react-icons/fa6';
+import { useLocation, useNavigate } from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
 import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
                             user,
                             post,
-                            baseApiUrl,
                             username,
+                            baseApiUrl,
                             hiddenQuotes,
                             toggleQuote,
                             showMentions,
                             setShowMentions,
-                            renderMentions,
-                            renderTags,
                             formatDate,
                             onDelete,
                             isOwner
                         }) => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const postId = post.uuid;
+    const isQuoteHidden = hiddenQuotes[postId];
+    const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
+    const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
+    const isVideo = url => url && /\.(mp4|webm|ogg)$/i.test(url);
+
+    // Estados para la UI
+    const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [updatedPost, setUpdatedPost] = useState(post);
+    const [showFullRefl, setShowFullRefl] = useState(false);
+    const [showAllTags, setShowAllTags] = useState(false);
 
-    const toggleMentions = (id) => {
+    // Cálculos para el texto
+    const quoteFontSize = useMemo(() => {
+        const f = updatedPost.style?.fontSize || 20;
+        return Math.min(Math.max(f, 8), 30);
+    }, [updatedPost.style]);
+
+    const rawQuote = updatedPost.quote || updatedPost.title || '';
+    const quotePreviewLen = 30;
+    const needsQuoteTruncate = rawQuote.length > quotePreviewLen;
+    const quotePreview = rawQuote.slice(0, quotePreviewLen) + (needsQuoteTruncate ? '…' : '');
+
+    const reflectionText = updatedPost.reflection || updatedPost.content || '';
+    const reflPreviewLen = 20;
+    const needsReflTruncate = reflectionText.length > reflPreviewLen;
+    const reflPreview = reflectionText.slice(0, reflPreviewLen) + (needsReflTruncate ? '…' : '');
+
+    // Manejo de tags
+    const allTags = (updatedPost.tags || []).slice(0, 20);
+    const inlineTags = allTags.slice(0, 5);
+    const extraTags = allTags.slice(5);
+
+    // Manejadores de eventos
+    const toggleMentions = () => {
         setShowMentions(prev => ({
             ...prev,
-            [id]: !prev[id]
+            [postId]: !prev[postId]
         }));
     };
 
@@ -50,109 +84,268 @@ const ExperienceCard = ({
         setUpdatedPost(updatedExperience);
     };
 
-    return (
-        <div className="post-card">
-            {showEditModal && (
-                <EditExperienceModal
-                    experience={updatedPost}
-                    onClose={() => setShowEditModal(false)}
-                    onUpdate={handlePostUpdate}
-                    baseApiUrl={baseApiUrl}
-                />
-            )}
+    const navigateToUserProfile = (profileUuid) => {
+        const targetUuid = profileUuid || updatedPost.user?.uuid;
 
-            <div className="post-header">
-                <div className="post-type">Experience</div>
-                <div className="post-date">{formatDate(updatedPost.creationDate)}</div>
+        if (!user) {
+            if (location.pathname === `/profile/${targetUuid}`) {
+                return;
+            }
+            navigate('/login');
+            return;
+        }
 
-                {isOwner && (
-                    <div className="post-options">
-                        <button
-                            className="options-btn"
-                            onClick={toggleOptions}
-                            aria-label="Post options"
+        if (targetUuid) {
+            const targetPath = `/profile/${targetUuid}`;
+            if (location.pathname !== targetPath) {
+                navigate(targetPath);
+            }
+        }
+    };
+
+    const handleMentionClick = (mentionUuid) => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        navigate(`/profile/${mentionUuid}`);
+    };
+
+    // Renderizado de menciones
+    const renderMentions = (mentions) => {
+        if (!Array.isArray(mentions) || mentions.length === 0) {
+            return null;
+        }
+
+        return (
+            <div className="post-mentions">
+                <div className="mentions-list">
+                    {mentions.map((mention, i) => (
+                        <span
+                            key={i}
+                            className="mention clickable"
+                            onClick={() => handleMentionClick(mention.uuid)}
                         >
-                            <FaEllipsisH />
-                        </button>
+                            @{mention.username}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        );
+    };
 
-                        {showOptions && (
-                            <div className="options-dropdown">
-                                <button onClick={handleEdit} className="option-item">
-                                    <FaEdit /> Edit
-                                </button>
-                                <button onClick={handleDelete} className="option-item delete">
-                                    <FaTrash /> Delete
-                                </button>
+    return (
+        <>
+            <div className="experience-card">
+                {showEditModal && (
+                    <EditExperienceModal
+                        experience={updatedPost}
+                        onClose={() => setShowEditModal(false)}
+                        onUpdate={handlePostUpdate}
+                        baseApiUrl={baseApiUrl}
+                    />
+                )}
+
+                {fullMediaUrl && (
+                    <div className="media-wrapper">
+                        {isVideo(mediaUrl)
+                            ? <video
+                                src={fullMediaUrl}
+                                className={`media-element ${!isQuoteHidden ? 'blur-media' : ''}`}
+                                autoPlay muted loop
+                            />
+                            : <img
+                                src={fullMediaUrl}
+                                alt={updatedPost.title}
+                                className={`media-element ${!isQuoteHidden ? 'blur-media' : ''}`}
+                            />
+                        }
+
+                        {!isQuoteHidden && (
+                            <div
+                                className="quote-overlay"
+                                style={{
+                                    left: `${updatedPost.style?.textPositionX || 50}%`,
+                                    top: `${updatedPost.style?.textPositionY || 50}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                }}
+                            >
+                                <div
+                                    className="quote-text"
+                                    style={{
+                                        fontSize: `${quoteFontSize}px`,
+                                        fontFamily: updatedPost.style?.fontFamily || 'inherit',
+                                        color: updatedPost.style?.fontColor || '#fff'
+                                    }}
+                                >
+                                    "{quotePreview}"
+                                </div>
+                                {needsQuoteTruncate && (
+                                    <button
+                                        className="overlay-btn"
+                                        onClick={() => setQuoteModalOpen(true)}
+                                    >
+                                        View Full
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
                 )}
-            </div>
 
-            <div className="post-content">
-                <div className="quote-container">
-                    <div className="quote-header" onClick={() => toggleQuote(updatedPost.uuid)}>
-                        <FaQuoteLeft className="quote-icon" />
-                        <h4 className="section-title">Quote</h4>
-                    </div>
-
-                    <div className={`quote-text ${hiddenQuotes[updatedPost.uuid] ? 'truncated' : ''}`}>
-                        {updatedPost.quote}
-                    </div>
-                </div>
-
-                <div className="reflection-container">
-                    <h4 className="section-title">Reflection</h4>
-                    <div className="reflection-text">
-                        {updatedPost.reflection}
-                    </div>
-                </div>
-
-                {updatedPost.tags && updatedPost.tags.length > 0 && (
-                    <div className="post-tags">
-                        <div className="tags-header">
-                            <FaTag className="tag-icon" />
-                            <h4 className="section-title">Tags</h4>
+                <div className="content">
+                    <div className="header-row">
+                        <div className="badges">
+                            <span className="badge exp-badge">
+                                <FaPhotoVideo /> Experience
+                            </span>
+                            {updatedPost.origin && (
+                                <span className="badge orig-badge">
+                                    <FaStar /> Origin
+                                </span>
+                            )}
                         </div>
-                        <div className="tags-content">
-                            {renderTags(updatedPost.tags)}
-                        </div>
-                    </div>
-                )}
 
-                {updatedPost.mentions && updatedPost.mentions.length > 0 && (
-                    <div className="post-mentions-container">
-                        <div
-                            className="mentions-header"
-                            onClick={() => toggleMentions(updatedPost.uuid)}
+                        {isOwner && (
+                            <div className="post-options">
+                                <button
+                                    className="options-btn"
+                                    onClick={toggleOptions}
+                                    aria-label="Post options"
+                                >
+                                    <FaEllipsisH />
+                                </button>
+
+                                {showOptions && (
+                                    <div className="options-dropdown">
+                                        <button onClick={handleEdit} className="option-item">
+                                            <FaEdit /> Edit
+                                        </button>
+                                        <button onClick={handleDelete} className="option-item delete">
+                                            <FaTrash /> Delete
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    <h3 className="title">{updatedPost.title}</h3>
+
+                    <div className="reflection-section">
+                        <div className="reflection-text">
+                            {showFullRefl ? reflectionText : reflPreview}
+                        </div>
+                        {needsReflTruncate && (
+                            <button
+                                className="show-more-btn"
+                                onClick={() => setShowFullRefl(r => !r)}
+                            >
+                                {showFullRefl ? 'Show less' : 'Show more'}
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="meta">
+                        <button
+                            className="username-link-btn"
+                            onClick={() => navigateToUserProfile()}
                         >
-                            <FaUserTag className="mention-icon" />
-                            <h4 className="section-title">Mentions</h4>
-                        </div>
-                        {renderMentions(updatedPost.mentions, updatedPost.uuid)}
+                            @{username}
+                        </button>
+
+                        {updatedPost.creationDate && (
+                            <span className="date">{formatDate(updatedPost.creationDate)}</span>
+                        )}
                     </div>
-                )}
+
+                    {allTags.length > 0 && (
+                        <div className="tags-section">
+                            <div className="tags-inline">
+                                {inlineTags.map((t, i) => <span key={i} className="tag">#{t.name}</span>)}
+                                {showAllTags && extraTags.map((t, i) =>
+                                    <span key={i + 5} className="tag">#{t.name}</span>
+                                )}
+                            </div>
+                            {extraTags.length > 0 && (
+                                <button
+                                    className="show-more-btn"
+                                    onClick={() => setShowAllTags(x => !x)}
+                                >
+                                    {showAllTags ? 'Show less' : `+${extraTags.length} more`}
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="actions">
+                        <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => toggleQuote(postId)}
+                        >
+                            {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
+                        </button>
+                        {updatedPost.mentions?.length > 0 && (
+                            <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={toggleMentions}
+                            >
+                                {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
+                            </button>
+                        )}
+                    </div>
+
+                    {updatedPost.mentions?.length > 0 && showMentions[postId] && (
+                        <div className="mentions">
+                            <div className="mentions-header">
+                                <FaUserTag className="mention-icon" />
+                                <h6>Mentions:</h6>
+                            </div>
+                            {renderMentions(updatedPost.mentions)}
+                        </div>
+                    )}
+
+                    <div className="post-stats">
+                        <div className="stat-item">
+                            <span className="stat-label">Resonates:</span>
+                            <span className="stat-value">{updatedPost.resonatesAmount || 0}</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="stat-label">Comments:</span>
+                            <span className="stat-value">{updatedPost.commentAmount || 0}</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="stat-label">Saved:</span>
+                            <span className="stat-value">{updatedPost.saveAmount || 0}</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="stat-label">Branches:</span>
+                            <span className="stat-value">{updatedPost.branchAmount || 0}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div className="post-stats">
-                <div className="stat-item">
-                    <span className="stat-label">Resonates:</span>
-                    <span className="stat-value">{updatedPost.resonatesAmount}</span>
+            {isQuoteModalOpen && (
+                <div className="modal-overlay" onClick={() => setQuoteModalOpen(false)}>
+                    <div className="quote-modal-content" onClick={e => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setQuoteModalOpen(false)}>
+                            ×
+                        </button>
+                        <div
+                            className="modal-quote-text"
+                            style={{
+                                fontSize: `${quoteFontSize}px`,
+                                fontFamily: updatedPost.style?.fontFamily || 'inherit',
+                                color: updatedPost.style?.fontColor || '#000'
+                            }}
+                        >
+                            "{rawQuote}"
+                        </div>
+                    </div>
                 </div>
-                <div className="stat-item">
-                    <span className="stat-label">Comments:</span>
-                    <span className="stat-value">{updatedPost.commentAmount}</span>
-                </div>
-                <div className="stat-item">
-                    <span className="stat-label">Saved:</span>
-                    <span className="stat-value">{updatedPost.saveAmount}</span>
-                </div>
-                <div className="stat-item">
-                    <span className="stat-label">Branches:</span>
-                    <span className="stat-value">{updatedPost.branchAmount}</span>
-                </div>
-            </div>
-        </div>
+            )}
+        </>
     );
 };
 
