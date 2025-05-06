@@ -35,6 +35,10 @@
     }
 }
 
+.edit-experience-modal * {
+    transform: none !important;
+}
+
 .edit-modal-header {
     display: flex;
     justify-content: space-between;
