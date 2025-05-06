@@ -86,6 +86,13 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         try {
             let hasUpdated = false;
 
+            // Validar que quote no esté vacío
+            if (quote.trim() === '') {
+                setError("Quote cannot be empty. Please enter a quote.");
+                setIsSaving(false);
+                return;
+            }
+
             // Update quote if changed
             if (quote !== experience.quote) {
                 const quoteRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/quote`, {
@@ -145,7 +152,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({
-                        mentions: newMentionUuids
+                        mentions: mentions.map(m => m.username)
                     })
                 });
 
@@ -245,7 +252,9 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                                 onChange={(e) => setQuote(e.target.value)}
                                 placeholder="Enter a quote..."
                                 rows={4}
+                                required
                             />
+                            <small>This field is required</small>
                         </div>
                     )}
 

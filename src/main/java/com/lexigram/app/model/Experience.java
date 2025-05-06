@@ -82,7 +82,10 @@ public class Experience {
   )
   private Set<User> mentions = new HashSet<>();
 
-  public Experience() {}
+  public Experience() {
+    this.uuid = UUID.randomUUID();
+    this.mentions = new HashSet<>();
+  }
 
   public Experience(User user,
                      Set<User> mentions,
@@ -191,6 +194,6 @@ public class Experience {
   }
 
   public void setMentions(Set<User> mentions) {
-    this.mentions = mentions;
+    this.mentions = mentions != null ? mentions : new HashSet<>();
   }
 }

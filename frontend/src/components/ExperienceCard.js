@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaQuoteLeft, FaEllipsisH, FaUser, FaTag, FaUserTag, FaEdit, FaTrash } from 'react-icons/fa';
-import EditExperienceModal from '../pages/EditExperienceModal';
+import EditExperienceModal from './EditExperienceModal';
+import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
                             user,

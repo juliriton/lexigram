@@ -13,6 +13,9 @@ public class UpdateExperienceReflectionDTO {
   @Size(min = 10, max = 300, message = "Reflection must be between 10 and 300 characters. Share something meaningful!")
   private String reflection;
 
+  public UpdateExperienceReflectionDTO() {
+  }
+
   UpdateExperienceReflectionDTO(UUID uuid, String reflection) {
     this.uuid = uuid;
     this.reflection = reflection;
@@ -24,5 +27,13 @@ public class UpdateExperienceReflectionDTO {
 
   public String getReflection() {
     return reflection;
+  }
+
+  public void setUuid(UUID uuid) {
+    this.uuid = uuid;
+  }
+
+  public void setReflection(String reflection) {
+    this.reflection = reflection;
   }
 }
