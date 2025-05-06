@@ -9,9 +9,14 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
     const [tags, setTags] = useState([]);
     const [tagInput, setTagInput] = useState('');
     const [mentions, setMentions] = useState([]);
-    const [mentionSearchTerm, setMentionSearchTerm] = useState('');
-    const [mentionResults, setMentionResults] = useState([]);
-    const [error, setError] = useState(null);
+    const [mentionInput, setMentionInput] = useState('');
+    const [ setMentionResults] = useState([]);
+    const [errors, setErrors] = useState({
+        quote: null,
+        reflection: null,
+        tags: null,
+        mentions: null
+    });
     const [success, setSuccess] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -31,12 +36,15 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
+        // Clear success message when changing tabs
+        setSuccess(null);
     };
 
     const handleAddTag = () => {
         if (tagInput.trim() !== '' && !tags.includes(tagInput.trim())) {
             setTags([...tags, tagInput.trim()]);
             setTagInput('');
+            setErrors({...errors, tags: null}); // Clear any tag errors
         }
     };
 
@@ -47,82 +55,125 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         ));
     };
 
-    const handleSearchMentions = async () => {
-        if (mentionSearchTerm.trim() === '') return;
+    // Add direct mention from input (similar to post creation page)
+    const handleAddDirectMention = () => {
+        if (mentionInput.trim() === '') return;
 
-        try {
-            const res = await fetch(`${baseApiUrl}/api/users/search?term=${encodeURIComponent(mentionSearchTerm)}`, {
-                credentials: 'include'
+        // Clear any previous errors
+        setErrors({...errors, mentions: null});
+
+        // Clean up the username (remove @ if present)
+        const username = mentionInput.trim().replace(/^@/, '');
+
+        // Check if already mentioned by username
+        if (mentions.some(m => m.username === username)) {
+            setMentionInput('');
+            return;
+        }
+
+        // Fetch the user by username
+        fetch(`${baseApiUrl}/api/auth/me/users/${encodeURIComponent(username)}`, {
+            credentials: 'include'
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('User not found');
+                return res.json();
+            })
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    const user = data[0];
+                    if (!mentions.some(m => m.uuid === user.uuid)) {
+                        setMentions([...mentions, user]);
+                    }
+                } else if (data && data.username) {
+                    if (!mentions.some(m => m.uuid === data.uuid)) {
+                        setMentions([...mentions, data]);
+                    }
+                } else {
+                    setErrors({...errors, mentions: "User not found"});
+                }
+                setMentionInput('');
+
+                setMentionResults([]);
+            })
+            .catch(err => {
+                console.error("Error adding mention:", err);
+                setMentionInput('');
             });
-
-            if (!res.ok) throw new Error('Failed to search users');
-
-            const data = await res.json();
-            setMentionResults(data);
-        } catch (err) {
-            console.error("Error searching for users:", err);
-            setError("Failed to search for users. Please try again.");
-        }
-    };
-
-    const handleAddMention = (user) => {
-        // Check if user is already mentioned
-        if (!mentions.some(m => m.uuid === user.uuid)) {
-            setMentions([...mentions, user]);
-        }
-        setMentionResults([]);
-        setMentionSearchTerm('');
     };
 
     const handleRemoveMention = (userUuid) => {
         setMentions(mentions.filter(m => m.uuid !== userUuid));
     };
 
+    const validateField = (field, value) => {
+        switch (field) {
+            case 'quote':
+                return value.trim() === '' ? "Quote cannot be empty. Please enter a quote." : null;
+            default:
+                return null;
+        }
+    };
+
     const handleSaveChanges = async () => {
         setIsSaving(true);
-        setError(null);
         setSuccess(null);
+
+        const quoteError = validateField('quote', quote);
+        if (quoteError) {
+            setErrors({...errors, quote: quoteError});
+            setIsSaving(false);
+            return;
+        }
 
         try {
             let hasUpdated = false;
-
-            // Validar que quote no esté vacío
-            if (quote.trim() === '') {
-                setError("Quote cannot be empty. Please enter a quote.");
-                setIsSaving(false);
-                return;
-            }
+            let updateErrors = {};
 
             // Update quote if changed
             if (quote !== experience.quote) {
-                const quoteRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/quote`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        uuid: experience.uuid,
-                        quote: quote
-                    })
-                });
+                try {
+                    const quoteRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/quote`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            uuid: experience.uuid,
+                            quote: quote
+                        })
+                    });
 
-                if (!quoteRes.ok) throw new Error('Failed to update quote');
-                hasUpdated = true;
+                    if (!quoteRes.ok) {
+                        updateErrors.quote = 'Failed to update quote';
+                    } else {
+                        hasUpdated = true;
+                    }
+                } catch (err) {
+                    updateErrors.quote = 'Error updating quote';
+                }
             }
 
             // Update reflection if changed
             if (reflection !== experience.reflection) {
-                const reflectionRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/reflection`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        uuid: experience.uuid,
-                        reflection: reflection
-                    })
-                });
+                try {
+                    const reflectionRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/reflection`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            uuid: experience.uuid,
+                            reflection: reflection
+                        })
+                    });
 
-                if (!reflectionRes.ok) throw new Error('Failed to update reflection');
-                hasUpdated = true;
+                    if (!reflectionRes.ok) {
+                        updateErrors.reflection = 'Failed to update reflection';
+                    } else {
+                        hasUpdated = true;
+                    }
+                } catch (err) {
+                    updateErrors.reflection = 'Error updating reflection';
+                }
             }
 
             // Update tags if changed
@@ -130,34 +181,53 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 typeof tag === 'string' ? tag : tag.name
             );
             if (JSON.stringify(tags.sort()) !== JSON.stringify(currentTags.sort())) {
-                const tagsRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/tags`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        tags: tags
-                    })
-                });
+                try {
+                    const tagsRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/tags`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            tags: tags
+                        })
+                    });
 
-                if (!tagsRes.ok) throw new Error('Failed to update tags');
-                hasUpdated = true;
+                    if (!tagsRes.ok) {
+                        updateErrors.tags = 'Failed to update tags';
+                    } else {
+                        hasUpdated = true;
+                    }
+                } catch (err) {
+                    updateErrors.tags = 'Error updating tags';
+                }
             }
 
             // Update mentions if changed
             const currentMentionUuids = experience.mentions?.map(m => m.uuid) || [];
             const newMentionUuids = mentions.map(m => m.uuid);
             if (JSON.stringify(newMentionUuids.sort()) !== JSON.stringify(currentMentionUuids.sort())) {
-                const mentionsRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/mentions`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        mentions: mentions.map(m => m.username)
-                    })
-                });
+                try {
+                    const mentionsRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/mentions`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            mentions: mentions.map(m => m.username)
+                        })
+                    });
 
-                if (!mentionsRes.ok) throw new Error('Failed to update mentions');
-                hasUpdated = true;
+                    if (!mentionsRes.ok) {
+                        updateErrors.mentions = 'Failed to update mentions';
+                    } else {
+                        hasUpdated = true;
+                    }
+                } catch (err) {
+                    updateErrors.mentions = 'Error updating mentions';
+                }
+            }
+
+            // Set any errors that occurred
+            if (Object.keys(updateErrors).length > 0) {
+                setErrors({...errors, ...updateErrors});
             }
 
             if (hasUpdated) {
@@ -175,7 +245,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 setTimeout(() => {
                     onClose();
                 }, 1000);
-            } else {
+            } else if (Object.keys(updateErrors).length === 0) {
                 setSuccess("No changes detected.");
                 setTimeout(() => {
                     onClose();
@@ -183,7 +253,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             }
         } catch (err) {
             console.error("Error updating experience:", err);
-            setError(err.message || "Failed to update experience. Please try again.");
+            setErrors({...errors, general: err.message || "Failed to update experience. Please try again."});
         } finally {
             setIsSaving(false);
         }
@@ -230,9 +300,9 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                     </div>
                 </div>
 
-                {error && (
+                {errors.general && (
                     <div className="alert alert-error">
-                        {error}
+                        {errors.general}
                     </div>
                 )}
 
@@ -249,12 +319,17 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                             <textarea
                                 id="quote"
                                 value={quote}
-                                onChange={(e) => setQuote(e.target.value)}
+                                onChange={(e) => {
+                                    setQuote(e.target.value);
+                                    const error = validateField('quote', e.target.value);
+                                    setErrors({...errors, quote: error});
+                                }}
                                 placeholder="Enter a quote..."
                                 rows={4}
                                 required
                             />
                             <small>This field is required</small>
+                            {errors.quote && <div className="field-error">{errors.quote}</div>}
                         </div>
                     )}
 
@@ -269,6 +344,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                                 rows={4}
                             />
                             <small>Between 10-300 characters</small>
+                            {errors.reflection && <div className="field-error">{errors.reflection}</div>}
                         </div>
                     )}
 
@@ -289,13 +365,14 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                                 />
                                 <button onClick={handleAddTag}>Add</button>
                             </div>
+                            {errors.tags && <div className="field-error">{errors.tags}</div>}
 
                             <div className="tags-list">
                                 {tags.map((tag, index) => (
                                     <div key={index} className="tag-item">
-                    <span>
-                      {typeof tag === 'string' ? tag : tag.name}
-                    </span>
+                                        <span>
+                                          {typeof tag === 'string' ? tag : tag.name}
+                                        </span>
                                         <button onClick={() => handleRemoveTag(tag)}>
                                             <FaTimes />
                                         </button>
@@ -307,35 +384,24 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
 
                     {activeTab === 'mentions' && (
                         <div className="mentions-section">
-                            <div className="mention-search-container">
+                            <div className="mention-input-container">
                                 <input
                                     type="text"
-                                    value={mentionSearchTerm}
-                                    onChange={(e) => setMentionSearchTerm(e.target.value)}
-                                    placeholder="Search for users to mention..."
+                                    value={mentionInput}
+                                    onChange={(e) => setMentionInput(e.target.value)}
+                                    placeholder="@username"
                                     onKeyPress={(e) => {
                                         if (e.key === 'Enter') {
                                             e.preventDefault();
-                                            handleSearchMentions();
+                                            handleAddDirectMention();
                                         }
                                     }}
                                 />
-                                <button onClick={handleSearchMentions}>Search</button>
+                                <button onClick={handleAddDirectMention}>Add</button>
                             </div>
+                            {errors.mentions && <div className="field-error">{errors.mentions}</div>}
 
-                            {mentionResults.length > 0 && (
-                                <div className="mention-results">
-                                    {mentionResults.map((user) => (
-                                        <div
-                                            key={user.uuid}
-                                            className="mention-result-item"
-                                            onClick={() => handleAddMention(user)}
-                                        >
-                                            <span>@{user.username}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+
 
                             <div className="mentions-list">
                                 <h4>Current Mentions:</h4>

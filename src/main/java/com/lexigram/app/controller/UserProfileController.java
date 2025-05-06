@@ -119,30 +119,14 @@ public class UserProfileController {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    try {
-      Optional<ExperienceDTO> updated = experienceService.updateExperienceMentions(uuid, dto);
+    Optional<ExperienceDTO> updated = experienceService.updateExperienceMentions(uuid, dto);
 
-      if (updated.isEmpty()) {
-        return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body(Map.of("error", "Experiencia no encontrada con UUID: " + uuid));
-      }
-
-      return ResponseEntity.ok(updated.get());
-
-    } catch (UserNotFoundException e) {
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
-          .body(Map.of("error", e.getMessage()));
-
-    } catch (Exception e) {
-      logger.error("Error al actualizar menciones para la experiencia {}: {}", uuid, e.getMessage());
-      return ResponseEntity
-          .status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(Map.of("error", "Error al procesar la solicitud"));
+    if (updated.isEmpty()) {
+      return ResponseEntity.notFound().build();
     }
-  }
 
+    return ResponseEntity.ok(updated.get());
+  }
 
   @PostMapping("/edit/profile-picture")
   public ResponseEntity<String> updateProfilePicture(HttpSession session,
@@ -150,86 +134,86 @@ public class UserProfileController {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-      if (!"image/jpeg".equalsIgnoreCase(file.getContentType())) {
-        return ResponseEntity
-            .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-            .body("Only JPG/JPEG images are allowed");
-      }
-
-      try {
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        File destination = new File(uploadDir + File.separator + fileName);
-        destination.getParentFile().mkdirs();
-        file.transferTo(destination);
-
-        String relativePath = "/images/" + fileName;
-        userProfileService.updateProfilePicture(id, relativePath);
-
-        return ResponseEntity.ok("Imagen subida correctamente.");
-      } catch (IOException e) {
-        return ResponseEntity.status(500).body("Error al subir imagen: " + e.getMessage());
-      }
+    if (!"image/jpeg".equalsIgnoreCase(file.getContentType())) {
+      return ResponseEntity
+          .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+          .body("Only JPG/JPEG images are allowed");
     }
 
-    @GetMapping("/posts")
-    public ResponseEntity<UserPostsDTO> getAllPosts(HttpSession session) {
-      Long id = (Long) session.getAttribute("user");
-      if (id == null) return ResponseEntity.status(401).build();
+    try {
+      String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+      File destination = new File(uploadDir + File.separator + fileName);
+      destination.getParentFile().mkdirs();
+      file.transferTo(destination);
 
-      return ResponseEntity.ok(userProfileService.getAllUserPosts(id));
+      String relativePath = "/images/" + fileName;
+      userProfileService.updateProfilePicture(id, relativePath);
+
+      return ResponseEntity.ok("Imagen subida correctamente.");
+    } catch (IOException e) {
+      return ResponseEntity.status(500).body("Error al subir imagen: " + e.getMessage());
     }
-
-    @GetMapping("/posts/experiences")
-    public ResponseEntity<Set<ExperienceDTO>> getAllExperiences(HttpSession session) {
-      Long id = (Long) session.getAttribute("user");
-      if (id == null) return ResponseEntity.status(401).build();
-
-      return ResponseEntity.ok(userProfileService.getAllUserExperiences(id));
-    }
-
-    @GetMapping("/posts/suggestions")
-    public ResponseEntity<Set<SuggestionDTO>> getAllSuggestions(HttpSession session) {
-      Long id = (Long) session.getAttribute("user");
-      if (id == null) return ResponseEntity.status(401).build();
-
-      return ResponseEntity.ok(userProfileService.getAllUserSuggestions(id));
-    }
-
-    @GetMapping("/followers")
-    public ResponseEntity<Set<ConnectionDTO>> getFollowers(HttpSession session) {
-      Long id = (Long) session.getAttribute("user");
-      if (id == null) return ResponseEntity.status(401).build();
-
-      return ResponseEntity.ok(userProfileService.getFollowers(id));
-    }
-
-    @GetMapping("/following")
-    public ResponseEntity<Set<ConnectionDTO>> getFollowing(HttpSession session) {
-      Long id = (Long) session.getAttribute("user");
-      if (id == null) return ResponseEntity.status(401).build();
-
-      return ResponseEntity.ok(userProfileService.getFollowing(id));
-    }
-
-    @PostMapping("/posts/delete/suggestions/{suggestionUuid}")
-    public ResponseEntity<Void> deleteSuggestion(HttpSession session, @PathVariable UUID suggestionUuid) {
-      Long id = (Long) session.getAttribute("user");
-      if (id == null) return ResponseEntity.status(401).build();
-
-      if (suggestionService.deleteSuggestion(suggestionUuid, id)) {
-        return ResponseEntity.noContent().build();
-      }
-      return ResponseEntity.notFound().build();
-    }
-
-    @PostMapping("/posts/delete/experiences/{experienceUuid}")
-    public ResponseEntity<Void> deleteExperience(HttpSession session, @PathVariable UUID experienceUuid) {
-      Long id = (Long) session.getAttribute("user");
-      if (id == null) return ResponseEntity.status(401).build();
-      if (experienceService.deleteExperience(experienceUuid, id)) {
-        return ResponseEntity.noContent().build();
-      }
-      return ResponseEntity.notFound().build();
-    }
-
   }
+
+  @GetMapping("/posts")
+  public ResponseEntity<UserPostsDTO> getAllPosts(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getAllUserPosts(id));
+  }
+
+  @GetMapping("/posts/experiences")
+  public ResponseEntity<Set<ExperienceDTO>> getAllExperiences(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getAllUserExperiences(id));
+  }
+
+  @GetMapping("/posts/suggestions")
+  public ResponseEntity<Set<SuggestionDTO>> getAllSuggestions(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getAllUserSuggestions(id));
+  }
+
+  @GetMapping("/followers")
+  public ResponseEntity<Set<ConnectionDTO>> getFollowers(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getFollowers(id));
+  }
+
+  @GetMapping("/following")
+  public ResponseEntity<Set<ConnectionDTO>> getFollowing(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.getFollowing(id));
+  }
+
+  @PostMapping("/posts/delete/suggestions/{suggestionUuid}")
+  public ResponseEntity<Void> deleteSuggestion(HttpSession session, @PathVariable UUID suggestionUuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    if (suggestionService.deleteSuggestion(suggestionUuid, id)) {
+      return ResponseEntity.noContent().build();
+    }
+    return ResponseEntity.notFound().build();
+  }
+
+  @PostMapping("/posts/delete/experiences/{experienceUuid}")
+  public ResponseEntity<Void> deleteExperience(HttpSession session, @PathVariable UUID experienceUuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+    if (experienceService.deleteExperience(experienceUuid, id)) {
+      return ResponseEntity.noContent().build();
+    }
+    return ResponseEntity.notFound().build();
+  }
+
+}

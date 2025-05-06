@@ -35,7 +35,7 @@ public class RelationshipProfileService {
   }
 
 
-  public Optional<ConnectionProfileDTO> getRelationshipProfile(Long id, UUID uuid) {
+  public Optional<ConnectionProfileDTO> getRelationshipProfileByUuid(Long id, UUID uuid) {
     User user = userRepository.findById(id).get();
     Optional<User> targetUserOptional = userRepository.findByUuid(uuid);
 
@@ -56,6 +56,36 @@ public class RelationshipProfileService {
           username,
           biography,
           profilePicture,
+          isFollowing,
+          targetFollowingAmount,
+          targetFollowerAmount);
+      return Optional.of(connectionProfileDTO);
+    }
+    return Optional.empty();
+  }
+
+  public Optional<ConnectionProfileDTO> getRelationshipProfileByUsername(Long id, String username) {
+    String trimmedUsername = username.trim();
+    User user = userRepository.findById(id).get();
+    Optional<User> targetUserOptional = userRepository.findByUsername(trimmedUsername);
+
+    if (targetUserOptional.isPresent()) {
+      User targetUser = targetUserOptional.get();
+
+      Optional<UserProfile> targetProfileOptional = userProfileRepository.findByUserUuid(targetUser.getUuid());
+      UserProfile targetProfile = targetProfileOptional.get();
+
+      String targetUsername = targetUser.getUsername();
+      String targetBiography = targetProfile.getBiography();
+      String targetProfilePicture = targetProfile.getProfilePictureUrl();
+      boolean isFollowing = targetUser.getFollowers().contains(user);
+      Long targetFollowingAmount = targetUser.getFollowingAmount();
+      Long targetFollowerAmount = targetUser.getFollowerAmount();
+
+      ConnectionProfileDTO connectionProfileDTO = new ConnectionProfileDTO(
+          targetUsername,
+          targetBiography,
+          targetProfilePicture,
           isFollowing,
           targetFollowingAmount,
           targetFollowerAmount);

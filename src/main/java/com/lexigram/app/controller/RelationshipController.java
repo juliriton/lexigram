@@ -1,6 +1,8 @@
 package com.lexigram.app.controller;
 
 import com.lexigram.app.dto.ConnectionDTO;
+import com.lexigram.app.dto.ConnectionProfileDTO;
+import com.lexigram.app.service.RelationshipProfileService;
 import com.lexigram.app.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +18,12 @@ import java.util.UUID;
 public class RelationshipController {
 
   private final UserService userService;
+  private final RelationshipProfileService relationshipProfileService;
 
   @Autowired
-  public RelationshipController(UserService userService) {
+  public RelationshipController(UserService userService, RelationshipProfileService relationshipProfileService) {
     this.userService = userService;
+    this.relationshipProfileService = relationshipProfileService;
   }
 
   @PostMapping("/users/{uuid}/follow")
@@ -63,6 +67,21 @@ public class RelationshipController {
       ConnectionDTO connection = optionalConnection.get();
       return ResponseEntity.ok(connection);
     }
+    return ResponseEntity.status(401).build();
+  }
+
+  @GetMapping("/users/{username}")
+  public ResponseEntity<ConnectionProfileDTO> getRelationshipProfileByUsername(HttpSession session, @PathVariable String username) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<ConnectionProfileDTO> optionalConnection = relationshipProfileService.getRelationshipProfileByUsername(id, username);
+
+    if (optionalConnection.isPresent()) {
+      ConnectionProfileDTO connection = optionalConnection.get();
+      return ResponseEntity.ok(connection);
+    }
+
     return ResponseEntity.status(401).build();
   }
 

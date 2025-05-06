@@ -95,7 +95,6 @@ const HomePage = ({ user, setUser }) => {
 
             if (response.ok) {
                 const data = await response.json();
-                // Always completely replace previous results
                 setSearchResults({
                     users: data.connections || [],
                     experiences: data.experiences || [],

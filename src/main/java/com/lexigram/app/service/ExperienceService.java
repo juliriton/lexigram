@@ -21,7 +21,6 @@ import java.util.*;
 @Service
 public class ExperienceService {
 
-  private final SuggestionRepository suggestionRepository;
   @Value("${lexigram.upload.dir}")
   private String uploadDir;
 
@@ -30,20 +29,18 @@ public class ExperienceService {
   private final TagRepository tagRepository;
   private final ExperienceStyleRepository experienceStyleRepository;
   private final ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository;
-  private final Logger logger = LoggerFactory.getLogger(ExperienceService.class);
 
   @Autowired
   public ExperienceService(ExperienceRepository experienceRepository,
                            UserRepository userRepository,
                            TagRepository tagRepository,
                            ExperienceStyleRepository experienceStyleRepository,
-                           ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository, SuggestionRepository suggestionRepository) {
+                           ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
     this.experienceStyleRepository = experienceStyleRepository;
     this.experiencePrivacySettingsRepository = experiencePrivacySettingsRepository;
-    this.suggestionRepository = suggestionRepository;
   }
 
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
@@ -239,19 +236,17 @@ public class ExperienceService {
   @Transactional
   public Optional<ExperienceDTO> updateExperienceMentions(UUID uuid, UpdateExperienceMentionsDTO dto) {
     if (uuid == null) {
-      logger.error("UUID de experiencia es nulo");
       throw new IllegalArgumentException("El UUID de la experiencia no puede ser nulo");
     }
 
     Optional<Experience> experienceOpt = experienceRepository.findByUuid(uuid);
     if (experienceOpt.isEmpty()) {
-      logger.error("Experiencia no encontrada con UUID: {}", uuid);
       return Optional.empty();
     }
 
     Experience experience = experienceOpt.get();
     
-    if (dto == null || dto.getMentions() == null || dto.getMentions().isEmpty()) {
+    if (dto.getMentions().isEmpty()) {
       experience.setMentions(new HashSet<>());
       experienceRepository.save(experience);
       return Optional.of(new ExperienceDTO(experience));
@@ -261,12 +256,13 @@ public class ExperienceService {
     List<String> notFoundUsers = new ArrayList<>();
 
     for (String username : dto.getMentions()) {
-      if (username == null || username.trim().isEmpty()) {
+
+      String trimmedUsername = username.trim();
+
+      if (username == null || trimmedUsername.isEmpty()) {
         continue;
       }
 
-      String trimmedUsername = username.trim();
-      
       User user = null;
 
       try {
@@ -275,26 +271,8 @@ public class ExperienceService {
           user = userOpt.get();
         }
       } catch (Exception e) {
-        logger.error("Error al buscar usuario: {}", trimmedUsername, e);
         notFoundUsers.add(trimmedUsername);
         continue;
-      }
-      
-      if (user == null) {
-        if (trimmedUsername.matches("\\d+")) {
-          try {
-            Long userId = Long.parseLong(trimmedUsername);
-            Optional<User> userOpt = userRepository.findById(userId);
-            if (userOpt.isPresent()) {
-              user = userOpt.get();
-            }
-          } catch (NumberFormatException nfe) {}
-        }
-        
-        if (user == null) {
-          notFoundUsers.add(trimmedUsername);
-          continue;
-        }
       }
 
       mentions.add(user);
@@ -302,13 +280,13 @@ public class ExperienceService {
     
     if (!notFoundUsers.isEmpty()) {
       String errorMsg = "Los siguientes usuarios no fueron encontrados: " + String.join(", ", notFoundUsers);
-      logger.error(errorMsg);
       throw new UserNotFoundException(errorMsg);
     }
     
     experience.setMentions(mentions);
-    Experience savedExperience = experienceRepository.save(experience);
+    experienceRepository.save(experience);
     
-    return Optional.of(new ExperienceDTO(savedExperience));
+    return Optional.of(new ExperienceDTO(experience));
   }
+
 }

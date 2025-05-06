@@ -27,7 +27,7 @@ public class RelationshipProfileController {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    Optional<ConnectionProfileDTO> profile = relationshipProfileService.getRelationshipProfile(id, uuid);
+    Optional<ConnectionProfileDTO> profile = relationshipProfileService.getRelationshipProfileByUuid(id, uuid);
     if (profile.isEmpty()) return ResponseEntity.notFound().build();
 
     return ResponseEntity.ok(profile.get());

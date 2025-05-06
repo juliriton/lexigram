@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaTag, FaUserTag } from 'react-icons/fa';
+import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
