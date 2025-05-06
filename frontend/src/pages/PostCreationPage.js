@@ -18,6 +18,7 @@ const PostCreationPage = ({ user }) => {
     const [allowComments, setAllowComments] = useState(true);
     const [allowResonates, setAllowResonates] = useState(true);
     const [allowForks, setAllowForks] = useState(true);
+    const [allowSaves, setAllowSaves] = useState(true);
     const [suggestionText, setSuggestionText] = useState('');
     const [suggestionTags, setSuggestionTags] = useState('');
     const [fontSizeError, setFontSizeError] = useState('');
@@ -120,7 +121,7 @@ const PostCreationPage = ({ user }) => {
             isOrigin: true,
             tags: tagArray,
             mentions: mentionArray,
-            privacySettings: { allowComments, allowForks, allowResonates },
+            privacySettings: { allowComments, allowForks, allowResonates, allowSaves },
             style: {
                 fontFamily,
                 fontSize,
@@ -272,22 +273,29 @@ const PostCreationPage = ({ user }) => {
                                 <input
                                     type="checkbox"
                                     checked={allowComments}
-                                    onChange={()=>setAllowComments(c=>!c)}
+                                    onChange={() => setAllowComments(c => !c)}
                                 /> Comments
                             </label>
                             <label>
                                 <input
                                     type="checkbox"
                                     checked={allowResonates}
-                                    onChange={()=>setAllowResonates(r=>!r)}
+                                    onChange={() => setAllowResonates(r => !r)}
                                 /> Resonates
                             </label>
                             <label>
                                 <input
                                     type="checkbox"
                                     checked={allowForks}
-                                    onChange={()=>setAllowForks(f=>!f)}
+                                    onChange={() => setAllowForks(f => !f)}
                                 /> Forks
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowSaves}
+                                    onChange={() => setAllowSaves(f => !f)}
+                                /> Saves
                             </label>
                         </div>
 
@@ -297,7 +305,7 @@ const PostCreationPage = ({ user }) => {
                                 className="submit-btn"
                                 disabled={!quote.trim() || !!quoteError || !!reflectionError}
                             >
-                                Share Experience
+                            Share Experience
                             </button>
                             <button
                                 type="button"
