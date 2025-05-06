@@ -34,7 +34,6 @@ public class UserProfileController {
   @Value("${lexigram.upload.dir}")
   private String uploadDir;
   private final UserProfileService userProfileService;
-  private final Logger logger = LoggerFactory.getLogger(UserProfileController.class);
 
   @Autowired
   public UserProfileController(UserProfileService userProfileService, ExperienceService experienceService, SuggestionService suggestionService) {
