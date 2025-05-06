@@ -22,16 +22,21 @@ public class ExperiencePrivacySettings {
   @Column(nullable = false)
   private boolean allowResonates = true;
 
+  @Column(nullable = false)
+  private boolean allowSaves = true;
+
   public ExperiencePrivacySettings() {}
 
   public ExperiencePrivacySettings(Experience experience,
                                    boolean allowComments,
                                    boolean allowForks,
-                                   boolean allowResonates) {
+                                   boolean allowResonates,
+                                   boolean allowSaves) {
     this.experience = experience;
     this.allowComments = allowComments;
     this.allowForks = allowForks;
     this.allowResonates = allowResonates;
+    this.allowSaves = allowSaves;
   }
 
   public boolean areCommentsAllowed(){
@@ -44,6 +49,10 @@ public class ExperiencePrivacySettings {
 
   public boolean areResonatesAllowed(){
     return allowResonates;
+  }
+
+  public boolean areSavesAllowed() {
+    return allowSaves;
   }
 
   public Experience getExperience() {

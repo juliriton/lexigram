@@ -28,7 +28,6 @@
     private final SuggestionService suggestionService;
     @Value("${lexigram.upload.dir}")
     private String uploadDir;
-
     private final UserProfileService userProfileService;
 
     @Autowired

@@ -113,7 +113,8 @@ public class ExperienceService {
         experience,
         privacySettingsDTO.getAllowComments(),
         privacySettingsDTO.getAllowForks(),
-        privacySettingsDTO.getAllowResonates()
+        privacySettingsDTO.getAllowResonates(),
+        privacySettingsDTO.getAllowSaves()
     );
     experiencePrivacySettingsRepository.save(privacy);
     experience.setPrivacySettings(privacy);

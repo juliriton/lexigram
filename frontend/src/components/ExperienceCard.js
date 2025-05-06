@@ -13,7 +13,6 @@ const ExperienceCard = ({
                             toggleQuote,
                             showMentions,
                             setShowMentions,
-                            renderMentions,
                             formatDate,
                             onDelete,
                             isOwner

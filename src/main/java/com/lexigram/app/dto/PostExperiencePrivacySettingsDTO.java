@@ -13,12 +13,19 @@ public class PostExperiencePrivacySettingsDTO {
   @NotNull
   private boolean allowResonates;
 
+  @NotNull
+  private boolean allowSaves;
+
   public PostExperiencePrivacySettingsDTO() {}
 
-  public PostExperiencePrivacySettingsDTO(boolean allowComments, boolean allowForks, boolean allowResonates) {
+  public PostExperiencePrivacySettingsDTO(boolean allowComments,
+                                          boolean allowForks,
+                                          boolean allowResonates,
+                                          boolean allowSaves) {
     this.allowComments = allowComments;
     this.allowForks = allowForks;
     this.allowResonates = allowResonates;
+    this.allowSaves = allowSaves;
   }
 
   public boolean getAllowComments(){ return allowComments; }
@@ -30,5 +37,7 @@ public class PostExperiencePrivacySettingsDTO {
   public boolean getAllowResonates(){
     return allowResonates;
   }
+
+  public boolean getAllowSaves() { return allowSaves; }
 
 }
