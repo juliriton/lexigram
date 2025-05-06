@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { FaPhotoVideo, FaTrash } from 'react-icons/fa';
+import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaTag, FaUserTag } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
+import EditExperienceModal from './EditExperienceModal';
 import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
@@ -23,33 +24,68 @@ const ExperienceCard = ({
     const isQuoteHidden = hiddenQuotes[postId];
     const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
     const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
-    const isVideo = url => /\.(mp4|webm|ogg)$/i.test(url);
+    const isVideo = url => url && /\.(mp4|webm|ogg)$/i.test(url);
 
+    // Estados para la UI
     const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
+    const [showOptions, setShowOptions] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [updatedPost, setUpdatedPost] = useState(post);
+    const [showFullRefl, setShowFullRefl] = useState(false);
+    const [showAllTags, setShowAllTags] = useState(false);
 
+    // Cálculos para el texto
     const quoteFontSize = useMemo(() => {
-        const f = post.style?.fontSize || 20;
+        const f = updatedPost.style?.fontSize || 20;
         return Math.min(Math.max(f, 8), 30);
-    }, [post.style]);
+    }, [updatedPost.style]);
 
-    const rawQuote = post.quote || post.title || '';
+    const rawQuote = updatedPost.quote || updatedPost.title || '';
     const quotePreviewLen = 30;
     const needsQuoteTruncate = rawQuote.length > quotePreviewLen;
     const quotePreview = rawQuote.slice(0, quotePreviewLen) + (needsQuoteTruncate ? '…' : '');
 
-    const reflectionText = post.reflection || post.content || '';
+    const reflectionText = updatedPost.reflection || updatedPost.content || '';
     const reflPreviewLen = 20;
     const needsReflTruncate = reflectionText.length > reflPreviewLen;
     const reflPreview = reflectionText.slice(0, reflPreviewLen) + (needsReflTruncate ? '…' : '');
-    const [showFullRefl, setShowFullRefl] = useState(false);
 
-    const allTags = (post.tags || []).slice(0, 20);
+    // Manejo de tags
+    const allTags = (updatedPost.tags || []).slice(0, 20);
     const inlineTags = allTags.slice(0, 5);
     const extraTags = allTags.slice(5);
-    const [showAllTags, setShowAllTags] = useState(false);
+
+    // Manejadores de eventos
+    const toggleMentions = () => {
+        setShowMentions(prev => ({
+            ...prev,
+            [postId]: !prev[postId]
+        }));
+    };
+
+    const toggleOptions = (e) => {
+        e.stopPropagation();
+        setShowOptions(!showOptions);
+    };
+
+    const handleEdit = (e) => {
+        e.stopPropagation();
+        setShowOptions(false);
+        setShowEditModal(true);
+    };
+
+    const handleDelete = (e) => {
+        e.stopPropagation();
+        setShowOptions(false);
+        onDelete();
+    };
+
+    const handlePostUpdate = (updatedExperience) => {
+        setUpdatedPost(updatedExperience);
+    };
 
     const navigateToUserProfile = (profileUuid) => {
-        const targetUuid = profileUuid || post.user.uuid;
+        const targetUuid = profileUuid || updatedPost.user?.uuid;
 
         if (!user) {
             if (location.pathname === `/profile/${targetUuid}`) {
@@ -61,10 +97,8 @@ const ExperienceCard = ({
 
         if (targetUuid) {
             const targetPath = `/profile/${targetUuid}`;
-            if (location.pathname === targetPath) {
-                return;
-            } else {
-                navigate(targetPath)
+            if (location.pathname !== targetPath) {
+                navigate(targetPath);
             }
         }
     };
@@ -74,19 +108,17 @@ const ExperienceCard = ({
             navigate('/login');
             return;
         }
-
         navigate(`/profile/${mentionUuid}`);
     };
 
-    // Custom renderMentions function for this component
-    const renderMentionsInCard = (mentions) => {
+    // Renderizado de menciones
+    const renderMentions = (mentions) => {
         if (!Array.isArray(mentions) || mentions.length === 0) {
             return null;
         }
 
         return (
             <div className="post-mentions">
-                <h6>Mentions:</h6>
                 <div className="mentions-list">
                     {mentions.map((mention, i) => (
                         <span
@@ -105,6 +137,15 @@ const ExperienceCard = ({
     return (
         <>
             <div className="experience-card">
+                {showEditModal && (
+                    <EditExperienceModal
+                        experience={updatedPost}
+                        onClose={() => setShowEditModal(false)}
+                        onUpdate={handlePostUpdate}
+                        baseApiUrl={baseApiUrl}
+                    />
+                )}
+
                 {fullMediaUrl && (
                     <div className="media-wrapper">
                         {isVideo(mediaUrl)
@@ -115,7 +156,7 @@ const ExperienceCard = ({
                             />
                             : <img
                                 src={fullMediaUrl}
-                                alt={post.title}
+                                alt={updatedPost.title}
                                 className={`media-element ${!isQuoteHidden ? 'blur-media' : ''}`}
                             />
                         }
@@ -124,8 +165,8 @@ const ExperienceCard = ({
                             <div
                                 className="quote-overlay"
                                 style={{
-                                    left: `${post.style?.textPositionX || 50}%`,
-                                    top: `${post.style?.textPositionY || 50}%`,
+                                    left: `${updatedPost.style?.textPositionX || 50}%`,
+                                    top: `${updatedPost.style?.textPositionY || 50}%`,
                                     transform: 'translate(-50%, -50%)'
                                 }}
                             >
@@ -133,8 +174,8 @@ const ExperienceCard = ({
                                     className="quote-text"
                                     style={{
                                         fontSize: `${quoteFontSize}px`,
-                                        fontFamily: post.style?.fontFamily || 'inherit',
-                                        color: post.style?.fontColor || '#fff'
+                                        fontFamily: updatedPost.style?.fontFamily || 'inherit',
+                                        color: updatedPost.style?.fontColor || '#fff'
                                     }}
                                 >
                                     "{quotePreview}"
@@ -153,18 +194,43 @@ const ExperienceCard = ({
                 )}
 
                 <div className="content">
-                    <div className="badges">
-                        <span className="badge exp-badge">
-                            <FaPhotoVideo /> Experience
-                        </span>
-                        {post.origin && (
-                            <span className="badge orig-badge">
-                                <FaStar /> Origin
+                    <div className="header-row">
+                        <div className="badges">
+                            <span className="badge exp-badge">
+                                <FaPhotoVideo /> Experience
                             </span>
+                            {updatedPost.origin && (
+                                <span className="badge orig-badge">
+                                    <FaStar /> Origin
+                                </span>
+                            )}
+                        </div>
+
+                        {isOwner && (
+                            <div className="post-options">
+                                <button
+                                    className="options-btn"
+                                    onClick={toggleOptions}
+                                    aria-label="Post options"
+                                >
+                                    <FaEllipsisH />
+                                </button>
+
+                                {showOptions && (
+                                    <div className="options-dropdown">
+                                        <button onClick={handleEdit} className="option-item">
+                                            <FaEdit /> Edit
+                                        </button>
+                                        <button onClick={handleDelete} className="option-item delete">
+                                            <FaTrash /> Delete
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
 
-                    <h3 className="title">{post.title}</h3>
+                    <h3 className="title">{updatedPost.title}</h3>
 
                     <div className="reflection-section">
                         <div className="reflection-text">
@@ -184,22 +250,12 @@ const ExperienceCard = ({
                         <button
                             className="username-link-btn"
                             onClick={() => navigateToUserProfile()}
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                padding: 0,
-                                color: '#0d6efd',
-                                textDecoration: 'underline',
-                                cursor: 'pointer',
-                                fontWeight: 'normal',
-                                fontSize: 'inherit'
-                            }}
                         >
                             @{username}
                         </button>
 
-                        {post.creationDate && (
-                            <span className="date">{formatDate(post.creationDate)}</span>
+                        {updatedPost.creationDate && (
+                            <span className="date">{formatDate(updatedPost.creationDate)}</span>
                         )}
                     </div>
 
@@ -229,31 +285,44 @@ const ExperienceCard = ({
                         >
                             {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
                         </button>
-                        {post.mentions?.length > 0 && (
+                        {updatedPost.mentions?.length > 0 && (
                             <button
                                 className="btn btn-sm btn-outline-secondary"
-                                onClick={() =>
-                                    setShowMentions(p => ({ ...p, [postId]: !p[postId] }))
-                                }
+                                onClick={toggleMentions}
                             >
                                 {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
                             </button>
                         )}
-                        {isOwner && (
-                            <button
-                                className="btn btn-sm btn-outline-danger ms-auto"
-                                onClick={onDelete}
-                            >
-                                <FaTrash /> Delete
-                            </button>
-                        )}
                     </div>
 
-                    {post.mentions?.length > 0 && showMentions[postId] && (
+                    {updatedPost.mentions?.length > 0 && showMentions[postId] && (
                         <div className="mentions">
-                            {renderMentionsInCard(post.mentions)}
+                            <div className="mentions-header">
+                                <FaUserTag className="mention-icon" />
+                                <h6>Mentions:</h6>
+                            </div>
+                            {renderMentions(updatedPost.mentions)}
                         </div>
                     )}
+
+                    <div className="post-stats">
+                        <div className="stat-item">
+                            <span className="stat-label">Resonates:</span>
+                            <span className="stat-value">{updatedPost.resonatesAmount || 0}</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="stat-label">Comments:</span>
+                            <span className="stat-value">{updatedPost.commentAmount || 0}</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="stat-label">Saved:</span>
+                            <span className="stat-value">{updatedPost.saveAmount || 0}</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="stat-label">Branches:</span>
+                            <span className="stat-value">{updatedPost.branchAmount || 0}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -267,8 +336,8 @@ const ExperienceCard = ({
                             className="modal-quote-text"
                             style={{
                                 fontSize: `${quoteFontSize}px`,
-                                fontFamily: post.style?.fontFamily || 'inherit',
-                                color: post.style?.fontColor || '#000'
+                                fontFamily: updatedPost.style?.fontFamily || 'inherit',
+                                color: updatedPost.style?.fontColor || '#000'
                             }}
                         >
                             "{rawQuote}"
