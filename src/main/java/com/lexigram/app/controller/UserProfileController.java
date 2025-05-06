@@ -149,7 +149,7 @@ public class UserProfileController {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-      if (!"image/jpeg".equalsIgnoreCase(file.getContentType())) {
+    if (!"image/jpeg".equalsIgnoreCase(file.getContentType())) {
         return ResponseEntity
             .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
             .body("Only JPG/JPEG images are allowed");
