@@ -182,10 +182,10 @@ const ExperienceCard = ({
                                 </div>
                                 {needsQuoteTruncate && (
                                     <button
-                                        className="overlay-btn"
+                                        className="view-full-quote-btn"
                                         onClick={() => setQuoteModalOpen(true)}
                                     >
-                                        View Full
+                                        View Full Quote
                                     </button>
                                 )}
                             </div>
@@ -219,10 +219,10 @@ const ExperienceCard = ({
                                 {showOptions && (
                                     <div className="options-dropdown">
                                         <button onClick={handleEdit} className="option-item">
-                                            <FaEdit /> Edit
+                                            <FaEdit size={14} /> <span>Edit</span>
                                         </button>
                                         <button onClick={handleDelete} className="option-item delete">
-                                            <FaTrash /> Delete
+                                            <FaTrash size={14} /> <span>Delete</span>
                                         </button>
                                     </div>
                                 )}
@@ -342,6 +342,21 @@ const ExperienceCard = ({
                         >
                             "{rawQuote}"
                         </div>
+
+                        {isOwner && (
+                            <div className="edit-quote-btn-container">
+                                <button
+                                    className="edit-quote-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setQuoteModalOpen(false);
+                                        setShowEditModal(true);
+                                    }}
+                                >
+                                    <FaEdit size={14} /> Edit Quote
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

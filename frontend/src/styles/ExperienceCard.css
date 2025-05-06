@@ -43,18 +43,35 @@
     white-space: normal;
 }
 
-.overlay-btn {
+/* Botón "Ver cita completa" mejorado */
+.view-full-quote-btn {
     background: rgba(0,0,0,0.6);
     color: #fff;
     border: none;
-    margin-top: 8px;
-    padding: 4px 8px;
-    border-radius: 4px;
+    margin-top: 10px;
+    padding: 6px 12px;
+    border-radius: 20px;
     cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.view-full-quote-btn:hover {
+    background: rgba(0,0,0,0.8);
 }
 
 .content {
     padding-bottom: 16px;
+}
+
+/* Header row con flexbox para posicionar elementos */
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 12px;
 }
 
 .badges {
@@ -80,6 +97,68 @@
     padding: 4px 10px;
     border-radius: 12px;
     font-size: .8rem;
+}
+
+/* Estilos mejorados para el menú de opciones */
+.post-options {
+    position: relative;
+    margin-right: 16px;
+    margin-top: 12px;
+}
+
+.options-btn {
+    background: none;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    color: #666;
+}
+
+.options-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.options-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 120px;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.option-item:hover {
+    background-color: #f7f7f7;
+}
+
+.option-item.delete {
+    color: #dc3545;
+}
+
+.option-item.delete:hover {
+    background-color: #fff0f0;
 }
 
 .title {
@@ -149,12 +228,50 @@
     cursor: pointer;
 }
 
+/* Estilos para estadísticas del post */
+.post-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 8px 16px;
+    border-top: 1px solid #eee;
+    margin-top: 12px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.stat-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333;
+}
+
 /* Mention styles from RelationshipProfilePage.css */
 .mentions {
     padding: 12px 16px;
     background: #F7F9FA;
     border-radius: 10px;
     margin: 0 16px 16px;
+}
+
+.mentions-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.mention-icon {
+    color: #555;
 }
 
 .post-mentions {
@@ -229,11 +346,12 @@
     color: #0a58ca;
 }
 
+/* Modal mejorado */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.7);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -245,23 +363,60 @@
     border-radius: 16px;
     padding: 24px;
     max-width: 90%;
+    width: 600px;
     max-height: 80vh;
     overflow-y: auto;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     position: relative;
 }
 
 .modal-close {
     position: absolute;
-    top: 12px;
-    right: 16px;
+    top: 10px;
+    right: 10px;
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 24px;
     cursor: pointer;
+    color: #666;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+}
+
+.modal-close:hover {
+    background-color: #f0f0f0;
 }
 
 .modal-quote-text {
     white-space: pre-wrap;
     word-wrap: break-word;
+    padding: 16px 8px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.edit-quote-btn {
+    margin-top: 24px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s ease;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.edit-quote-btn:hover {
+    background-color: #3a7bc8;
 }
