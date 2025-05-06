@@ -1,0 +1,284 @@
+.edit-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.edit-experience-modal {
+    width: 90%;
+    max-width: 700px;
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modal-fade-in 0.3s ease-in-out;
+}
+
+@keyframes modal-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.edit-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.edit-modal-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.close-modal-btn:hover {
+    color: #333;
+}
+
+.form-toggle-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.toggle-button {
+    display: flex;
+    align-items: center;
+    background-color: #f3f3f3;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.toggle-button span {
+    margin-left: 0.5rem;
+}
+
+.toggle-button:hover {
+    background-color: #e6e6e6;
+}
+
+.toggle-button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.form-section {
+    margin-bottom: 1.5rem;
+}
+
+.quote-section,
+.reflection-section,
+.tags-section,
+.mentions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.edit-experience-modal textarea,
+.edit-experience-modal input[type="text"] {
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.edit-experience-modal textarea:focus,
+.edit-experience-modal input[type="text"]:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.edit-experience-modal small {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.tag-input-container,
+.mention-search-container {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tag-input-container input,
+.mention-search-container input {
+    flex: 1;
+}
+
+.tag-input-container button,
+.mention-search-container button {
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.tag-input-container button:hover,
+.mention-search-container button:hover {
+    background-color: #0069d9;
+}
+
+.tags-list,
+.mentions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.tag-item,
+.mention-item {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0;
+    padding: 0.4rem 0.75rem;
+    border-radius: 20px;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.tag-item button,
+.mention-item button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.tag-item button:hover,
+.mention-item button:hover {
+    color: #d9534f;
+}
+
+.mention-results {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+}
+
+.mention-result-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.mention-result-item:hover {
+    background-color: #f0f0f0;
+}
+
+.mentions-list h4 {
+    margin: 0.5rem 0;
+    width: 100%;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    justify-content: flex-end;
+}
+
+.cancel-btn {
+    padding: 0.6rem 1.25rem;
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.cancel-btn:hover {
+    background-color: #e5e5e5;
+}
+
+.submit-btn {
+    padding: 0.6rem 1.25rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-weight: 500;
+}
+
+.submit-btn:hover {
+    background-color: #0069d9;
+}
+
+.submit-btn:disabled,
+.cancel-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.alert {
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}

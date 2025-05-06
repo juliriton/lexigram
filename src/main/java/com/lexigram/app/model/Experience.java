@@ -82,7 +82,10 @@ public class Experience {
   )
   private Set<User> mentions = new HashSet<>();
 
-  public Experience() {}
+  public Experience() {
+    this.uuid = UUID.randomUUID();
+    this.mentions = new HashSet<>();
+  }
 
   public Experience(User user,
                      Set<User> mentions,
@@ -178,4 +181,19 @@ public class Experience {
   }
 
 
+  public void setQuote(String quote) {
+    this.quote = quote;
+  }
+
+  public void setReflection(String reflection) {
+    this.reflection = reflection;
+  }
+
+  public void setTags(Set<Tag> tags) {
+    this.tags = tags;
+  }
+
+  public void setMentions(Set<User> mentions) {
+    this.mentions = mentions != null ? mentions : new HashSet<>();
+  }
 }
