@@ -1,5 +1,9 @@
-package com.lexigram.app.model;
+package com.lexigram.app.model.experience;
 
+import com.lexigram.app.model.Comment;
+import com.lexigram.app.model.Tag;
+import com.lexigram.app.model.resonate.Resonate;
+import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
 
 import java.util.*;
@@ -30,23 +34,26 @@ public class Experience {
   private long creationDate;
 
   @Column(nullable = false)
-  private long resonatesAmount = 0;
+  private long resonatesAmount;
 
   @Column(nullable = false)
-  private long commentAmount = 0;
+  private long commentAmount;
 
   @Column(nullable = false)
-  private long saveAmount = 0;
+  private long saveAmount;
 
   @Column(nullable = false)
-  private long branchAmount = 0;
+  private long branchAmount;
 
   @Column(nullable = false)
-  private boolean isOrigin = true;
+  private boolean isOrigin;
 
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
+
+  @OneToMany(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Resonate> resonates = new HashSet<>();
 
   @OneToMany(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Comment> comments = new HashSet<>();
@@ -59,13 +66,12 @@ public class Experience {
   )
   private Set<Tag> tags = new HashSet<>();
 
-
   @ManyToOne
   @JoinColumn(name = "origin_id", referencedColumnName = "id", nullable = true)
   private Experience origin;
 
   @OneToMany(mappedBy = "origin", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Experience> forks = new ArrayList<>();
+  private List<Experience> branches;
   
   @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "style_id", referencedColumnName = "id")
@@ -80,7 +86,7 @@ public class Experience {
       joinColumns = @JoinColumn(name = "experience_id"),
       inverseJoinColumns = @JoinColumn(name = "user_id")
   )
-  private Set<User> mentions = new HashSet<>();
+  private Set<User> mentions;
 
   public Experience() {
     this.uuid = UUID.randomUUID();
@@ -144,6 +150,10 @@ public class Experience {
     return user;
   }
 
+  public Set<Resonate> getResonates(){
+    return resonates;
+  }
+
   public Set<Comment> getComments() {
     return comments;
   }
@@ -152,8 +162,8 @@ public class Experience {
     return tags;
   }
 
-  public List<Experience> getForks() {
-    return forks;
+  public List<Experience> getBranches() {
+    return branches;
   }
 
   public ExperienceStyle getStyle() {
@@ -176,10 +186,13 @@ public class Experience {
     this.privacySettings = privacySettings;
   }
 
+  public void setIsOrigin(Boolean isOrigin) {
+    this.isOrigin = isOrigin;
+  }
+
   public void setOrigin(Experience origin) {
     this.origin = origin;
   }
-
 
   public void setQuote(String quote) {
     this.quote = quote;
@@ -196,4 +209,27 @@ public class Experience {
   public void setMentions(Set<User> mentions) {
     this.mentions = mentions != null ? mentions : new HashSet<>();
   }
+
+  public void addResonate(Resonate resonate){
+    resonates.add(resonate);
+    resonatesAmount +=1;
+  }
+
+  public void removeResonate(){
+
+  }
+
+  public void addSave(){
+    saveAmount +=1;
+  }
+
+  public void addBranch(){
+    branchAmount +=1;
+  }
+
+  public void addComment(Comment comment){
+    comments.add(comment);
+    commentAmount +=1;
+  }
+
 }

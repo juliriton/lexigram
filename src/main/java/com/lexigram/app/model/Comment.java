@@ -1,5 +1,7 @@
 package com.lexigram.app.model;
 
+import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -38,6 +40,7 @@ public class Comment {
   @Column(nullable = false)
   private long creationDate;
 
+  @Column(nullable = false)
   private long resonatesCount = 0;
 
 

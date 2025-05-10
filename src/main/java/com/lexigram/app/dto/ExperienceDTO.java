@@ -1,9 +1,9 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.Experience;
+import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.Tag;
-import com.lexigram.app.model.User;
-import com.lexigram.app.model.UserProfile;
+import com.lexigram.app.model.user.User;
+import com.lexigram.app.model.user.UserProfile;
 
 import java.util.*;
 

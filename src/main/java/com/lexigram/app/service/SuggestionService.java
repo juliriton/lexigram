@@ -5,7 +5,7 @@ import com.lexigram.app.dto.PostSuggestionDTO;
 import com.lexigram.app.dto.SuggestionDTO;
 import com.lexigram.app.model.Suggestion;
 import com.lexigram.app.model.Tag;
-import com.lexigram.app.model.User;
+import com.lexigram.app.model.user.User;
 import com.lexigram.app.repository.SuggestionRepository;
 import com.lexigram.app.repository.TagRepository;
 import com.lexigram.app.repository.UserRepository;

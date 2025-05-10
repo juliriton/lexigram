@@ -1,6 +1,6 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.ExperienceStyle;
+import com.lexigram.app.model.experience.ExperienceStyle;
 
 public class ExperienceStyleDTO {
 

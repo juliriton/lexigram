@@ -3,11 +3,13 @@ package com.lexigram.app.service;
 import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.model.*;
+import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.experience.ExperiencePrivacySettings;
+import com.lexigram.app.model.experience.ExperienceStyle;
+import com.lexigram.app.model.resonate.Resonate;
+import com.lexigram.app.model.user.User;
 import com.lexigram.app.repository.*;
 import jakarta.transaction.Transactional;
-import org.apache.commons.logging.Log;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,18 +31,21 @@ public class ExperienceService {
   private final TagRepository tagRepository;
   private final ExperienceStyleRepository experienceStyleRepository;
   private final ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository;
+  private final ResonateRepository resonateRepository;
 
   @Autowired
   public ExperienceService(ExperienceRepository experienceRepository,
                            UserRepository userRepository,
                            TagRepository tagRepository,
                            ExperienceStyleRepository experienceStyleRepository,
-                           ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository) {
+                           ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository,
+                           ResonateRepository resonateRepository) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
     this.experienceStyleRepository = experienceStyleRepository;
     this.experiencePrivacySettingsRepository = experiencePrivacySettingsRepository;
+    this.resonateRepository = resonateRepository;
   }
 
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
@@ -290,14 +295,65 @@ public class ExperienceService {
   }
 
   public Optional<ExperienceDTO> resonateExperience(Long id, UUID uuid) {
-    return null;
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    if (experience.getResonates().contains(user)) {
+      throw new UnsupportedOperationException();
+    }
+
+    Resonate resonate = new Resonate(user);
+    resonate.setExperience(experience);
+
+    resonateRepository.save(resonate);
+
+    experience.addResonate(resonate);
+
+    experienceRepository.save(experience);
+    userRepository.save(user);
+
+    return Optional.of(new ExperienceDTO(experience));
   }
 
 
   public Optional<ExperienceDTO> unResonateExperience(Long id, UUID uuid) {
-    return null;
-  }
+    Optional<User> userOptional = userRepository.findById(id);
 
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    if (experience.getResonates().contains(user)) {
+      resonateRepository.deleteByUserAndExperience(user, experience);
+
+      userRepository.save(user);
+      experienceRepository.save(experience);
+      return Optional.of(new ExperienceDTO(experience));
+    }
+
+    throw new UnsupportedOperationException();
+  }
 
   public Optional<ExperienceDTO> commentExperience(Long id, UUID uuid, PostCommentDTO comment) {
     return null;
@@ -325,7 +381,7 @@ public class ExperienceService {
 
 
   public String getExperienceLink(UUID uuid) {
-    return null;
+    return "https://lexigram.app/experience/" + uuid.toString();
   }
 
 }
