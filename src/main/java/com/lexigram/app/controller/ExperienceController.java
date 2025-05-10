@@ -131,7 +131,7 @@ public class ExperienceController {
   public ResponseEntity<ExperienceDTO> forkExperience(HttpSession session,
                                                       @PathVariable UUID uuid,
                                                       @RequestBody ForkExperienceDTO fork,
-                                                      MultipartFile file) throws IOException {
+                                                      @RequestPart(value = "file", required = true) MultipartFile file) throws IOException {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 

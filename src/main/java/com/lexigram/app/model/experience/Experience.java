@@ -75,7 +75,7 @@ public class Experience {
   private Experience origin;
 
   @OneToMany(mappedBy = "origin", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Experience> branches;
+  private Set<Experience> branches;
   
   @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "style_id", referencedColumnName = "id")
@@ -168,7 +168,7 @@ public class Experience {
     return tags;
   }
 
-  public List<Experience> getBranches() {
+  public Set<Experience> getBranches() {
     return branches;
   }
 

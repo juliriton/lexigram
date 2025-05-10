@@ -1,13 +1,15 @@
 package com.lexigram.app.controller;
 
-import com.lexigram.app.dto.ForkSuggestionDTO;
+import com.lexigram.app.dto.PostExperienceDTO;
 import com.lexigram.app.dto.SuggestionDTO;
 import com.lexigram.app.service.SuggestionService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,12 +56,15 @@ public class SuggestionController {
 
   }
 
-  @PutMapping("experience/{uuid}/fork")
-  public ResponseEntity<SuggestionDTO> forkExperience(HttpSession session, @PathVariable UUID uuid, @RequestBody ForkSuggestionDTO fork) {
+  @PutMapping(value = "suggestion/{uuid}/reply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<SuggestionDTO> replySuggestion(HttpSession session,
+                                                       @PathVariable UUID uuid,
+                                                       @RequestBody PostExperienceDTO experienceDTO,
+                                                       @RequestPart(value = "file", required = true) MultipartFile file) throws IOException {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    Optional<SuggestionDTO> optionalSuggestionDTO = suggestionService.forkSuggestion(id, uuid, fork);
+    Optional<SuggestionDTO> optionalSuggestionDTO = suggestionService.replySuggestion(id, uuid, experienceDTO, file);
 
     if (optionalSuggestionDTO.isPresent()) {
       SuggestionDTO suggestionDTO = optionalSuggestionDTO.get();
@@ -70,7 +75,7 @@ public class SuggestionController {
 
   }
 
-  @PutMapping("experience/{uuid}/save")
+  @PutMapping("suggestion/{uuid}/save")
   public ResponseEntity<SuggestionDTO> saveSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();

@@ -1,17 +1,20 @@
 package com.lexigram.app.service;
 
-import com.lexigram.app.dto.ForkSuggestionDTO;
-import com.lexigram.app.dto.PostSuggestionDTO;
-import com.lexigram.app.dto.SuggestionDTO;
+import com.lexigram.app.dto.*;
+import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.model.Suggestion;
 import com.lexigram.app.model.Tag;
+import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.user.User;
+import com.lexigram.app.repository.ExperienceRepository;
 import com.lexigram.app.repository.SuggestionRepository;
 import com.lexigram.app.repository.TagRepository;
 import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -21,16 +24,20 @@ import java.util.UUID;
 public class SuggestionService {
 
   private final UserRepository userRepository;
+  private final ExperienceService experienceService;
+  private final ExperienceRepository experienceRepository;
   private SuggestionRepository suggestionRepository;
   private TagRepository tagRepository;
 
   @Autowired
   public SuggestionService(SuggestionRepository suggestionRepository,
                            UserRepository userRepository,
-                           TagRepository tagRepository) {
+                           TagRepository tagRepository, ExperienceService experienceService, ExperienceRepository experienceRepository) {
     this.suggestionRepository = suggestionRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
+    this.experienceService = experienceService;
+    this.experienceRepository = experienceRepository;
   }
 
   public SuggestionDTO createSuggestion(Long id, PostSuggestionDTO postSuggestionDTO) {
@@ -134,13 +141,35 @@ public class SuggestionService {
     return null;
   }
 
+  public Optional<SuggestionDTO> replySuggestion(Long id, UUID uuid, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+    ExperienceDTO replyDTO = experienceService.createExperience(id, postExperienceDTO, file);
+
+    Experience reply = experienceRepository.findByUuid(replyDTO.getUuid()).get();
+
+    suggestion.addReply(reply);
+    suggestionRepository.save(suggestion);
+    userRepository.save(user);
+
+    return Optional.of(new SuggestionDTO(suggestion));
+
+  }
+
   public String getSuggestionLink(UUID uuid) {
-    return null;
+    return "https://lexigram.app/suggestion/" + uuid.toString();
   }
-
-  public Optional<SuggestionDTO> forkSuggestion(Long id, UUID uuid, ForkSuggestionDTO fork) {
-    return null;
-  }
-
 
 }

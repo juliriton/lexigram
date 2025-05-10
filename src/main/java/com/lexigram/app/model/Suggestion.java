@@ -1,10 +1,12 @@
 package com.lexigram.app.model;
 
+import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,6 +31,13 @@ public class Suggestion {
   @Column(nullable = false, columnDefinition = "Text", updatable = false)
   private String body;
 
+  @ManyToOne
+  @JoinColumn(name = "suggestion_id")
+  private Suggestion suggestion;
+
+  @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Experience> replies;
+
   @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Resonate> resonates = new HashSet<>();
 
@@ -39,7 +48,7 @@ public class Suggestion {
   private long resonateAmount = 0;
 
   @Column(nullable = false)
-  private long experienceAmount = 0;
+  private long replyAmount = 0;
 
   @Column(nullable = false)
   private long creationDate;
@@ -76,12 +85,16 @@ public class Suggestion {
     return header;
   }
 
+  public Set<Experience> getReplies() {
+    return replies;
+  }
+
   public long getResonatesAmount() {
     return resonateAmount;
   }
 
   public long getExperienceAmount() {
-    return experienceAmount;
+    return replyAmount;
   }
 
   public long getCreationDate() {
@@ -100,4 +113,8 @@ public class Suggestion {
     return body;
   }
 
+  public void addReply(Experience experience) {
+    replies.add(experience);
+    replyAmount+=1;
+  }
 }
