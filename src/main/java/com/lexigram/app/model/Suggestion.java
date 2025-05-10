@@ -45,10 +45,13 @@ public class Suggestion {
   private Set<Save> saves = new HashSet<>();
 
   @Column(nullable = false)
-  private long resonateAmount = 0;
+  private long resonateAmount;
 
   @Column(nullable = false)
-  private long replyAmount = 0;
+  private long saveAmount;
+
+  @Column(nullable = false)
+  private long replyAmount;
 
   @Column(nullable = false)
   private long creationDate;
@@ -117,4 +120,19 @@ public class Suggestion {
     replies.add(experience);
     replyAmount+=1;
   }
+
+  public Set<Save> getSaves(){
+    return saves;
+  }
+
+  public void addSave(Save save) {
+    saves.add(save);
+    saveAmount += 1;
+  }
+
+  public void addResonate(Resonate resonate) {
+    resonates.add(resonate);
+    resonateAmount+=1;
+  }
+
 }

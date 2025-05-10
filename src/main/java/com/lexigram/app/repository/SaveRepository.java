@@ -11,5 +11,7 @@ import java.util.UUID;
 public interface SaveRepository extends JpaRepository<Save, Long> {
   Optional<Save> findByExperienceUuidAndUserId(UUID uuid, Long id);
   void deleteByExperienceUuidAndUserId(UUID uuid, Long id);
+  Optional<Save> findBySuggestionUuidAndUserId(UUID uuid, Long id);
+  void deleteBySuggestionUuidAndUserId(UUID uuid, Long id);
 }
 

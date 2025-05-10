@@ -2,14 +2,13 @@ package com.lexigram.app.service;
 
 import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.UserNotFoundException;
+import com.lexigram.app.model.Save;
 import com.lexigram.app.model.Suggestion;
 import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
-import com.lexigram.app.repository.ExperienceRepository;
-import com.lexigram.app.repository.SuggestionRepository;
-import com.lexigram.app.repository.TagRepository;
-import com.lexigram.app.repository.UserRepository;
+import com.lexigram.app.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,16 +27,24 @@ public class SuggestionService {
   private final ExperienceRepository experienceRepository;
   private SuggestionRepository suggestionRepository;
   private TagRepository tagRepository;
+  private SaveRepository saveRepository;
+  private ResonateRepository resonateRepository;
 
   @Autowired
   public SuggestionService(SuggestionRepository suggestionRepository,
                            UserRepository userRepository,
-                           TagRepository tagRepository, ExperienceService experienceService, ExperienceRepository experienceRepository) {
+                           TagRepository tagRepository,
+                           ExperienceService experienceService,
+                           ExperienceRepository experienceRepository,
+                           SaveRepository saveRepository,
+                           ResonateRepository resonateRepository) {
     this.suggestionRepository = suggestionRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
     this.experienceService = experienceService;
     this.experienceRepository = experienceRepository;
+    this.saveRepository = saveRepository;
+    this.resonateRepository = resonateRepository;
   }
 
   public SuggestionDTO createSuggestion(Long id, PostSuggestionDTO postSuggestionDTO) {
@@ -126,19 +133,125 @@ public class SuggestionService {
   }
 
   public Optional<SuggestionDTO> resonateSuggestion(Long id, UUID uuid) {
-    return null;
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+    Optional<Resonate> resonateOptional = resonateRepository.findBySuggestionUuidAndUserId(uuid, id);
+
+    if (resonateOptional.isPresent()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Resonate resonate = new Resonate(user);
+    resonate.setSuggestion(suggestion);
+
+    resonateRepository.save(resonate);
+
+    suggestion.addResonate(resonate);
+
+    suggestionRepository.save(suggestion);
+    userRepository.save(user);
+
+    return Optional.of(new SuggestionDTO(suggestion));
   }
 
   public Optional<SuggestionDTO> unResonateSuggestion(Long id, UUID uuid) {
-    return null;
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+    Optional<Resonate> resonateOptional = resonateRepository.findBySuggestionUuidAndUserId(uuid, id);
+
+    if (suggestionOptional.isEmpty() || resonateOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+
+    resonateRepository.deleteBySuggestionUuidAndUserId(uuid, id);
+
+    userRepository.save(user);
+    suggestionRepository.save(suggestion);
+    return Optional.of(new SuggestionDTO(suggestion));
   }
 
   public Optional<SuggestionDTO> saveSuggestion(Long id, UUID uuid) {
-    return null;
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+
+    Optional<Save> saveOptional = saveRepository.findBySuggestionUuidAndUserId(uuid, id);
+
+    if (saveOptional.isPresent()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Save save = new Save(user, suggestion);
+    saveRepository.save(save);
+    suggestion.addSave(save);
+    suggestionRepository.save(suggestion);
+    userRepository.save(user);
+
+    return Optional.of(new SuggestionDTO(suggestion));
   }
 
   public Optional<SuggestionDTO> unSaveSuggestion(Long id, UUID uuid) {
-    return null;
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+
+    Optional<Save> saveOptional = saveRepository.findBySuggestionUuidAndUserId(uuid, id);
+
+    if (saveOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    if (suggestion.getSaves().contains(saveOptional.get())) {
+      saveRepository.deleteBySuggestionUuidAndUserId(uuid, id);
+      suggestionRepository.save(suggestion);
+      userRepository.save(user);
+
+      return Optional.of(new SuggestionDTO(suggestion));
+    }
+
+    throw new UnsupportedOperationException();
   }
 
   public Optional<SuggestionDTO> replySuggestion(Long id, UUID uuid, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {

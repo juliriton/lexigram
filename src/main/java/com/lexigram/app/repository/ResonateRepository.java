@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface ResonateRepository extends JpaRepository<Resonate, Long> {
   void deleteByExperienceUuidAndUserId(UUID uuid, Long id);
   Optional<Resonate> findByExperienceUuidAndUserId(UUID uuid, Long id);
+  Optional<Resonate> findBySuggestionUuidAndUserId(UUID uuid, Long id);
+  void deleteBySuggestionUuidAndUserId(UUID uuid, Long id);
 }
