@@ -101,13 +101,15 @@ public class Experience {
                      Set<User> mentions,
                      Set<Tag> tags,
                      String quote,
-                     String reflection
+                     String reflection,
+                     Boolean isOrigin
                      ){
     this.user = user;
     this.mentions = mentions;
     this.tags = tags;
     this.quote = quote;
     this.reflection = reflection;
+    this.isOrigin = isOrigin;
   }
 
   public Long getId(){

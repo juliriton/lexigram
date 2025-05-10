@@ -87,8 +87,9 @@ public class ExperienceService {
     Experience experience;
     String quote = postExperienceDTO.getQuote();
     String reflection = postExperienceDTO.getReflection();
+    Boolean isOrigin = true;
 
-    experience = new Experience(user, mentions, tags, quote, reflection);
+    experience = new Experience(user, mentions, tags, quote, reflection, isOrigin);
 
     experience = experienceRepository.save(experience);
 
@@ -480,8 +481,98 @@ public class ExperienceService {
 
   }
 
-  public Optional<ExperienceDTO> forkExperience(Long id, UUID uuid, ForkExperienceDTO forkExperienceDTO) {
-    return null;
+  public Optional<ExperienceDTO> forkExperience(Long id, UUID uuid, ForkExperienceDTO forkExperienceDTO, MultipartFile file) throws IOException {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+    ExperiencePrivacySettings expPrivacySettings = experiencePrivacySettingsRepository.findById(experience.getId()).get();
+
+    if (!expPrivacySettings.areForksAllowed()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Set<User> mentions = new HashSet<>();
+    Set<Tag> tags = new HashSet<>();
+
+    if (forkExperienceDTO.getMentions() != null) {
+      for (String username : forkExperienceDTO.getMentions()) {
+        if (username.equals(user.getUsername())) {
+          throw new InvalidObjectException("Cannot mention yourself in a post!");
+        }
+        Optional<User> mention = userRepository.findByUsername(username);
+        if (mention.isPresent()) {
+          mentions.add(mention.get());
+        } else {
+          throw new UserNotFoundException();
+        }
+      }
+    }
+
+    for (String t : forkExperienceDTO.getTags()) {
+      Optional<Tag> tagOptional = tagRepository.findByName(t);
+      if (tagOptional.isPresent()) {
+        tags.add(tagOptional.get());
+      } else {
+        Tag tag = new Tag(t);
+        tagRepository.save(tag);
+        tags.add(tag);
+      }
+    }
+
+    String quote = experience.getQuote();
+    String reflection = forkExperienceDTO.getReflection();
+    Boolean isOrigin = false;
+    PostExperiencePrivacySettingsDTO forkPrivacySettings = forkExperienceDTO.getPostExperiencePrivacySettingsDTO();
+    PostExperienceStyleDTO forkStyle = forkExperienceDTO.getPostExperienceStyleDTO();
+
+    Experience fork = new Experience(user, mentions, tags, quote, reflection, isOrigin);
+    fork.setOrigin(experience);
+
+    if (file != null && !file.isEmpty()) {
+      String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+      File destination = new File(uploadDir + File.separator + fileName);
+      destination.getParentFile().mkdirs();
+      file.transferTo(destination);
+
+      String relativePath = "/images/" + fileName;
+
+      ExperienceStyle style = new ExperienceStyle(
+          fork,
+          forkStyle.getFontFamily(),
+          forkStyle.getFontSize(),
+          forkStyle.getFontColor(),
+          forkStyle.getTextPositionX(),
+          forkStyle.getTextPositionY(),
+          relativePath
+      );
+      experienceStyleRepository.save(style);
+      fork.setStyle(style);
+    }
+
+    ExperiencePrivacySettings privacy = new ExperiencePrivacySettings(
+        fork,
+        forkPrivacySettings.getAllowComments(),
+        forkPrivacySettings.getAllowForks(),
+        forkPrivacySettings.getAllowResonates(),
+        forkPrivacySettings.getAllowSaves()
+    );
+    experiencePrivacySettingsRepository.save(privacy);
+    fork.setPrivacySettings(privacy);
+
+    fork = experienceRepository.save(fork);
+
+    return Optional.of(new ExperienceDTO(fork));
   }
 
 
