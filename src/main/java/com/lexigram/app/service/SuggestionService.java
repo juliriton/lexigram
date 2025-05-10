@@ -1,5 +1,6 @@
 package com.lexigram.app.service;
 
+import com.lexigram.app.dto.ForkSuggestionDTO;
 import com.lexigram.app.dto.PostSuggestionDTO;
 import com.lexigram.app.dto.SuggestionDTO;
 import com.lexigram.app.model.Suggestion;
@@ -116,5 +117,30 @@ public class SuggestionService {
     userRepository.save(user);
     return true;
   }
+
+  public Optional<SuggestionDTO> resonateSuggestion(Long id, UUID uuid) {
+    return null;
+  }
+
+  public Optional<SuggestionDTO> unResonateSuggestion(Long id, UUID uuid) {
+    return null;
+  }
+
+  public Optional<SuggestionDTO> saveSuggestion(Long id, UUID uuid) {
+    return null;
+  }
+
+  public Optional<SuggestionDTO> unSaveSuggestion(Long id, UUID uuid) {
+    return null;
+  }
+
+  public String getSuggestionLink(UUID uuid) {
+    return null;
+  }
+
+  public Optional<SuggestionDTO> forkSuggestion(Long id, UUID uuid, ForkSuggestionDTO fork) {
+    return null;
+  }
+
 
 }

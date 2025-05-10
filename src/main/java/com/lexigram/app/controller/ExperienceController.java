@@ -16,14 +16,14 @@ import java.util.UUID;
 @RequestMapping("/api/auth/me")
 public class ExperienceController {
 
-  @Autowired
-  private ExperienceService experienceService;
+  private final ExperienceService experienceService;
 
+  @Autowired
   public ExperienceController(ExperienceService experienceService) {
     this.experienceService = experienceService;
   }
 
-  @PutMapping("/{uuid}/resonate")
+  @PutMapping("experience/{uuid}/resonate")
   public ResponseEntity<ExperienceDTO> resonateExperience(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -38,7 +38,7 @@ public class ExperienceController {
     return ResponseEntity.status(401).build();
   }
 
-  @PutMapping("/{uuid}/unresonate")
+  @PutMapping("experience/{uuid}/unresonate")
   public ResponseEntity<ExperienceDTO> unResonateExperience(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -52,10 +52,9 @@ public class ExperienceController {
 
     return ResponseEntity.status(401).build();
 
-
   }
 
-  @PutMapping("/{uuid}/comment")
+  @PutMapping("experience/{uuid}/comment")
   public ResponseEntity<ExperienceDTO> commentExperience(HttpSession session, @PathVariable UUID uuid, @RequestBody PostCommentDTO comment) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -71,7 +70,7 @@ public class ExperienceController {
 
   }
 
-  @PutMapping("/{expUuid}/comment/{comUuid}")
+  @PutMapping("experience/{expUuid}/comment/{comUuid}")
   public ResponseEntity<ExperienceDTO> unCommentExperience(HttpSession session, @PathVariable UUID expUuid, @PathVariable UUID comUuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -87,7 +86,7 @@ public class ExperienceController {
 
   }
 
-  @PutMapping("/{uuid}/save")
+  @PutMapping("experience/{uuid}/save")
   public ResponseEntity<ExperienceDTO> saveExperience(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -102,7 +101,7 @@ public class ExperienceController {
     return ResponseEntity.status(401).build();
   }
 
-  @PutMapping("/{uuid}/unSave")
+  @PutMapping("experience/{uuid}/unSave")
   public ResponseEntity<ExperienceDTO> unSaveExperience(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -118,7 +117,7 @@ public class ExperienceController {
 
   }
 
-  @PutMapping("/{uuid}/fork")
+  @PutMapping("experience/{uuid}/fork")
   public ResponseEntity<ExperienceDTO> forkExperience(HttpSession session, @PathVariable UUID uuid, @RequestBody ForkExperienceDTO fork) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -134,7 +133,7 @@ public class ExperienceController {
 
   }
 
-  @GetMapping("/{uuid}/share")
+  @GetMapping("experience/{uuid}/share")
   public ResponseEntity<String> getExperienceLink(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();

@@ -1,0 +1,115 @@
+package com.lexigram.app.controller;
+
+import com.lexigram.app.dto.ForkSuggestionDTO;
+import com.lexigram.app.dto.SuggestionDTO;
+import com.lexigram.app.service.SuggestionService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@RestController
+@RequestMapping("/api/auth/me")
+public class SuggestionController {
+
+  private final SuggestionService suggestionService;
+
+  @Autowired
+  public SuggestionController(SuggestionService suggestionService) {
+    this.suggestionService = suggestionService;
+  }
+
+  @PutMapping("suggestion/{uuid}/resonate")
+  public ResponseEntity<SuggestionDTO> resonateExperience(HttpSession session, @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<SuggestionDTO> optionalSuggestionDTO = suggestionService.resonateSuggestion(id, uuid);
+
+    if (optionalSuggestionDTO.isPresent()) {
+      SuggestionDTO suggestionDTO = optionalSuggestionDTO.get();
+      return ResponseEntity.ok(suggestionDTO);
+    }
+
+    return ResponseEntity.status(401).build();
+  }
+
+  @PutMapping("suggestion/{uuid}/unresonate")
+  public ResponseEntity<SuggestionDTO> unResonateExperience(HttpSession session, @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<SuggestionDTO> optionalSuggestionDTO = suggestionService.unResonateSuggestion(id, uuid);
+
+    if (optionalSuggestionDTO.isPresent()) {
+      SuggestionDTO suggestionDTO = optionalSuggestionDTO.get();
+      return ResponseEntity.ok(suggestionDTO);
+    }
+
+    return ResponseEntity.status(401).build();
+
+  }
+
+  @PutMapping("experience/{uuid}/fork")
+  public ResponseEntity<SuggestionDTO> forkExperience(HttpSession session, @PathVariable UUID uuid, @RequestBody ForkSuggestionDTO fork) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<SuggestionDTO> optionalSuggestionDTO = suggestionService.forkSuggestion(id, uuid, fork);
+
+    if (optionalSuggestionDTO.isPresent()) {
+      SuggestionDTO suggestionDTO = optionalSuggestionDTO.get();
+      return ResponseEntity.ok(suggestionDTO);
+    }
+
+    return ResponseEntity.status(401).build();
+
+  }
+
+  @PutMapping("experience/{uuid}/save")
+  public ResponseEntity<SuggestionDTO> saveSuggestion(HttpSession session, @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<SuggestionDTO> optionalSuggestionDTO = suggestionService.saveSuggestion(id, uuid);
+
+    if (optionalSuggestionDTO.isPresent()) {
+      SuggestionDTO suggestionDTO = optionalSuggestionDTO.get();
+      return ResponseEntity.ok(suggestionDTO);
+    }
+
+    return ResponseEntity.status(401).build();
+  }
+
+  @PutMapping("experience/{uuid}/unSave")
+  public ResponseEntity<SuggestionDTO> unSaveExperience(HttpSession session, @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<SuggestionDTO> optionalSuggestionDTO = suggestionService.unSaveSuggestion(id, uuid);
+
+    if (optionalSuggestionDTO.isPresent()) {
+      SuggestionDTO suggestionDTO = optionalSuggestionDTO.get();
+      return ResponseEntity.ok(suggestionDTO);
+    }
+
+    return ResponseEntity.status(401).build();
+
+  }
+
+  @GetMapping("experience/{uuid}/share")
+  public ResponseEntity<String> getSuggestionLink(HttpSession session, @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    String postLink = suggestionService.getSuggestionLink(uuid);
+
+    return ResponseEntity.ok(postLink);
+
+  }
+
+}
