@@ -1,10 +1,11 @@
 package com.lexigram.app.repository;
 
-import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;
-import com.lexigram.app.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface ResonateRepository extends JpaRepository<Resonate, Long> {
-  void deleteByUserAndExperience(User user, Experience experience);
+  void deleteByExperienceUuidAndUserId(UUID uuid, Long id);
+  Optional<Resonate> findByExperienceUuidAndUserId(UUID uuid, Long id);
 }

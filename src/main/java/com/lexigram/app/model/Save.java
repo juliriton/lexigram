@@ -1,12 +1,11 @@
-package com.lexigram.app.model.resonate;
+package com.lexigram.app.model;
 
 import com.lexigram.app.model.experience.Experience;
-import com.lexigram.app.model.Suggestion;
 import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
 
-@Entity(name = "resonates")
-public class Resonate {
+@Entity(name = "saves")
+public class Save {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,18 +23,23 @@ public class Resonate {
   @JoinColumn(name = "suggestion_id", nullable = false)
   private Suggestion suggestion;
 
-  public Resonate() {}
+  public Save(){}
 
-  public Resonate(User user) {
+  public Save(User user, Experience experience) {
     this.user = user;
-  }
-
-  public void setExperience(Experience experience) {
     this.experience = experience;
   }
-
-  public void setSuggestion(Suggestion suggestion) {
+  public Save(User user, Suggestion suggestion) {
+    this.user = user;
     this.suggestion = suggestion;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
   }
 
   public User getUser() {

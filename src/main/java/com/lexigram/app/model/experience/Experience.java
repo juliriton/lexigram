@@ -1,6 +1,7 @@
 package com.lexigram.app.model.experience;
 
 import com.lexigram.app.model.Comment;
+import com.lexigram.app.model.Save;
 import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
@@ -54,6 +55,9 @@ public class Experience {
 
   @OneToMany(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Resonate> resonates = new HashSet<>();
+
+  @OneToMany(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Save> saves = new HashSet<>();
 
   @OneToMany(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Comment> comments = new HashSet<>();
@@ -210,26 +214,31 @@ public class Experience {
     this.mentions = mentions != null ? mentions : new HashSet<>();
   }
 
-  public void addResonate(Resonate resonate){
+  public void addResonate(Resonate resonate) {
     resonates.add(resonate);
     resonatesAmount +=1;
   }
 
-  public void removeResonate(){
+  public void removeResonate() {
 
   }
 
-  public void addSave(){
+  public void addSave(Save save) {
+    saves.add(save);
     saveAmount +=1;
   }
 
-  public void addBranch(){
+  public void addBranch() {
     branchAmount +=1;
   }
 
-  public void addComment(Comment comment){
+  public void addComment(Comment comment) {
     comments.add(comment);
     commentAmount +=1;
+  }
+
+  public Set<Save> getSaves() {
+    return saves;
   }
 
 }

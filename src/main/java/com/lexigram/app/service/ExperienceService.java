@@ -33,6 +33,7 @@ public class ExperienceService {
   private final ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository;
   private final ResonateRepository resonateRepository;
   private final CommentRepository commentRepository;
+  private final SaveRepository saveRepository;
 
   @Autowired
   public ExperienceService(ExperienceRepository experienceRepository,
@@ -41,7 +42,8 @@ public class ExperienceService {
                            ExperienceStyleRepository experienceStyleRepository,
                            ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository,
                            ResonateRepository resonateRepository,
-                           CommentRepository commentRepository) {
+                           CommentRepository commentRepository,
+                           SaveRepository saveRepository) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
@@ -49,6 +51,7 @@ public class ExperienceService {
     this.experiencePrivacySettingsRepository = experiencePrivacySettingsRepository;
     this.resonateRepository = resonateRepository;
     this.commentRepository = commentRepository;
+    this.saveRepository = saveRepository;
   }
 
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
@@ -312,8 +315,9 @@ public class ExperienceService {
     }
 
     Experience experience = experienceOptional.get();
+    Optional<Resonate> resonateOptional = resonateRepository.findByExperienceUuidAndUserId(uuid, id);
 
-    if (experience.getResonates().contains(user)) {
+    if (resonateOptional.isPresent()) {
       throw new UnsupportedOperationException();
     }
 
@@ -340,22 +344,20 @@ public class ExperienceService {
 
     User user = userOptional.get();
     Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+    Optional<Resonate> resonateOptional = resonateRepository.findByExperienceUuidAndUserId(uuid, id);
 
-    if (experienceOptional.isEmpty()) {
-      return Optional.empty();
+    if (experienceOptional.isEmpty() || resonateOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
     }
 
     Experience experience = experienceOptional.get();
 
-    if (experience.getResonates().contains(user)) {
-      resonateRepository.deleteByUserAndExperience(user, experience);
+    resonateRepository.deleteByExperienceUuidAndUserId(uuid, id);
 
-      userRepository.save(user);
-      experienceRepository.save(experience);
-      return Optional.of(new ExperienceDTO(experience));
-    }
+    userRepository.save(user);
+    experienceRepository.save(experience);
+    return Optional.of(new ExperienceDTO(experience));
 
-    throw new UnsupportedOperationException();
   }
 
   public Optional<ExperienceDTO> commentExperience(Long id, UUID uuid, PostCommentDTO commentDTO) {
@@ -369,7 +371,7 @@ public class ExperienceService {
     Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
 
     if (experienceOptional.isEmpty()) {
-      return Optional.empty();
+      throw new UnsupportedOperationException();
     }
 
     Experience experience = experienceOptional.get();
@@ -399,31 +401,84 @@ public class ExperienceService {
     Optional<Comment> commentOptional = commentRepository.findByUuid(comUuid);
 
     if (experienceOptional.isEmpty() || commentOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    commentRepository.deleteByUuid(comUuid);
+    experienceRepository.save(experience);
+    userRepository.save(user);
+    return Optional.of(new ExperienceDTO(experience));
+
+  }
+
+
+  public Optional<ExperienceDTO> saveExperience(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
       return Optional.empty();
     }
 
     Experience experience = experienceOptional.get();
 
-    if (experience.getComments().contains(user)) {
-      commentRepository.deleteByUuid(comUuid);
-      experienceRepository.save(experience);
-      userRepository.save(user);
-      return Optional.of(new ExperienceDTO(experience));
+    Optional<Save> saveOptional = saveRepository.findByExperienceUuidAndUserId(uuid, id);
+
+    if (saveOptional.isPresent()) {
+      throw new UnsupportedOperationException();
     }
 
-    throw new UnsupportedOperationException();
-  }
+    Save save = new Save(user, experience);
+    saveRepository.save(save);
+    experience.addSave(save);
+    experienceRepository.save(experience);
+    userRepository.save(user);
 
-
-  public Optional<ExperienceDTO> saveExperience(Long id, UUID uuid) {
-    return null;
+    return Optional.of(new ExperienceDTO(experience));
   }
 
 
   public Optional<ExperienceDTO> unSaveExperience(Long id, UUID uuid) {
-    return null;
-  }
+    Optional<User> userOptional = userRepository.findById(id);
 
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    Optional<Save> saveOptional = saveRepository.findByExperienceUuidAndUserId(uuid, id);
+
+    if (saveOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    if (experience.getSaves().contains(saveOptional.get())) {
+      saveRepository.deleteByExperienceUuidAndUserId(uuid, id);
+      experienceRepository.save(experience);
+      userRepository.save(user);
+
+      return Optional.of(new ExperienceDTO(experience));
+    }
+
+    throw new UnsupportedOperationException();
+
+  }
 
   public Optional<ExperienceDTO> forkExperience(Long id, UUID uuid, ForkExperienceDTO forkExperienceDTO) {
     return null;

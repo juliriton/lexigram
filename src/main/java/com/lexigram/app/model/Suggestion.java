@@ -1,5 +1,6 @@
 package com.lexigram.app.model;
 
+import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
 
@@ -27,6 +28,12 @@ public class Suggestion {
 
   @Column(nullable = false, columnDefinition = "Text", updatable = false)
   private String body;
+
+  @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Resonate> resonates = new HashSet<>();
+
+  @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Save> saves = new HashSet<>();
 
   @Column(nullable = false)
   private long resonateAmount = 0;
