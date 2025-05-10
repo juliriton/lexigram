@@ -289,4 +289,43 @@ public class ExperienceService {
     return Optional.of(new ExperienceDTO(experience));
   }
 
+  public Optional<ExperienceDTO> resonateExperience(Long id, UUID uuid) {
+    return null;
+  }
+
+
+  public Optional<ExperienceDTO> unResonateExperience(Long id, UUID uuid) {
+    return null;
+  }
+
+
+  public Optional<ExperienceDTO> commentExperience(Long id, UUID uuid, PostCommentDTO comment) {
+    return null;
+  }
+
+
+  public Optional<ExperienceDTO> uncCommentExperience(Long id, UUID expUuid, UUID comUuid) {
+    return null;
+  }
+
+
+  public Optional<ExperienceDTO> saveExperience(Long id, UUID uuid) {
+    return null;
+  }
+
+
+  public Optional<ExperienceDTO> unSaveExperience(Long id, UUID uuid) {
+    return null;
+  }
+
+
+  public Optional<ExperienceDTO> forkExperience(Long id, UUID uuid, ForkExperienceDTO forkExperienceDTO) {
+    return null;
+  }
+
+
+  public String getExperienceLink(UUID uuid) {
+    return null;
+  }
+
 }
