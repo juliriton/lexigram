@@ -71,11 +71,11 @@ public class ExperienceController {
   }
 
   @PutMapping("experience/{expUuid}/comment/{comUuid}")
-  public ResponseEntity<ExperienceDTO> unCommentExperience(HttpSession session, @PathVariable UUID expUuid, @PathVariable UUID comUuid) {
+  public ResponseEntity<ExperienceDTO> deleteExperienceComment(HttpSession session, @PathVariable UUID expUuid, @PathVariable UUID comUuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    Optional<ExperienceDTO> optionalExperienceDTO = experienceService.uncCommentExperience(id, expUuid, comUuid);
+    Optional<ExperienceDTO> optionalExperienceDTO = experienceService.deleteExperienceCommentByUuid(id, expUuid, comUuid);
 
     if (optionalExperienceDTO.isPresent()) {
       ExperienceDTO experienceDTO = optionalExperienceDTO.get();

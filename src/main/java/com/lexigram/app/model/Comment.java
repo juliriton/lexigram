@@ -43,6 +43,54 @@ public class Comment {
   @Column(nullable = false)
   private long resonatesCount = 0;
 
+  public Comment(){}
+
+  public Comment(User user, Experience experience, String content) {
+    this.user = user;
+    this.experience = experience;
+    this.content = content;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public Experience getExperience() {
+    return experience;
+  }
+
+  public Comment getParentComment() {
+    return parentComment;
+  }
+
+  public void setParentComment(Comment parentComment) {
+    this.parentComment = parentComment;
+  }
+
+  public String getContent() {
+    return content;
+  }
+
+  public long getCreationDate() {
+    return creationDate;
+  }
+
+  public long getResonatesCount() {
+    return resonatesCount;
+  }
+
+  public List<Comment> getReplies() {
+    return replies;
+  }
+
 
 }
 

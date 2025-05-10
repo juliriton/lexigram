@@ -32,6 +32,7 @@ public class ExperienceService {
   private final ExperienceStyleRepository experienceStyleRepository;
   private final ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository;
   private final ResonateRepository resonateRepository;
+  private final CommentRepository commentRepository;
 
   @Autowired
   public ExperienceService(ExperienceRepository experienceRepository,
@@ -39,13 +40,15 @@ public class ExperienceService {
                            TagRepository tagRepository,
                            ExperienceStyleRepository experienceStyleRepository,
                            ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository,
-                           ResonateRepository resonateRepository) {
+                           ResonateRepository resonateRepository,
+                           CommentRepository commentRepository) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
     this.experienceStyleRepository = experienceStyleRepository;
     this.experiencePrivacySettingsRepository = experiencePrivacySettingsRepository;
     this.resonateRepository = resonateRepository;
+    this.commentRepository = commentRepository;
   }
 
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
@@ -355,13 +358,60 @@ public class ExperienceService {
     throw new UnsupportedOperationException();
   }
 
-  public Optional<ExperienceDTO> commentExperience(Long id, UUID uuid, PostCommentDTO comment) {
-    return null;
+  public Optional<ExperienceDTO> commentExperience(Long id, UUID uuid, PostCommentDTO commentDTO) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    Comment comment = new Comment(user, experience, commentDTO.getContent());
+
+    commentRepository.save(comment);
+
+    experience.addComment(comment);
+
+    experienceRepository.save(experience);
+    userRepository.save(user);
+
+    return Optional.of(new ExperienceDTO(experience));
   }
 
 
-  public Optional<ExperienceDTO> uncCommentExperience(Long id, UUID expUuid, UUID comUuid) {
-    return null;
+  public Optional<ExperienceDTO> deleteExperienceCommentByUuid(Long id, UUID expUuid, UUID comUuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(expUuid);
+    Optional<Comment> commentOptional = commentRepository.findByUuid(comUuid);
+
+    if (experienceOptional.isEmpty() || commentOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    if (experience.getComments().contains(user)) {
+      commentRepository.deleteByUuid(comUuid);
+      experienceRepository.save(experience);
+      userRepository.save(user);
+      return Optional.of(new ExperienceDTO(experience));
+    }
+
+    throw new UnsupportedOperationException();
   }
 
 
