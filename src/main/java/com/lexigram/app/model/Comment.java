@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity(name = "comments")
 public class Comment {
@@ -13,11 +14,15 @@ public class Comment {
   @PrePersist
   protected void onCreate() {
     this.creationDate = System.currentTimeMillis();
+    this.uuid = UUID.randomUUID();
   }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(nullable = false, unique = true, updatable = false)
+  private UUID uuid;
 
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)

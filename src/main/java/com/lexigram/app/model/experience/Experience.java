@@ -2,6 +2,7 @@ package com.lexigram.app.model.experience;
 
 import com.lexigram.app.model.Comment;
 import com.lexigram.app.model.Save;
+import com.lexigram.app.model.Suggestion;
 import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
@@ -73,6 +74,10 @@ public class Experience {
   @ManyToOne
   @JoinColumn(name = "origin_id", referencedColumnName = "id", nullable = true)
   private Experience origin;
+
+  @ManyToOne
+  @JoinColumn(name = "suggestion_id", referencedColumnName = "id", nullable = true)
+  private Suggestion suggestion;
 
   @OneToMany(mappedBy = "origin", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Experience> branches;

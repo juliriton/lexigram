@@ -110,7 +110,7 @@ public class ExperienceController {
     return ResponseEntity.status(401).build();
   }
 
-  @PutMapping("experience/{uuid}/unSave")
+  @PutMapping("experience/{uuid}/un-save")
   public ResponseEntity<ExperienceDTO> unSaveExperience(HttpSession session,
                                                         @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");

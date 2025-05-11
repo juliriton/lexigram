@@ -49,10 +49,10 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private Set<Suggestion> suggestions = new HashSet<>();
 
-  @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private Set<Comment> comments = new HashSet<>();
 
-  @OneToMany(mappedBy = "resonate", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private Set<Resonate> resonates = new HashSet<>();
 
   @ManyToMany(mappedBy = "mentions", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
