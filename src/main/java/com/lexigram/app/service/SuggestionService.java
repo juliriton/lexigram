@@ -308,4 +308,18 @@ public class SuggestionService {
     return "https://lexigram.app/suggestion/" + uuid.toString();
   }
 
+  public Set<SuggestionDTO> getSavedSuggestions(Long id) {
+    Set<SuggestionDTO> publicSavedSuggestions = new HashSet<>();
+
+    Set<Save> saved = saveRepository.getAllByUserId(id);
+
+    for (Save save : saved) {
+      Suggestion suggestion = save.getSuggestion();
+      if (suggestion.getUser().getUserPrivacySettings().getVisibility()){
+        publicSavedSuggestions.add(new SuggestionDTO(suggestion));
+      }
+    }
+    return publicSavedSuggestions;
+  }
+
 }

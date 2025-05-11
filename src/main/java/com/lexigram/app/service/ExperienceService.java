@@ -585,4 +585,18 @@ public class ExperienceService {
     return "https://lexigram.app/experience/" + uuid.toString();
   }
 
+  public Set<ExperienceDTO> getSavedExperiences(Long id) {
+    Set<ExperienceDTO> publicSavedExperiences = new HashSet<>();
+
+    Set<Save> saved = saveRepository.getAllByUserId(id);
+
+    for (Save save : saved) {
+      Experience experience = save.getExperience();
+      if (experience.getUser().getUserPrivacySettings().getVisibility()){
+        publicSavedExperiences.add(new ExperienceDTO(experience));
+      }
+    }
+    return publicSavedExperiences;
+  }
+
 }

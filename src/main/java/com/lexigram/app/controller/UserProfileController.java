@@ -150,7 +150,7 @@ public class UserProfileController {
     }
   }
 
-  @PutMapping("/edit/experience/{uuid}/tags")
+  @PutMapping("/edit/suggestion/{uuid}/tags")
   public ResponseEntity<SuggestionDTO> updateSuggestionTags(
       HttpSession session,
       @PathVariable UUID uuid,
@@ -223,6 +223,22 @@ public class UserProfileController {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.notFound().build();
+  }
+
+  @GetMapping("/saved/suggestions")
+  public ResponseEntity<Set<SuggestionDTO>> getSavedSuggestions(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(suggestionService.getSavedSuggestions(id));
+  }
+
+  @GetMapping("/saved/experiences")
+  public ResponseEntity<Set<ExperienceDTO>> getSavedExperiences(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(experienceService.getSavedExperiences(id));
   }
 
 }

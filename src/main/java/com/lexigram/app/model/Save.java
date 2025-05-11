@@ -16,11 +16,11 @@ public class Save {
   private User user;
 
   @ManyToOne
-  @JoinColumn(name = "experience_id", nullable = false)
+  @JoinColumn(name = "experience_id", nullable = true)
   private Experience experience;
 
   @ManyToOne
-  @JoinColumn(name = "suggestion_id", nullable = false)
+  @JoinColumn(name = "suggestion_id", nullable = true)
   private Suggestion suggestion;
 
   public Save(){}
