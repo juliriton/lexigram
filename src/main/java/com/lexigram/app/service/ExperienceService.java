@@ -88,8 +88,9 @@ public class ExperienceService {
     String quote = postExperienceDTO.getQuote();
     String reflection = postExperienceDTO.getReflection();
     Boolean isOrigin = true;
+    Boolean isReply = postExperienceDTO.isReply();
 
-    experience = new Experience(user, mentions, tags, quote, reflection, isOrigin);
+    experience = new Experience(user, mentions, tags, quote, reflection, isOrigin, isReply);
 
     experience = experienceRepository.save(experience);
 
@@ -322,13 +323,10 @@ public class ExperienceService {
       throw new UnsupportedOperationException();
     }
 
-    Resonate resonate = new Resonate(user);
-    resonate.setExperience(experience);
+    Resonate resonate = new Resonate(user, experience);
 
     resonateRepository.save(resonate);
-
     experience.addResonate(resonate);
-
     experienceRepository.save(experience);
     userRepository.save(user);
 
@@ -352,11 +350,12 @@ public class ExperienceService {
     }
 
     Experience experience = experienceOptional.get();
+    Resonate resonate = resonateOptional.get();
 
+    experience.removeResonate(resonate);
     resonateRepository.deleteByExperienceUuidAndUserId(uuid, id);
-
-    userRepository.save(user);
     experienceRepository.save(experience);
+    userRepository.save(user);
     return Optional.of(new ExperienceDTO(experience));
 
   }
@@ -380,9 +379,7 @@ public class ExperienceService {
     Comment comment = new Comment(user, experience, commentDTO.getContent());
 
     commentRepository.save(comment);
-
     experience.addComment(comment);
-
     experienceRepository.save(experience);
     userRepository.save(user);
 
@@ -406,7 +403,9 @@ public class ExperienceService {
     }
 
     Experience experience = experienceOptional.get();
+    Comment comment = commentOptional.get();
 
+    experience.removeComment(comment);
     commentRepository.deleteByUuid(comUuid);
     experienceRepository.save(experience);
     userRepository.save(user);
@@ -469,7 +468,10 @@ public class ExperienceService {
       return Optional.empty();
     }
 
-    if (experience.getSaves().contains(saveOptional.get())) {
+    Save save = saveOptional.get();
+
+    if (experience.getSaves().contains(save)) {
+      experience.removeSave(save);
       saveRepository.deleteByExperienceUuidAndUserId(uuid, id);
       experienceRepository.save(experience);
       userRepository.save(user);
@@ -533,10 +535,11 @@ public class ExperienceService {
     String quote = experience.getQuote();
     String reflection = forkExperienceDTO.getReflection();
     Boolean isOrigin = false;
+    Boolean isReply = false;
     PostExperiencePrivacySettingsDTO forkPrivacySettings = forkExperienceDTO.getPostExperiencePrivacySettingsDTO();
     PostExperienceStyleDTO forkStyle = forkExperienceDTO.getPostExperienceStyleDTO();
 
-    Experience fork = new Experience(user, mentions, tags, quote, reflection, isOrigin);
+    Experience fork = new Experience(user, mentions, tags, quote, reflection, isOrigin, isReply);
     fork.setOrigin(experience);
 
     if (file != null && !file.isEmpty()) {
@@ -571,6 +574,8 @@ public class ExperienceService {
     fork.setPrivacySettings(privacy);
 
     fork = experienceRepository.save(fork);
+    experience.addBranch(fork);
+    experienceRepository.save(experience);
 
     return Optional.of(new ExperienceDTO(fork));
   }

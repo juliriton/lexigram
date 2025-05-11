@@ -91,7 +91,7 @@ public class SuggestionController {
   }
 
   @PutMapping("suggestion/{uuid}/un-save")
-  public ResponseEntity<SuggestionDTO> unSaveSuggestuin(HttpSession session, @PathVariable UUID uuid) {
+  public ResponseEntity<SuggestionDTO> unSaveSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 

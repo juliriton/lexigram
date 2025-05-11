@@ -132,6 +132,29 @@ public class SuggestionService {
     return true;
   }
 
+  public Optional<SuggestionDTO> updateSuggestionTag(UUID uuid, UpdateSuggestionTagDTO updateTagDTO) {
+    Set<Tag> tags = new HashSet<>();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+    if (suggestionOptional.isPresent()) {
+      Suggestion suggestion = suggestionOptional.get();
+
+      for (String t : updateTagDTO.getTags()) {
+        Optional<Tag> tagOptional = tagRepository.findByName(t);
+        if (tagOptional.isPresent()) {
+          tags.add(tagOptional.get());
+        } else {
+          Tag tag = new Tag(t);
+          tagRepository.save(tag);
+          tags.add(tag);
+        }
+      }
+      suggestion.setTags(tags);
+      suggestionRepository.save(suggestion);
+      return Optional.of(new SuggestionDTO(suggestion));
+    }
+    return Optional.empty();
+  }
+
   public Optional<SuggestionDTO> resonateSuggestion(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
@@ -153,13 +176,10 @@ public class SuggestionService {
       throw new UnsupportedOperationException();
     }
 
-    Resonate resonate = new Resonate(user);
-    resonate.setSuggestion(suggestion);
-
-    resonateRepository.save(resonate);
+    Resonate resonate = new Resonate(user, suggestion);
 
     suggestion.addResonate(resonate);
-
+    resonateRepository.save(resonate);
     suggestionRepository.save(suggestion);
     userRepository.save(user);
 
@@ -182,11 +202,12 @@ public class SuggestionService {
     }
 
     Suggestion suggestion = suggestionOptional.get();
+    Resonate resonate = resonateOptional.get();
 
+    suggestion.removeResonate(resonate);
     resonateRepository.deleteBySuggestionUuidAndUserId(uuid, id);
-
-    userRepository.save(user);
     suggestionRepository.save(suggestion);
+    userRepository.save(user);
     return Optional.of(new SuggestionDTO(suggestion));
   }
 
@@ -213,8 +234,8 @@ public class SuggestionService {
     }
 
     Save save = new Save(user, suggestion);
-    saveRepository.save(save);
     suggestion.addSave(save);
+    saveRepository.save(save);
     suggestionRepository.save(suggestion);
     userRepository.save(user);
 
@@ -244,6 +265,8 @@ public class SuggestionService {
     }
 
     if (suggestion.getSaves().contains(saveOptional.get())) {
+      Save save = saveOptional.get();
+      suggestion.removeSave(save);
       saveRepository.deleteBySuggestionUuidAndUserId(uuid, id);
       suggestionRepository.save(suggestion);
       userRepository.save(user);

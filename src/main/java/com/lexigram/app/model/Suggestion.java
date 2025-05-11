@@ -31,12 +31,8 @@ public class Suggestion {
   @Column(nullable = false, columnDefinition = "Text", updatable = false)
   private String body;
 
-  @ManyToOne
-  @JoinColumn(name = "suggestion_id")
-  private Suggestion suggestion;
-
-  @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<Experience> replies;
+  @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private Set<Experience> replies = new HashSet<>();
 
   @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Resonate> resonates = new HashSet<>();
@@ -121,6 +117,11 @@ public class Suggestion {
     replyAmount+=1;
   }
 
+  public void removeReply(Experience experience) {
+    replies.remove(experience);
+    replyAmount-=1;
+  }
+
   public Set<Save> getSaves(){
     return saves;
   }
@@ -130,9 +131,23 @@ public class Suggestion {
     saveAmount += 1;
   }
 
+  public void removeSave(Save save) {
+    saves.remove(save);
+    saveAmount-=1;
+  }
+
   public void addResonate(Resonate resonate) {
     resonates.add(resonate);
     resonateAmount+=1;
+  }
+
+  public void removeResonate(Resonate resonate) {
+    resonates.remove(resonate);
+    resonateAmount-=1;
+  }
+
+  public void setTags(Set<Tag> tags) {
+    this.tags = tags;
   }
 
 }

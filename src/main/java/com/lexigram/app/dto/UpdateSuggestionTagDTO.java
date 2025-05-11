@@ -4,14 +4,14 @@ import jakarta.validation.constraints.Size;
 
 import java.util.Set;
 
-public class UpdateExperienceTagDTO {
+public class UpdateSuggestionTagDTO {
 
-  @Size(min = 1, message = "Experiences should have at least 1 tag.")
+  @Size(min = 1, message = "Suggestions should have at least 1 tag.")
   private Set<String> tags;
 
-  public UpdateExperienceTagDTO() {}
+  public UpdateSuggestionTagDTO() {}
 
-  public UpdateExperienceTagDTO(Set<String> tags) {
+  public UpdateSuggestionTagDTO(Set<String> tags) {
     this.tags = tags;
   }
 
@@ -23,3 +23,4 @@ public class UpdateExperienceTagDTO {
     this.tags = tags;
   }
 }
+

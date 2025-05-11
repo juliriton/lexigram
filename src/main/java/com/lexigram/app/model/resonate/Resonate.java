@@ -26,8 +26,14 @@ public class Resonate {
 
   public Resonate() {}
 
-  public Resonate(User user) {
+  public Resonate(User user, Suggestion suggestion) {
     this.user = user;
+    this.suggestion = suggestion;
+  }
+
+  public Resonate(User user, Experience experience) {
+    this.user = user;
+    this.experience = experience;
   }
 
   public void setExperience(Experience experience) {

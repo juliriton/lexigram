@@ -7,7 +7,6 @@ import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
-
 import java.util.*;
 
 @Entity(name = "experiences")
@@ -49,6 +48,9 @@ public class Experience {
 
   @Column(nullable = false)
   private boolean isOrigin;
+
+  @Column(nullable = false)
+  private boolean isReply;
 
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
@@ -107,7 +109,8 @@ public class Experience {
                      Set<Tag> tags,
                      String quote,
                      String reflection,
-                     Boolean isOrigin
+                     Boolean isOrigin,
+                     Boolean isReply
                      ){
     this.user = user;
     this.mentions = mentions;
@@ -115,6 +118,7 @@ public class Experience {
     this.quote = quote;
     this.reflection = reflection;
     this.isOrigin = isOrigin;
+    this.isReply = isReply;
   }
 
   public Long getId(){
@@ -155,6 +159,10 @@ public class Experience {
 
   public boolean isOrigin() {
     return isOrigin;
+  }
+
+  public Boolean isReply(){
+    return isReply;
   }
 
   public User getUser() {
@@ -226,8 +234,9 @@ public class Experience {
     resonatesAmount +=1;
   }
 
-  public void removeResonate() {
-
+  public void removeResonate(Resonate resonate) {
+    resonates.remove(resonate);
+    resonatesAmount -=1;
   }
 
   public void addSave(Save save) {
@@ -235,13 +244,24 @@ public class Experience {
     saveAmount +=1;
   }
 
-  public void addBranch() {
+  public void removeSave(Save save) {
+    saves.remove(save);
+    saveAmount -=1;
+  }
+
+  public void addBranch(Experience experience) {
+    branches.add(experience);
     branchAmount +=1;
   }
 
   public void addComment(Comment comment) {
     comments.add(comment);
     commentAmount +=1;
+  }
+
+  public void removeComment(Comment comment) {
+    comments.remove(comment);
+    commentAmount -=1;
   }
 
   public Set<Save> getSaves() {
