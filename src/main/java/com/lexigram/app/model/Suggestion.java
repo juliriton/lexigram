@@ -150,4 +150,11 @@ public class Suggestion {
     this.tags = tags;
   }
 
+  public Set<Resonate> getResonates() {
+    return resonates;
+  }
+
+  public long getSavesAmount() {
+    return saveAmount;
+  }
 }

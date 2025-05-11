@@ -1,12 +1,11 @@
 package com.lexigram.app.model;
 
 import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity(name = "comments")
 public class Comment {
@@ -36,7 +35,7 @@ public class Comment {
   @JoinColumn(name = "parent_comment_id", nullable = false)
   private Comment parentComment;
 
-  @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "parentComment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Comment> replies = new ArrayList<>();
 
   @Column(nullable = false, columnDefinition = "TEXT")
@@ -45,8 +44,14 @@ public class Comment {
   @Column(nullable = false)
   private long creationDate;
 
+  @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Resonate> resonates = new HashSet<>();
+
   @Column(nullable = false)
-  private long resonatesCount = 0;
+  private long resonatesAmount;
+
+  @Column(nullable = false)
+  private long repliesAmount;
 
   public Comment(){}
 
@@ -88,14 +93,45 @@ public class Comment {
     return creationDate;
   }
 
-  public long getResonatesCount() {
-    return resonatesCount;
+  public long getResonatesAmount() {
+    return resonatesAmount;
   }
 
   public List<Comment> getReplies() {
     return replies;
   }
 
+  public UUID getUuid() {
+    return uuid;
+  }
+
+  public UUID getExpUuid() {
+    return experience.getUuid();
+  }
+
+  public Set<Resonate> getResonates() {
+    return resonates;
+  }
+
+  public void addResonate(Resonate resonate) {
+    this.resonates.add(resonate);
+    resonatesAmount+=1;
+  }
+
+  public void removeResonate(Resonate resonate) {
+    resonates.remove(resonate);
+    resonatesAmount-=1;
+  }
+
+  public void addReply(Comment comment) {
+    replies.add(comment);
+    repliesAmount+=1;
+  }
+
+  public void removeReply(Comment comment) {
+    replies.remove(comment);
+    repliesAmount-=1;
+  }
 
 }
 

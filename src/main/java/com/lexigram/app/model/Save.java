@@ -4,12 +4,22 @@ import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
 
+import java.util.UUID;
+
 @Entity(name = "saves")
 public class Save {
+
+  @PrePersist
+  protected void onCreate() {
+    this.uuid = UUID.randomUUID();
+  }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(nullable = false, unique = true, updatable = false)
+  private UUID uuid;
 
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
@@ -52,6 +62,10 @@ public class Save {
 
   public Suggestion getSuggestion() {
     return suggestion;
+  }
+
+  public UUID getUuid() {
+    return uuid;
   }
 
 }
