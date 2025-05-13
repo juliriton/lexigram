@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaTag, FaEdit, FaUserTag } from 'react-icons/fa';
-import '../styles/EditExperienceModal.css';
+import '../styles/EditPostModal.css';
 
 const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
     const [activeTab, setActiveTab] = useState('quote');

@@ -74,7 +74,7 @@ public class PostExperienceDTO {
     return privacySettings;
   }
 
-  public Boolean isReply() {
+  public Boolean getIsReply() {
     return isReply;
   }
 }

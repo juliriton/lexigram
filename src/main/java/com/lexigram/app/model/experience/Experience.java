@@ -82,7 +82,7 @@ public class Experience {
   private Suggestion suggestion;
 
   @OneToMany(mappedBy = "origin", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<Experience> branches;
+  private Set<Experience> branches = new HashSet<>();
   
   @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "style_id", referencedColumnName = "id")

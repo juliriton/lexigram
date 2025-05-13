@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/UserProfilePage.css';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
+import EditSuggestionModal from '../components/EditSuggestionModal';
 
 const UserProfilePage = ({ user }) => {
     const navigate = useNavigate();
@@ -24,6 +25,7 @@ const UserProfilePage = ({ user }) => {
     const [activeTab, setActiveTab] = useState('posts');
     const [updateMessage, setUpdateMessage] = useState('');
     const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+    const [editingSuggestion, setEditingSuggestion] = useState(null);
 
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
@@ -285,6 +287,21 @@ const UserProfilePage = ({ user }) => {
         setDeleteConfirmation(null);
     };
 
+    const handleEditSuggestion = (suggestion) => {
+        setEditingSuggestion(suggestion);
+    };
+
+    const handleCloseSuggestionModal = () => {
+        setEditingSuggestion(null);
+    };
+
+    const handleUpdateSuggestion = (updatedSuggestion) => {
+        setPosts(posts.map(post =>
+            post.uuid === updatedSuggestion.uuid ? { ...post, ...updatedSuggestion } : post
+        ));
+        setUpdateMessage("Suggestion updated successfully!");
+    };
+
     const getProfileImageUrl = () => {
         if (usingDefaultImage || !profile?.profilePictureUrl) {
             return defaultProfilePic;
@@ -389,6 +406,7 @@ const UserProfilePage = ({ user }) => {
                 renderTags={renderTags}
                 formatDate={formatDate}
                 onDelete={() => confirmDelete(post, 'Suggestion')}
+                onEdit={() => handleEditSuggestion(post)}
                 isOwner={true}
             />
         );
@@ -511,6 +529,15 @@ const UserProfilePage = ({ user }) => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {editingSuggestion && (
+                <EditSuggestionModal
+                    suggestion={editingSuggestion}
+                    onClose={handleCloseSuggestionModal}
+                    onUpdate={handleUpdateSuggestion}
+                    baseApiUrl={baseApiUrl}
+                />
             )}
 
             <div className="profile-nav">

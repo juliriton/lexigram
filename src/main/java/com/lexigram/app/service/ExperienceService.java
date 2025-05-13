@@ -88,7 +88,7 @@ public class ExperienceService {
     String quote = postExperienceDTO.getQuote();
     String reflection = postExperienceDTO.getReflection();
     Boolean isOrigin = true;
-    Boolean isReply = postExperienceDTO.isReply();
+    Boolean isReply = postExperienceDTO.getIsReply();
 
     experience = new Experience(user, mentions, tags, quote, reflection, isOrigin, isReply);
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FaQuestion, FaTrash } from 'react-icons/fa';
+import React from 'react';
+import { FaQuestion, FaTrash, FaEdit } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/SuggestionCard.css';
 
@@ -10,6 +10,7 @@ const SuggestionCard = ({
                             baseApiUrl,
                             formatDate,
                             onDelete,
+                            onEdit,
                             isOwner
                         }) => {
     const navigate = useNavigate();
@@ -19,8 +20,8 @@ const SuggestionCard = ({
     const headerParts = post.header ? post.header.split('...') : ['', ''];
     const promptText = headerParts[0] || "Tell me about";
 
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [showAllTags, setShowAllTags] = useState(false);
+    const [isExpanded, setIsExpanded] = React.useState(false);
+    const [showAllTags, setShowAllTags] = React.useState(false);
 
     const toggleExpanded = () => setIsExpanded(!isExpanded);
     const toggleTags = () => setShowAllTags(!showAllTags);
@@ -133,7 +134,14 @@ const SuggestionCard = ({
                 {isOwner && (
                     <div className="actions">
                         <button
-                            className="btn btn-sm btn-outline-danger ms-auto"
+                            className="btn btn-sm btn-outline-primary me-2"
+                            onClick={onEdit}
+                            aria-label="Edit Suggestion"
+                        >
+                            <FaEdit/> Edit
+                        </button>
+                        <button
+                            className="btn btn-sm btn-outline-danger"
                             onClick={onDelete}
                             aria-label="Delete Suggestion"
                         >

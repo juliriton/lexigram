@@ -26,7 +26,7 @@ public class SuggestionController {
   }
 
   @PutMapping("suggestion/{uuid}/resonate")
-  public ResponseEntity<SuggestionDTO> resonateExperience(HttpSession session, @PathVariable UUID uuid) {
+  public ResponseEntity<SuggestionDTO> resonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
@@ -41,7 +41,7 @@ public class SuggestionController {
   }
 
   @PutMapping("suggestion/{uuid}/unresonate")
-  public ResponseEntity<SuggestionDTO> unResonateExperience(HttpSession session, @PathVariable UUID uuid) {
+  public ResponseEntity<SuggestionDTO> unResonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
