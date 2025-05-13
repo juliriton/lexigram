@@ -21,10 +21,10 @@ public class PostExperienceDTO {
   @Size(max = 20, message = "Experiences should have at least 1 tag.")
   private Set<String> tags;
 
-  private Set<String> mentions;
-
   @NotNull
-  private boolean isOrigin;
+  private Boolean isReply;
+
+  private Set<String> mentions;
 
   @NotNull
   private PostExperienceStyleDTO style;
@@ -38,14 +38,14 @@ public class PostExperienceDTO {
                            String reflection,
                            Set<String> tags,
                            Set<String> mentions,
-                           boolean isOrigin,
+                           Boolean isReply,
                            PostExperiencePrivacySettingsDTO privacySettings,
                            PostExperienceStyleDTO style) {
     this.quote = quote;
     this.reflection = reflection;
     this.tags = tags;
     this.mentions = mentions;
-    this.isOrigin = isOrigin;
+    this.isReply = isReply;
     this.privacySettings = privacySettings;
     this.style = style;
   }
@@ -66,10 +66,6 @@ public class PostExperienceDTO {
     return mentions;
   }
 
-  public boolean isOrigin(){
-    return isOrigin;
-  }
-
   public PostExperienceStyleDTO getStyle() {
     return style;
   }
@@ -78,5 +74,8 @@ public class PostExperienceDTO {
     return privacySettings;
   }
 
+  public Boolean isReply() {
+    return isReply;
+  }
 }
 

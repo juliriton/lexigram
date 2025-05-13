@@ -1,16 +1,19 @@
 package com.lexigram.app.service;
 
-import com.lexigram.app.dto.PostSuggestionDTO;
-import com.lexigram.app.dto.SuggestionDTO;
+import com.lexigram.app.dto.*;
+import com.lexigram.app.exception.UserNotFoundException;
+import com.lexigram.app.model.Save;
 import com.lexigram.app.model.Suggestion;
 import com.lexigram.app.model.Tag;
-import com.lexigram.app.model.User;
-import com.lexigram.app.repository.SuggestionRepository;
-import com.lexigram.app.repository.TagRepository;
-import com.lexigram.app.repository.UserRepository;
+import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.resonate.Resonate;
+import com.lexigram.app.model.user.User;
+import com.lexigram.app.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -20,16 +23,28 @@ import java.util.UUID;
 public class SuggestionService {
 
   private final UserRepository userRepository;
+  private final ExperienceService experienceService;
+  private final ExperienceRepository experienceRepository;
   private SuggestionRepository suggestionRepository;
   private TagRepository tagRepository;
+  private SaveRepository saveRepository;
+  private ResonateRepository resonateRepository;
 
   @Autowired
   public SuggestionService(SuggestionRepository suggestionRepository,
                            UserRepository userRepository,
-                           TagRepository tagRepository) {
+                           TagRepository tagRepository,
+                           ExperienceService experienceService,
+                           ExperienceRepository experienceRepository,
+                           SaveRepository saveRepository,
+                           ResonateRepository resonateRepository) {
     this.suggestionRepository = suggestionRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
+    this.experienceService = experienceService;
+    this.experienceRepository = experienceRepository;
+    this.saveRepository = saveRepository;
+    this.resonateRepository = resonateRepository;
   }
 
   public SuggestionDTO createSuggestion(Long id, PostSuggestionDTO postSuggestionDTO) {
@@ -115,6 +130,196 @@ public class SuggestionService {
     User user = userRepository.findById(userId).get();
     userRepository.save(user);
     return true;
+  }
+
+  public Optional<SuggestionDTO> updateSuggestionTag(UUID uuid, UpdateSuggestionTagDTO updateTagDTO) {
+    Set<Tag> tags = new HashSet<>();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+    if (suggestionOptional.isPresent()) {
+      Suggestion suggestion = suggestionOptional.get();
+
+      for (String t : updateTagDTO.getTags()) {
+        Optional<Tag> tagOptional = tagRepository.findByName(t);
+        if (tagOptional.isPresent()) {
+          tags.add(tagOptional.get());
+        } else {
+          Tag tag = new Tag(t);
+          tagRepository.save(tag);
+          tags.add(tag);
+        }
+      }
+      suggestion.setTags(tags);
+      suggestionRepository.save(suggestion);
+      return Optional.of(new SuggestionDTO(suggestion));
+    }
+    return Optional.empty();
+  }
+
+  public Optional<SuggestionDTO> resonateSuggestion(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+    Optional<Resonate> resonateOptional = resonateRepository.findBySuggestionUuidAndUserId(uuid, id);
+
+    if (resonateOptional.isPresent()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Resonate resonate = new Resonate(user, suggestion);
+
+    suggestion.addResonate(resonate);
+    resonateRepository.save(resonate);
+    suggestionRepository.save(suggestion);
+    userRepository.save(user);
+
+    return Optional.of(new SuggestionDTO(suggestion));
+  }
+
+  public Optional<SuggestionDTO> unResonateSuggestion(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+    Optional<Resonate> resonateOptional = resonateRepository.findBySuggestionUuidAndUserId(uuid, id);
+
+    if (suggestionOptional.isEmpty() || resonateOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+    Resonate resonate = resonateOptional.get();
+
+    suggestion.removeResonate(resonate);
+    resonateRepository.deleteBySuggestionUuidAndUserId(uuid, id);
+    suggestionRepository.save(suggestion);
+    userRepository.save(user);
+    return Optional.of(new SuggestionDTO(suggestion));
+  }
+
+  public Optional<SuggestionDTO> saveSuggestion(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+
+    Optional<Save> saveOptional = saveRepository.findBySuggestionUuidAndUserId(uuid, id);
+
+    if (saveOptional.isPresent()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Save save = new Save(user, suggestion);
+    suggestion.addSave(save);
+    saveRepository.save(save);
+    suggestionRepository.save(suggestion);
+    userRepository.save(user);
+
+    return Optional.of(new SuggestionDTO(suggestion));
+  }
+
+  public Optional<SuggestionDTO> unSaveSuggestion(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+
+    Optional<Save> saveOptional = saveRepository.findBySuggestionUuidAndUserId(uuid, id);
+
+    if (saveOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    if (suggestion.getSaves().contains(saveOptional.get())) {
+      Save save = saveOptional.get();
+      suggestion.removeSave(save);
+      saveRepository.deleteBySuggestionUuidAndUserId(uuid, id);
+      suggestionRepository.save(suggestion);
+      userRepository.save(user);
+
+      return Optional.of(new SuggestionDTO(suggestion));
+    }
+
+    throw new UnsupportedOperationException();
+  }
+
+  public Optional<SuggestionDTO> replySuggestion(Long id, UUID uuid, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+    ExperienceDTO replyDTO = experienceService.createExperience(id, postExperienceDTO, file);
+
+    Experience reply = experienceRepository.findByUuid(replyDTO.getUuid()).get();
+
+    suggestion.addReply(reply);
+    suggestionRepository.save(suggestion);
+    userRepository.save(user);
+
+    return Optional.of(new SuggestionDTO(suggestion));
+
+  }
+
+  public String getSuggestionLink(UUID uuid) {
+    return "https://lexigram.app/suggestion/" + uuid.toString();
+  }
+
+  public Set<SuggestionDTO> getSavedSuggestions(Long id) {
+    Set<SuggestionDTO> publicSavedSuggestions = new HashSet<>();
+
+    Set<Save> saved = saveRepository.getAllByUserId(id);
+
+    for (Save save : saved) {
+      Suggestion suggestion = save.getSuggestion();
+      if (suggestion.getUser().getUserPrivacySettings().getVisibility()){
+        publicSavedSuggestions.add(new SuggestionDTO(suggestion));
+      }
+    }
+    return publicSavedSuggestions;
   }
 
 }

@@ -1,14 +1,11 @@
 package com.lexigram.app.controller;
 
 import com.lexigram.app.dto.*;
-import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.service.ExperienceService;
 import com.lexigram.app.service.SuggestionService;
 import com.lexigram.app.service.UserProfileService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -16,10 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -155,6 +150,20 @@ public class UserProfileController {
     }
   }
 
+  @PutMapping("/edit/suggestion/{uuid}/tags")
+  public ResponseEntity<SuggestionDTO> updateSuggestionTags(
+      HttpSession session,
+      @PathVariable UUID uuid,
+      @Valid @RequestBody UpdateSuggestionTagDTO dto) {
+
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<SuggestionDTO> updated = suggestionService.updateSuggestionTag(uuid, dto);
+    if (updated.isEmpty()) return ResponseEntity.notFound().build();
+    return ResponseEntity.ok(updated.get());
+  }
+
   @GetMapping("/posts")
   public ResponseEntity<UserPostsDTO> getAllPosts(HttpSession session) {
     Long id = (Long) session.getAttribute("user");
@@ -214,6 +223,22 @@ public class UserProfileController {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.notFound().build();
+  }
+
+  @GetMapping("/saved/suggestions")
+  public ResponseEntity<Set<SuggestionDTO>> getSavedSuggestions(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(suggestionService.getSavedSuggestions(id));
+  }
+
+  @GetMapping("/saved/experiences")
+  public ResponseEntity<Set<ExperienceDTO>> getSavedExperiences(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(experienceService.getSavedExperiences(id));
   }
 
 }

@@ -1,8 +1,12 @@
 package com.lexigram.app.model;
 
+import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.resonate.Resonate;
+import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,11 +31,23 @@ public class Suggestion {
   @Column(nullable = false, columnDefinition = "Text", updatable = false)
   private String body;
 
-  @Column(nullable = false)
-  private long resonateAmount = 0;
+  @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private Set<Experience> replies = new HashSet<>();
+
+  @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Resonate> resonates = new HashSet<>();
+
+  @OneToMany(mappedBy = "suggestion", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Save> saves = new HashSet<>();
 
   @Column(nullable = false)
-  private long experienceAmount = 0;
+  private long resonateAmount;
+
+  @Column(nullable = false)
+  private long saveAmount;
+
+  @Column(nullable = false)
+  private long replyAmount;
 
   @Column(nullable = false)
   private long creationDate;
@@ -68,12 +84,16 @@ public class Suggestion {
     return header;
   }
 
+  public Set<Experience> getReplies() {
+    return replies;
+  }
+
   public long getResonatesAmount() {
     return resonateAmount;
   }
 
   public long getExperienceAmount() {
-    return experienceAmount;
+    return replyAmount;
   }
 
   public long getCreationDate() {
@@ -92,4 +112,49 @@ public class Suggestion {
     return body;
   }
 
+  public void addReply(Experience experience) {
+    replies.add(experience);
+    replyAmount+=1;
+  }
+
+  public void removeReply(Experience experience) {
+    replies.remove(experience);
+    replyAmount-=1;
+  }
+
+  public Set<Save> getSaves(){
+    return saves;
+  }
+
+  public void addSave(Save save) {
+    saves.add(save);
+    saveAmount += 1;
+  }
+
+  public void removeSave(Save save) {
+    saves.remove(save);
+    saveAmount-=1;
+  }
+
+  public void addResonate(Resonate resonate) {
+    resonates.add(resonate);
+    resonateAmount+=1;
+  }
+
+  public void removeResonate(Resonate resonate) {
+    resonates.remove(resonate);
+    resonateAmount-=1;
+  }
+
+  public void setTags(Set<Tag> tags) {
+    this.tags = tags;
+  }
+
+  public Set<Resonate> getResonates() {
+    return resonates;
+  }
+
+  public long getSavesAmount() {
+    return saveAmount;
+  }
 }

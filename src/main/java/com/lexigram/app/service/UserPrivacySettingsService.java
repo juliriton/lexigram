@@ -1,8 +1,8 @@
 package com.lexigram.app.service;
 
 import com.lexigram.app.dto.UserPrivacySettingsDTO;
-import com.lexigram.app.model.User;
-import com.lexigram.app.model.UserPrivacySettings;
+import com.lexigram.app.model.user.User;
+import com.lexigram.app.model.user.UserPrivacySettings;
 import com.lexigram.app.repository.UserPrivacySettingsRepository;
 import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;

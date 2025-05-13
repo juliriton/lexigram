@@ -3,11 +3,13 @@ package com.lexigram.app.service;
 import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.model.*;
+import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.experience.ExperiencePrivacySettings;
+import com.lexigram.app.model.experience.ExperienceStyle;
+import com.lexigram.app.model.resonate.Resonate;
+import com.lexigram.app.model.user.User;
 import com.lexigram.app.repository.*;
 import jakarta.transaction.Transactional;
-import org.apache.commons.logging.Log;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,18 +31,27 @@ public class ExperienceService {
   private final TagRepository tagRepository;
   private final ExperienceStyleRepository experienceStyleRepository;
   private final ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository;
+  private final ResonateRepository resonateRepository;
+  private final CommentRepository commentRepository;
+  private final SaveRepository saveRepository;
 
   @Autowired
   public ExperienceService(ExperienceRepository experienceRepository,
                            UserRepository userRepository,
                            TagRepository tagRepository,
                            ExperienceStyleRepository experienceStyleRepository,
-                           ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository) {
+                           ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository,
+                           ResonateRepository resonateRepository,
+                           CommentRepository commentRepository,
+                           SaveRepository saveRepository) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
     this.experienceStyleRepository = experienceStyleRepository;
     this.experiencePrivacySettingsRepository = experiencePrivacySettingsRepository;
+    this.resonateRepository = resonateRepository;
+    this.commentRepository = commentRepository;
+    this.saveRepository = saveRepository;
   }
 
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
@@ -76,8 +87,10 @@ public class ExperienceService {
     Experience experience;
     String quote = postExperienceDTO.getQuote();
     String reflection = postExperienceDTO.getReflection();
+    Boolean isOrigin = true;
+    Boolean isReply = postExperienceDTO.isReply();
 
-    experience = new Experience(user, mentions, tags, quote, reflection);
+    experience = new Experience(user, mentions, tags, quote, reflection, isOrigin, isReply);
 
     experience = experienceRepository.save(experience);
 
@@ -287,6 +300,303 @@ public class ExperienceService {
     experienceRepository.save(experience);
     
     return Optional.of(new ExperienceDTO(experience));
+  }
+
+  public Optional<ExperienceDTO> resonateExperience(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+    Optional<Resonate> resonateOptional = resonateRepository.findByExperienceUuidAndUserId(uuid, id);
+
+    if (resonateOptional.isPresent()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Resonate resonate = new Resonate(user, experience);
+
+    resonateRepository.save(resonate);
+    experience.addResonate(resonate);
+    experienceRepository.save(experience);
+    userRepository.save(user);
+
+    return Optional.of(new ExperienceDTO(experience));
+  }
+
+
+  public Optional<ExperienceDTO> unResonateExperience(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+    Optional<Resonate> resonateOptional = resonateRepository.findByExperienceUuidAndUserId(uuid, id);
+
+    if (experienceOptional.isEmpty() || resonateOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Experience experience = experienceOptional.get();
+    Resonate resonate = resonateOptional.get();
+
+    experience.removeResonate(resonate);
+    resonateRepository.deleteByExperienceUuidAndUserId(uuid, id);
+    experienceRepository.save(experience);
+    userRepository.save(user);
+    return Optional.of(new ExperienceDTO(experience));
+
+  }
+
+  public Optional<ExperienceDTO> commentExperience(Long id, UUID uuid, PostCommentDTO commentDTO) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    Comment comment = new Comment(user, experience, commentDTO.getContent());
+
+    commentRepository.save(comment);
+    experience.addComment(comment);
+    experienceRepository.save(experience);
+    userRepository.save(user);
+
+    return Optional.of(new ExperienceDTO(experience));
+  }
+
+
+  public Optional<ExperienceDTO> deleteExperienceCommentByUuid(Long id, UUID expUuid, UUID comUuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(expUuid);
+    Optional<Comment> commentOptional = commentRepository.findByUuid(comUuid);
+
+    if (experienceOptional.isEmpty() || commentOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Experience experience = experienceOptional.get();
+    Comment comment = commentOptional.get();
+
+    experience.removeComment(comment);
+    commentRepository.deleteByUuid(comUuid);
+    experienceRepository.save(experience);
+    userRepository.save(user);
+    return Optional.of(new ExperienceDTO(experience));
+
+  }
+
+
+  public Optional<ExperienceDTO> saveExperience(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    Optional<Save> saveOptional = saveRepository.findByExperienceUuidAndUserId(uuid, id);
+
+    if (saveOptional.isPresent()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Save save = new Save(user, experience);
+    saveRepository.save(save);
+    experience.addSave(save);
+    experienceRepository.save(experience);
+    userRepository.save(user);
+
+    return Optional.of(new ExperienceDTO(experience));
+  }
+
+
+  public Optional<ExperienceDTO> unSaveExperience(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    Optional<Save> saveOptional = saveRepository.findByExperienceUuidAndUserId(uuid, id);
+
+    if (saveOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Save save = saveOptional.get();
+
+    if (experience.getSaves().contains(save)) {
+      experience.removeSave(save);
+      saveRepository.deleteByExperienceUuidAndUserId(uuid, id);
+      experienceRepository.save(experience);
+      userRepository.save(user);
+
+      return Optional.of(new ExperienceDTO(experience));
+    }
+
+    throw new UnsupportedOperationException();
+
+  }
+
+  public Optional<ExperienceDTO> forkExperience(Long id, UUID uuid, ForkExperienceDTO forkExperienceDTO, MultipartFile file) throws IOException {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    User user = userOptional.get();
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+    ExperiencePrivacySettings expPrivacySettings = experiencePrivacySettingsRepository.findById(experience.getId()).get();
+
+    if (!expPrivacySettings.areForksAllowed()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Set<User> mentions = new HashSet<>();
+    Set<Tag> tags = new HashSet<>();
+
+    if (forkExperienceDTO.getMentions() != null) {
+      for (String username : forkExperienceDTO.getMentions()) {
+        if (username.equals(user.getUsername())) {
+          throw new InvalidObjectException("Cannot mention yourself in a post!");
+        }
+        Optional<User> mention = userRepository.findByUsername(username);
+        if (mention.isPresent()) {
+          mentions.add(mention.get());
+        } else {
+          throw new UserNotFoundException();
+        }
+      }
+    }
+
+    for (String t : forkExperienceDTO.getTags()) {
+      Optional<Tag> tagOptional = tagRepository.findByName(t);
+      if (tagOptional.isPresent()) {
+        tags.add(tagOptional.get());
+      } else {
+        Tag tag = new Tag(t);
+        tagRepository.save(tag);
+        tags.add(tag);
+      }
+    }
+
+    String quote = experience.getQuote();
+    String reflection = forkExperienceDTO.getReflection();
+    Boolean isOrigin = false;
+    Boolean isReply = false;
+    PostExperiencePrivacySettingsDTO forkPrivacySettings = forkExperienceDTO.getPostExperiencePrivacySettingsDTO();
+    PostExperienceStyleDTO forkStyle = forkExperienceDTO.getPostExperienceStyleDTO();
+
+    Experience fork = new Experience(user, mentions, tags, quote, reflection, isOrigin, isReply);
+    fork.setOrigin(experience);
+
+    if (file != null && !file.isEmpty()) {
+      String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+      File destination = new File(uploadDir + File.separator + fileName);
+      destination.getParentFile().mkdirs();
+      file.transferTo(destination);
+
+      String relativePath = "/images/" + fileName;
+
+      ExperienceStyle style = new ExperienceStyle(
+          fork,
+          forkStyle.getFontFamily(),
+          forkStyle.getFontSize(),
+          forkStyle.getFontColor(),
+          forkStyle.getTextPositionX(),
+          forkStyle.getTextPositionY(),
+          relativePath
+      );
+      experienceStyleRepository.save(style);
+      fork.setStyle(style);
+    }
+
+    ExperiencePrivacySettings privacy = new ExperiencePrivacySettings(
+        fork,
+        forkPrivacySettings.getAllowComments(),
+        forkPrivacySettings.getAllowForks(),
+        forkPrivacySettings.getAllowResonates(),
+        forkPrivacySettings.getAllowSaves()
+    );
+    experiencePrivacySettingsRepository.save(privacy);
+    fork.setPrivacySettings(privacy);
+
+    fork = experienceRepository.save(fork);
+    experience.addBranch(fork);
+    experienceRepository.save(experience);
+
+    return Optional.of(new ExperienceDTO(fork));
+  }
+
+
+  public String getExperienceLink(UUID uuid) {
+    return "https://lexigram.app/experience/" + uuid.toString();
+  }
+
+  public Set<ExperienceDTO> getSavedExperiences(Long id) {
+    Set<ExperienceDTO> publicSavedExperiences = new HashSet<>();
+
+    Set<Save> saved = saveRepository.getAllByUserId(id);
+
+    for (Save save : saved) {
+      Experience experience = save.getExperience();
+      if (experience.getUser().getUserPrivacySettings().getVisibility()){
+        publicSavedExperiences.add(new ExperienceDTO(experience));
+      }
+    }
+    return publicSavedExperiences;
   }
 
 }

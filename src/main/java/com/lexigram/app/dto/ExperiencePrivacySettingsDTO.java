@@ -1,6 +1,6 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.ExperiencePrivacySettings;
+import com.lexigram.app.model.experience.ExperiencePrivacySettings;
 
 public class ExperiencePrivacySettingsDTO {
 

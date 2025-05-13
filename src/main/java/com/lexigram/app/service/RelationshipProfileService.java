@@ -2,10 +2,10 @@ package com.lexigram.app.service;
 
 import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.UserNotFoundException;
-import com.lexigram.app.model.Experience;
+import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.Suggestion;
-import com.lexigram.app.model.User;
-import com.lexigram.app.model.UserProfile;
+import com.lexigram.app.model.user.User;
+import com.lexigram.app.model.user.UserProfile;
 import com.lexigram.app.repository.ExperienceRepository;
 import com.lexigram.app.repository.SuggestionRepository;
 import com.lexigram.app.repository.UserProfileRepository;

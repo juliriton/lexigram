@@ -1,13 +1,11 @@
 package com.lexigram.app.service;
 
 import com.lexigram.app.dto.*;
-import com.lexigram.app.model.Experience;
+import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.Suggestion;
-import com.lexigram.app.model.Tag;
-import com.lexigram.app.model.User;
+import com.lexigram.app.model.user.User;
 import com.lexigram.app.repository.ExperienceRepository;
 import com.lexigram.app.repository.SuggestionRepository;
-import com.lexigram.app.repository.TagRepository;
 import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

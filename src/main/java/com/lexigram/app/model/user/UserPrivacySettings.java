@@ -1,4 +1,4 @@
-package com.lexigram.app.model;
+package com.lexigram.app.model.user;
 
 import jakarta.persistence.*;
 

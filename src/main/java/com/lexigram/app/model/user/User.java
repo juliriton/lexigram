@@ -1,5 +1,10 @@
-package com.lexigram.app.model;
+package com.lexigram.app.model.user;
 
+import com.lexigram.app.model.Comment;
+import com.lexigram.app.model.Save;
+import com.lexigram.app.model.Suggestion;
+import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.resonate.Resonate;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -44,6 +49,15 @@ public class User {
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   private Set<Suggestion> suggestions = new HashSet<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private Set<Comment> comments = new HashSet<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private Set<Resonate> resonates = new HashSet<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Save> saves = new HashSet<>();
 
   @ManyToMany(mappedBy = "mentions", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private Set<Experience> mentionedIn = new HashSet<>();
@@ -149,6 +163,14 @@ public class User {
 
   public Long getFollowerAmount() {
     return followerAmount;
+  }
+
+  public Set<Save> getSaves() {
+    return saves;
+  }
+
+  public Set<Resonate> getResonates() {
+    return resonates;
   }
 
 }
