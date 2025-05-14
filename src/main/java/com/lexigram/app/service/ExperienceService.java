@@ -302,6 +302,7 @@ public class ExperienceService {
     return Optional.of(new ExperienceDTO(experience));
   }
 
+  @Transactional
   public Optional<ExperienceDTO> resonateExperience(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
@@ -333,7 +334,7 @@ public class ExperienceService {
     return Optional.of(new ExperienceDTO(experience));
   }
 
-
+  @Transactional
   public Optional<ExperienceDTO> unResonateExperience(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
@@ -386,7 +387,7 @@ public class ExperienceService {
     return Optional.of(new ExperienceDTO(experience));
   }
 
-
+  @Transactional
   public Optional<ExperienceDTO> deleteExperienceCommentByUuid(Long id, UUID expUuid, UUID comUuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
@@ -412,7 +413,6 @@ public class ExperienceService {
     return Optional.of(new ExperienceDTO(experience));
 
   }
-
 
   public Optional<ExperienceDTO> saveExperience(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
@@ -445,7 +445,7 @@ public class ExperienceService {
     return Optional.of(new ExperienceDTO(experience));
   }
 
-
+  @Transactional
   public Optional<ExperienceDTO> unSaveExperience(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
@@ -588,7 +588,7 @@ public class ExperienceService {
   public Set<ExperienceDTO> getSavedExperiences(Long id) {
     Set<ExperienceDTO> publicSavedExperiences = new HashSet<>();
 
-    Set<Save> saved = saveRepository.getAllByUserId(id);
+    Set<Save> saved = saveRepository.findAllByUserIdAndExperienceIsNotNull(id);
 
     for (Save save : saved) {
       Experience experience = save.getExperience();

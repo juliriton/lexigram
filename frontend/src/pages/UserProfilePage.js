@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { FaHome, FaArrowLeft, FaUser, FaUsers } from 'react-icons/fa';
+import { FaHome, FaArrowLeft, FaUser, FaUsers, FaBookmark } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import '../styles/UserProfilePage.css';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
 import EditSuggestionModal from '../components/EditSuggestionModal';
+import EditExperienceModal from '../components/EditExperienceModal';
+import SavedContent from '../components/SavedContent';
 
 const UserProfilePage = ({ user }) => {
     const navigate = useNavigate();
@@ -26,6 +28,10 @@ const UserProfilePage = ({ user }) => {
     const [updateMessage, setUpdateMessage] = useState('');
     const [deleteConfirmation, setDeleteConfirmation] = useState(null);
     const [editingSuggestion, setEditingSuggestion] = useState(null);
+    const [editingExperience, setEditingExperience] = useState(null);
+    const [postCount, setPostCount] = useState(0);
+    const [followerCount, setFollowerCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
 
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
@@ -48,8 +54,12 @@ const UserProfilePage = ({ user }) => {
         const loadProfile = async () => {
             try {
                 const [resUser, resProfile] = await Promise.all([
-                    fetch(`${baseApiUrl}/api/auth/me`, { credentials: 'include' }),
-                    fetch(`${baseApiUrl}/api/auth/me/profile`, { credentials: 'include' })
+                    fetch(`${baseApiUrl}/api/auth/me`, {
+                        credentials: 'include'
+                    }),
+                    fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                        credentials: 'include'
+                    })
                 ]);
 
                 if (!resUser.ok || !resProfile.ok) throw new Error('Error loading data');
@@ -67,6 +77,7 @@ const UserProfilePage = ({ user }) => {
                 setLoading(false);
             }
         };
+
         loadProfile();
     }, []);
 
@@ -85,35 +96,33 @@ const UserProfilePage = ({ user }) => {
             }
 
             try {
-                const res = await fetch(url, { credentials: 'include' });
-                if (!res.ok) throw new Error('Failed to fetch posts');
-                const data = await res.json();
+                const res = await fetch(url, {
+                    credentials: 'include'
+                });
 
+                if (!res.ok) throw new Error('Failed to fetch posts');
+
+                const data = await res.json();
                 let processedPosts = [];
 
                 if (postFilter === 'all') {
                     if (data.experiences && Array.isArray(data.experiences)) {
-                        processedPosts = [...processedPosts, ...data.experiences.map(exp => ({...exp, type: 'Experience'}))];
+                        processedPosts = [...processedPosts, ...data.experiences.map(exp => ({ ...exp, type: 'Experience' }))];
                     }
                     if (data.suggestions && Array.isArray(data.suggestions)) {
-                        processedPosts = [...processedPosts, ...data.suggestions.map(sug => ({...sug, type: 'Suggestion'}))];
+                        processedPosts = [...processedPosts, ...data.suggestions.map(sug => ({ ...sug, type: 'Suggestion' }))];
                     }
                     if (Array.isArray(data)) {
                         processedPosts = data;
                     }
+                    setPostCount(processedPosts.length);
                 } else {
                     if (Array.isArray(data)) {
-                        processedPosts = data.map(item => ({
-                            ...item,
-                            type: postFilter === 'experiences' ? 'Experience' : 'Suggestion'
-                        }));
+                        processedPosts = data.map(item => ({ ...item, type: postFilter === 'experiences' ? 'Experience' : 'Suggestion' }));
                     } else if (typeof data === 'object' && data !== null) {
                         const items = postFilter === 'experiences' ? data.experiences : data.suggestions;
                         if (Array.isArray(items)) {
-                            processedPosts = items.map(item => ({
-                                ...item,
-                                type: postFilter === 'experiences' ? 'Experience' : 'Suggestion'
-                            }));
+                            processedPosts = items.map(item => ({ ...item, type: postFilter === 'experiences' ? 'Experience' : 'Suggestion' }));
                         }
                     }
                 }
@@ -125,47 +134,54 @@ const UserProfilePage = ({ user }) => {
                 setPosts([]);
             }
         };
+
         fetchPosts();
     }, [postFilter]);
 
     useEffect(() => {
         const fetchConnections = async () => {
-            if (activeTab === 'followers' || activeTab === 'following') {
-                try {
-                    const endpoint = activeTab === 'followers'
-                        ? `${baseApiUrl}/api/auth/me/profile/followers`
-                        : `${baseApiUrl}/api/auth/me/profile/following`;
+            try {
+                // Fetch follower count
+                const followerRes = await fetch(`${baseApiUrl}/api/auth/me/profile/followers`, {
+                    credentials: 'include'
+                });
 
-                    const res = await fetch(endpoint, { credentials: 'include' });
-                    if (!res.ok) throw new Error(`Failed to fetch ${activeTab}`);
-
-                    const data = await res.json();
-                    if (activeTab === 'followers') {
-                        setFollowers(data);
-                    } else {
-                        setFollowing(data);
-                    }
-                } catch (err) {
-                    console.error(`Error fetching ${activeTab}:`, err);
+                if (followerRes.ok) {
+                    const followerData = await followerRes.json();
+                    setFollowers(followerData);
+                    setFollowerCount(followerData.length);
                 }
+
+                // Fetch following count
+                const followingRes = await fetch(`${baseApiUrl}/api/auth/me/profile/following`, {
+                    credentials: 'include'
+                });
+
+                if (followingRes.ok) {
+                    const followingData = await followingRes.json();
+                    setFollowing(followingData);
+                    setFollowingCount(followingData.length);
+                }
+            } catch (err) {
+                console.error("Error fetching connections:", err);
             }
         };
 
         fetchConnections();
-    }, [activeTab, baseApiUrl]);
+    }, [activeTab]);
 
     useEffect(() => {
         const validateImage = async () => {
             if (!profile?.profilePictureUrl || attemptedLoad) return;
+
             setAttemptedLoad(true);
-
             const imgUrl = `${baseApiUrl}${profile.profilePictureUrl}`;
-
             const img = new Image();
             img.onload = () => setUsingDefaultImage(false);
             img.onerror = () => setUsingDefaultImage(true);
             img.src = imgUrl;
         };
+
         validateImage();
     }, [profile, attemptedLoad]);
 
@@ -176,19 +192,19 @@ const UserProfilePage = ({ user }) => {
 
             const res = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/biography`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 credentials: 'include',
                 body: JSON.stringify({ biography: bioToUpdate })
             });
 
             if (!res.ok) throw new Error('Update failed');
 
-            setProfile(prev => ({
-                ...prev,
-                biography: bioToUpdate
-            }));
-
-            setUpdateMessage(`Your biography has been updated! Previous: "${previousBioValue}" New: "${bioToUpdate}"`);
+            setProfile(prev => ({ ...prev, biography: bioToUpdate }));
+            setUpdateMessage(`Your biography has been updated!
+Previous: "${previousBioValue}"
+New: "${bioToUpdate}"`);
         } catch (err) {
             console.error("Error updating biography:", err);
         }
@@ -229,13 +245,10 @@ const UserProfilePage = ({ user }) => {
 
             setUsingDefaultImage(false);
             setAttemptedLoad(false);
-
             setSelectedFile(null);
             const fileInput = document.getElementById('profile-picture-input');
             if (fileInput) fileInput.value = '';
-
             setUpdateMessage('Your profile picture has been updated!');
-
         } catch (err) {
             console.error("Error uploading picture:", err);
             alert("Error uploading picture");
@@ -262,9 +275,9 @@ const UserProfilePage = ({ user }) => {
             }
 
             setPosts(posts.filter(post => post.uuid !== uuid));
+            setPostCount(prevCount => prevCount - 1);
             setUpdateMessage(`${type} successfully deleted`);
             setDeleteConfirmation(null);
-
         } catch (err) {
             console.error(`Error deleting ${type.toLowerCase()}:`, err);
             setUpdateMessage(`Error deleting ${type.toLowerCase()}: ${err.message}`);
@@ -273,7 +286,6 @@ const UserProfilePage = ({ user }) => {
 
     const confirmDelete = (post, postType) => {
         const uuid = post?.uuid;
-
         if (!uuid) {
             console.error("Cannot delete post: Missing UUID", post);
             setUpdateMessage("Error: Cannot delete this post. Missing UUID.");
@@ -291,15 +303,30 @@ const UserProfilePage = ({ user }) => {
         setEditingSuggestion(suggestion);
     };
 
+    const handleEditExperience = (experience) => {
+        setEditingExperience(experience);
+    };
+
     const handleCloseSuggestionModal = () => {
         setEditingSuggestion(null);
     };
 
-    const handleUpdateSuggestion = (updatedSuggestion) => {
+    const handleCloseExperienceModal = () => {
+        setEditingExperience(null);
+    };
+
+    const handleUpdateSuggestion = (updatedSuggestion, message) => {
         setPosts(posts.map(post =>
             post.uuid === updatedSuggestion.uuid ? { ...post, ...updatedSuggestion } : post
         ));
-        setUpdateMessage("Suggestion updated successfully!");
+        setUpdateMessage(message || "Suggestion updated successfully!");
+    };
+
+    const handleUpdateExperience = (updatedExperience, message) => {
+        setPosts(posts.map(post =>
+            post.uuid === updatedExperience.uuid ? { ...post, ...updatedExperience } : post
+        ));
+        setUpdateMessage(message || "Experience updated successfully!");
     };
 
     const getProfileImageUrl = () => {
@@ -320,14 +347,14 @@ const UserProfilePage = ({ user }) => {
         return `${baseApiUrl}${connection.profilePictureUrl}`;
     };
 
-    const formatDate = (timestamp) =>
-        new Date(timestamp).toLocaleDateString();
+    const formatDate = (timestamp) => new Date(timestamp).toLocaleDateString();
 
-    const renderTags = (tags) => Array.isArray(tags) && tags.map((tag, i) => (
-        <span key={i} className="tag-badge">
-            {typeof tag === 'object' ? tag.name : tag}
-        </span>
-    ));
+    const renderTags = (tags) =>
+        Array.isArray(tags) && tags.map((tag, i) => (
+            <span key={i} className="tag-badge">
+        {typeof tag === 'object' ? tag.name : tag}
+      </span>
+        ));
 
     const toggleQuote = (postId) => {
         setHiddenQuotes(prev => ({
@@ -341,7 +368,8 @@ const UserProfilePage = ({ user }) => {
             navigate('/login');
             return;
         }
-        if (user.uuid !== mentionUuid){
+
+        if (user.uuid !== mentionUuid) {
             navigate(`/profile/${mentionUuid}`);
         }
     };
@@ -356,10 +384,10 @@ const UserProfilePage = ({ user }) => {
                             key={i}
                             className="mention clickable"
                             onClick={() => handleMentionClick(mention.uuid)}
-                            style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
+                            style={{cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline'}}
                         >
-                        @{mention.username}
-                    </span>
+              @{mention.username}
+            </span>
                     ))}
                 </div>
             </div>
@@ -386,7 +414,9 @@ const UserProfilePage = ({ user }) => {
                     renderTags={renderTags}
                     formatDate={formatDate}
                     onDelete={() => confirmDelete(post, 'Experience')}
+                    onEdit={() => handleEditExperience(post)}
                     isOwner={true}
+                    disableInteractions={true}
                 />
             );
         }
@@ -408,6 +438,7 @@ const UserProfilePage = ({ user }) => {
                 onDelete={() => confirmDelete(post, 'Suggestion')}
                 onEdit={() => handleEditSuggestion(post)}
                 isOwner={true}
+                disableInteractions={true}
             />
         );
     };
@@ -460,12 +491,10 @@ const UserProfilePage = ({ user }) => {
     if (error || !profile) {
         return (
             <div className="profile-error">
-                <div className="error-icon"> </div>
+                <div className="error-icon"></div>
                 <h3>Error Loading Profile</h3>
                 <p>{error || "No profile data found"}</p>
-                <button className="btn-primary" onClick={() => navigate('/')}>
-                    Home
-                </button>
+                <button className="btn-primary" onClick={() => navigate('/')}>Home</button>
             </div>
         );
     }
@@ -487,22 +516,31 @@ const UserProfilePage = ({ user }) => {
                         <div className="profile-username">{username}</div>
                     </div>
                 </div>
+            </div>
 
-                <div className="profile-bio">
-                    <p>{profile.biography}</p>
+            <div className="profile-bio">
+                <p>{profile.biography}</p>
+            </div>
+
+            <div className="profile-stats">
+                <div className="stat-item">
+                    <div className="stat-count">{postCount}</div>
+                    <div className="stat-label">Posts</div>
+                </div>
+                <div className="stat-item">
+                    <div className="stat-count">{followerCount}</div>
+                    <div className="stat-label">Followers</div>
+                </div>
+                <div className="stat-item">
+                    <div className="stat-count">{followingCount}</div>
+                    <div className="stat-label">Following</div>
                 </div>
             </div>
 
             {updateMessage && (
                 <div className="alert alert-info animate__animated animate__fadeInDown">
                     {updateMessage}
-                    <button
-                        onClick={() => setUpdateMessage('')}
-                        className="close-alert"
-                        aria-label="Close"
-                    >
-                        &times;
-                    </button>
+                    <button onClick={() => setUpdateMessage('')} className="close-alert" aria-label="Close">&times;</button>
                 </div>
             )}
 
@@ -510,22 +548,10 @@ const UserProfilePage = ({ user }) => {
                 <div className="modal-backdrop">
                     <div className="delete-confirmation-modal">
                         <h3>Delete {deleteConfirmation.type}</h3>
-                        <p>Are you sure you want to delete
-                            this {deleteConfirmation.type.toLowerCase()}? This action cannot be
-                            undone.</p>
+                        <p>Are you sure you want to delete this {deleteConfirmation.type.toLowerCase()}? This action cannot be undone.</p>
                         <div className="modal-buttons">
-                            <button
-                                className="btn-secondary"
-                                onClick={cancelDelete}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="btn-danger"
-                                onClick={handleDeletePost}
-                            >
-                                Delete
-                            </button>
+                            <button className="btn-secondary" onClick={cancelDelete}>Cancel</button>
+                            <button className="btn-danger" onClick={handleDeletePost}>Delete</button>
                         </div>
                     </div>
                 </div>
@@ -540,12 +566,27 @@ const UserProfilePage = ({ user }) => {
                 />
             )}
 
+            {editingExperience && (
+                <EditExperienceModal
+                    experience={editingExperience}
+                    onClose={handleCloseExperienceModal}
+                    onUpdate={handleUpdateExperience}
+                    baseApiUrl={baseApiUrl}
+                />
+            )}
+
             <div className="profile-nav">
                 <button
                     className={`profile-nav-item ${activeTab === 'posts' ? 'active' : ''}`}
                     onClick={() => setActiveTab('posts')}
                 >
                     Posts
+                </button>
+                <button
+                    className={`profile-nav-item ${activeTab === 'saved' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('saved')}
+                >
+                    <FaBookmark /> Saved
                 </button>
                 <button
                     className={`profile-nav-item ${activeTab === 'followers' ? 'active' : ''}`}
@@ -573,6 +614,7 @@ const UserProfilePage = ({ user }) => {
                         <select
                             value={postFilter}
                             onChange={(e) => setPostFilter(e.target.value)}
+                            className="filter-select"
                         >
                             <option value="all">All Posts</option>
                             <option value="suggestions">Suggestions</option>
@@ -589,6 +631,12 @@ const UserProfilePage = ({ user }) => {
                             {posts.map(renderPost)}
                         </div>
                     )}
+                </div>
+            )}
+
+            {activeTab === 'saved' && (
+                <div className="profile-content profile-saved">
+                    <SavedContent user={user} baseApiUrl={baseApiUrl} />
                 </div>
             )}
 
@@ -616,12 +664,7 @@ const UserProfilePage = ({ user }) => {
                             rows="4"
                             placeholder="Write something about yourself..."
                         />
-                        <button
-                            className="btn-primary"
-                            onClick={handleBioUpdate}
-                        >
-                            Save Biography
-                        </button>
+                        <button className="btn-primary" onClick={handleBioUpdate}>Save Biography</button>
                     </div>
 
                     <div className="edit-section">
@@ -632,24 +675,20 @@ const UserProfilePage = ({ user }) => {
                             accept="image/jpeg"
                             onChange={handleFileChange}
                         />
-                        <button
-                            className="btn-primary"
-                            onClick={handlePictureUpload}
-                        >
-                            Upload Picture
-                        </button>
+                        <button className="btn-primary" onClick={handlePictureUpload}>Upload Picture</button>
                     </div>
                 </div>
             )}
+
             <div className="text-center">
                 <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
-                    <FaArrowLeft/> Go back
+                    <FaArrowLeft /> Go back
                 </button>
             </div>
 
             <div className="text-center">
                 <button className="btn btn-success mt-3" onClick={() => navigate('/')}>
-                    <FaHome/> Home
+                    <FaHome /> Home
                 </button>
             </div>
         </div>

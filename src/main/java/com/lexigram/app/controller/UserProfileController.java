@@ -31,7 +31,9 @@ public class UserProfileController {
   private final UserProfileService userProfileService;
 
   @Autowired
-  public UserProfileController(UserProfileService userProfileService, ExperienceService experienceService, SuggestionService suggestionService) {
+  public UserProfileController(UserProfileService userProfileService,
+                               ExperienceService experienceService,
+                               SuggestionService suggestionService) {
     this.userProfileService = userProfileService;
     this.experienceService = experienceService;
     this.suggestionService = suggestionService;

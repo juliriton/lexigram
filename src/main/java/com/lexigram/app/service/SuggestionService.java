@@ -9,10 +9,10 @@ import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
 import com.lexigram.app.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
@@ -186,6 +186,7 @@ public class SuggestionService {
     return Optional.of(new SuggestionDTO(suggestion));
   }
 
+  @Transactional
   public Optional<SuggestionDTO> unResonateSuggestion(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
@@ -242,6 +243,7 @@ public class SuggestionService {
     return Optional.of(new SuggestionDTO(suggestion));
   }
 
+  @Transactional
   public Optional<SuggestionDTO> unSaveSuggestion(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
@@ -311,7 +313,7 @@ public class SuggestionService {
   public Set<SuggestionDTO> getSavedSuggestions(Long id) {
     Set<SuggestionDTO> publicSavedSuggestions = new HashSet<>();
 
-    Set<Save> saved = saveRepository.getAllByUserId(id);
+    Set<Save> saved = saveRepository.findAllByUserIdAndSuggestionIsNotNull(id);
 
     for (Save save : saved) {
       Suggestion suggestion = save.getSuggestion();

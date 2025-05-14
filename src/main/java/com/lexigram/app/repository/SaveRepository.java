@@ -14,6 +14,8 @@ public interface SaveRepository extends JpaRepository<Save, Long> {
   void deleteByExperienceUuidAndUserId(UUID uuid, Long id);
   Optional<Save> findBySuggestionUuidAndUserId(UUID uuid, Long id);
   void deleteBySuggestionUuidAndUserId(UUID uuid, Long id);
-  Set<Save> getAllByUserId(Long id);
+  Set<Save> findAllByUserIdAndExperienceIsNotNull(Long userId);
+  Set<Save> findAllByUserIdAndSuggestionIsNotNull(Long userId);
+
 }
 

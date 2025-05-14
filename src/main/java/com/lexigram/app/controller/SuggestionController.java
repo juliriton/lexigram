@@ -40,7 +40,7 @@ public class SuggestionController {
     return ResponseEntity.status(401).build();
   }
 
-  @PutMapping("suggestion/{uuid}/unresonate")
+  @PutMapping("suggestion/{uuid}/un-resonate")
   public ResponseEntity<SuggestionDTO> unResonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
