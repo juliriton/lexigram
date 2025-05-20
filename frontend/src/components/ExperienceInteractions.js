@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { FaBookmark, FaRegBookmark, FaCommentAlt, FaShare, FaExclamation, FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaBookmark, FaRegBookmark, FaCommentAlt, FaShare, FaHeart, FaRegHeart } from 'react-icons/fa';
 import '../styles/ExperienceInteractions.css';
+import {FaCodeFork} from "react-icons/fa6";
 
 const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete }) => {
     const [interactions, setInteractions] = useState({
@@ -81,7 +82,6 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
 
             setInteractions(updatedInteractions);
 
-            // Update the parent component with the updated experience data
             if (onActionComplete) {
                 onActionComplete({
                     ...experience,
@@ -97,18 +97,15 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
     };
 
     const handleComment = () => {
-        // Implement comment functionality
         console.log('Comment on experience:', experience.uuid);
     };
 
     const handleShare = () => {
-        // Implement share functionality
         console.log('Share experience:', experience.uuid);
     };
 
-    const handleReport = () => {
-        // Implement report functionality
-        console.log('Report experience:', experience.uuid);
+    const handleFork = () => {
+        console.log('Fork experience:', experience.uuid);
     };
 
     return (
@@ -153,10 +150,10 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
 
             <button
                 className="interaction-button report"
-                onClick={handleReport}
+                onClick={handleFork}
                 title="Report"
             >
-                <FaExclamation />
+                <FaCodeFork />
             </button>
         </div>
     );

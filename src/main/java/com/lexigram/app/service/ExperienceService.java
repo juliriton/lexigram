@@ -199,6 +199,10 @@ public class ExperienceService {
     if (experienceOptional.isPresent()) {
       Experience experience = experienceOptional.get();
 
+      if (!experience.isOrigin()) {
+        throw new UnsupportedOperationException();
+      }
+
       String quote = experienceDTO.getQuote();
       if (quote == null || quote.trim().isEmpty()) {
         throw new IllegalArgumentException("Quote cannot be null or empty");
