@@ -206,6 +206,15 @@ public class UserProfileController {
     return ResponseEntity.ok(userProfileService.getFollowing(id));
   }
 
+  @GetMapping("/followers/{followerUuid}")
+  public ResponseEntity<ConnectionDTO> removeFollower(HttpSession session,
+                                                           @PathVariable UUID followerUuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.removeFollower(id, followerUuid));
+  }
+
   @PostMapping("/posts/delete/suggestions/{suggestionUuid}")
   public ResponseEntity<Void> deleteSuggestion(HttpSession session, @PathVariable UUID suggestionUuid) {
     Long id = (Long) session.getAttribute("user");
