@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InvalidObjectException;
@@ -604,7 +603,6 @@ public class ExperienceService {
     return Optional.of(new ExperienceDTO(fork));
   }
 
-
   public String getExperienceLink(UUID uuid) {
     return "https://lexigram.app/experience/" + uuid.toString();
   }
@@ -621,6 +619,30 @@ public class ExperienceService {
       }
     }
     return publicSavedExperiences;
+  }
+
+  public Set<ExperienceDTO> getAllBranches(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    Set<ExperienceDTO> branches = new HashSet<>();
+
+    for (Experience e : experience.getBranches()) {
+      branches.add(new ExperienceDTO(e));
+    }
+
+    return branches;
   }
 
 }

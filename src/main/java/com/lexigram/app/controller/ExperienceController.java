@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
@@ -155,6 +156,18 @@ public class ExperienceController {
     String postLink = experienceService.getExperienceLink(uuid);
 
     return ResponseEntity.ok(postLink);
+
+  }
+
+  @GetMapping("experience/{uuid}/branches")
+  public ResponseEntity<Set<ExperienceDTO>> getExperienceBranches(HttpSession session,
+                                                  @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Set<ExperienceDTO> forks = experienceService.getAllBranches(id, uuid);
+
+    return ResponseEntity.ok(forks);
 
   }
 
