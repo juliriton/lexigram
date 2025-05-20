@@ -318,6 +318,13 @@ public class ExperienceService {
     }
 
     Experience experience = experienceOptional.get();
+
+    ExperiencePrivacySettings expPrivacySettings = experiencePrivacySettingsRepository.findById(experience.getId()).get();
+
+    if (!expPrivacySettings.areResonatesAllowed()) {
+      throw new UnsupportedOperationException();
+    }
+
     Optional<Resonate> resonateOptional = resonateRepository.findByExperienceUuidAndUserId(uuid, id);
 
     if (resonateOptional.isPresent()) {
@@ -377,6 +384,13 @@ public class ExperienceService {
 
     Experience experience = experienceOptional.get();
 
+    ExperiencePrivacySettings expPrivacySettings = experiencePrivacySettingsRepository.findById(experience.getId()).get();
+
+    if (!expPrivacySettings.areCommentsAllowed()) {
+      throw new UnsupportedOperationException();
+    }
+
+
     Comment comment = new Comment(user, experience, commentDTO.getContent());
 
     commentRepository.save(comment);
@@ -429,6 +443,12 @@ public class ExperienceService {
     }
 
     Experience experience = experienceOptional.get();
+
+    ExperiencePrivacySettings expPrivacySettings = experiencePrivacySettingsRepository.findById(experience.getId()).get();
+
+    if (!expPrivacySettings.areSavesAllowed()) {
+      throw new UnsupportedOperationException();
+    }
 
     Optional<Save> saveOptional = saveRepository.findByExperienceUuidAndUserId(uuid, id);
 

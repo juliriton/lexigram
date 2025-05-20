@@ -25,7 +25,7 @@ public class SuggestionController {
     this.suggestionService = suggestionService;
   }
 
-  @PutMapping("suggestion/{uuid}/resonate")
+  @PostMapping("suggestion/{uuid}/resonate")
   public ResponseEntity<SuggestionDTO> resonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -40,7 +40,7 @@ public class SuggestionController {
     return ResponseEntity.status(401).build();
   }
 
-  @PutMapping("suggestion/{uuid}/un-resonate")
+  @DeleteMapping("suggestion/{uuid}/un-resonate")
   public ResponseEntity<SuggestionDTO> unResonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -56,7 +56,7 @@ public class SuggestionController {
 
   }
 
-  @PutMapping(value = "suggestion/{uuid}/reply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(value = "suggestion/{uuid}/reply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<SuggestionDTO> replySuggestion(HttpSession session,
                                                        @PathVariable UUID uuid,
                                                        @RequestBody PostExperienceDTO experienceDTO,
@@ -75,7 +75,7 @@ public class SuggestionController {
 
   }
 
-  @PutMapping("suggestion/{uuid}/save")
+  @PostMapping("suggestion/{uuid}/save")
   public ResponseEntity<SuggestionDTO> saveSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -90,7 +90,7 @@ public class SuggestionController {
     return ResponseEntity.status(401).build();
   }
 
-  @PutMapping("suggestion/{uuid}/un-save")
+  @DeleteMapping("suggestion/{uuid}/un-save")
   public ResponseEntity<SuggestionDTO> unSaveSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();

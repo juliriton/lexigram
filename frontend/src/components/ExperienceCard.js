@@ -3,6 +3,7 @@ import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-ico
 import { FaStar } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
+import ExperienceInteractions from './ExperienceInteractions';
 import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
@@ -16,7 +17,8 @@ const ExperienceCard = ({
                             setShowMentions,
                             formatDate,
                             onDelete,
-                            isOwner
+                            isOwner,
+                            onActionComplete
                         }) => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -85,8 +87,7 @@ const ExperienceCard = ({
     };
 
     const navigateToUserProfile = (profileUuid) => {
-        const targetUuid = profileUuid || updatedPost.user?.uuid;
-
+        const targetUuid = profileUuid || post.user.uuid;
         if (!user) {
             if (location.pathname === `/profile/${targetUuid}`) {
                 return;
@@ -97,7 +98,9 @@ const ExperienceCard = ({
 
         if (targetUuid) {
             const targetPath = `/profile/${targetUuid}`;
-            if (location.pathname !== targetPath) {
+            if (location.pathname === targetPath) {
+                return;
+            } else {
                 navigate(targetPath);
             }
         }
@@ -111,7 +114,12 @@ const ExperienceCard = ({
         navigate(`/profile/${mentionUuid}`);
     };
 
-    // Renderizado de menciones
+    const handleActionComplete = (updatedExperience) => {
+        if (onActionComplete) {
+            onActionComplete(updatedExperience);
+        }
+    };
+
     const renderMentions = (mentions) => {
         if (!Array.isArray(mentions) || mentions.length === 0) {
             return null;
@@ -250,6 +258,16 @@ const ExperienceCard = ({
                         <button
                             className="username-link-btn"
                             onClick={() => navigateToUserProfile()}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                padding: 0,
+                                color: '#0d6efd',
+                                textDecoration: 'underline',
+                                cursor: 'pointer',
+                                fontWeight: 'normal',
+                                fontSize: 'inherit'
+                            }}
                         >
                             @{username}
                         </button>
@@ -277,6 +295,14 @@ const ExperienceCard = ({
                             )}
                         </div>
                     )}
+
+                    <ExperienceInteractions
+                        user={user}
+                        experience={updatedPost}
+                        baseApiUrl={baseApiUrl}
+                        onActionComplete={onActionComplete}
+                        onClick={() => handleActionComplete(updatedPost)}
+                    />
 
                     <div className="actions">
                         <button

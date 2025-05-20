@@ -22,6 +22,7 @@ import java.util.UUID;
 @Service
 public class SuggestionService {
 
+  public static final String URL = "http://localhost:3000";
   private final UserRepository userRepository;
   private final ExperienceService experienceService;
   private final ExperienceRepository experienceRepository;
@@ -307,7 +308,7 @@ public class SuggestionService {
   }
 
   public String getSuggestionLink(UUID uuid) {
-    return "https://lexigram.app/suggestion/" + uuid.toString();
+    return URL + "/" + uuid.toString();
   }
 
   public Set<SuggestionDTO> getSavedSuggestions(Long id) {

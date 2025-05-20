@@ -3,13 +3,14 @@ import { FaTimes, FaTag } from 'react-icons/fa';
 import '../styles/EditPostModal.css';
 
 const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
-    const [activeTab, setActiveTab] = useState('content');
+    const [activeTab, setActiveTab] = useState('tags');
     const [tags, setTags] = useState([]);
     const [tagInput, setTagInput] = useState('');
     const [errors, setErrors] = useState({
         tags: null,
     });
     const [success, setSuccess] = useState(null);
+    const [changes, setChanges] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -19,7 +20,6 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
                 typeof tag === 'string' ? tag : tag.name
             ));
         }
-
     }, [suggestion]);
 
     const handleTabChange = (tab) => {
@@ -46,10 +46,12 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
     const handleSaveChanges = async () => {
         setIsSaving(true);
         setSuccess(null);
+        setChanges([]);
 
         try {
             let hasUpdated = false;
             let updateErrors = {};
+            let changesList = [];
 
             // Update tags if changed
             const currentTags = suggestion.tags?.map(tag =>
@@ -71,18 +73,26 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
                         updateErrors.tags = 'Failed to update tags';
                     } else {
                         hasUpdated = true;
+                        changesList.push({
+                            field: 'Tags',
+                            previous: currentTags.join(', ') || '(none)',
+                            new: tags.join(', ') || '(none)'
+                        });
                     }
                 } catch (err) {
                     updateErrors.tags = 'Error updating tags';
                 }
             }
 
+            // Set any errors that occurred
             if (Object.keys(updateErrors).length > 0) {
                 setErrors({...errors, ...updateErrors});
             }
 
             if (hasUpdated) {
+                setChanges(changesList);
                 setSuccess("Suggestion updated successfully!");
+
                 onUpdate({
                     ...suggestion,
                     tags: tags.map(tag => typeof tag === 'string' ? { name: tag } : tag),
@@ -91,7 +101,7 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
                 // Close modal after short delay to show success message
                 setTimeout(() => {
                     onClose();
-                }, 1000);
+                }, 2000);
             } else if (Object.keys(updateErrors).length === 0) {
                 setSuccess("No changes detected.");
                 setTimeout(() => {
@@ -135,6 +145,27 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
                 {success && (
                     <div className="alert alert-success">
                         {success}
+                    </div>
+                )}
+
+                {changes.length > 0 && (
+                    <div className="changes-summary">
+                        <h3>Changes Made:</h3>
+                        {changes.map((change, index) => (
+                            <div key={index} className="change-item">
+                                <strong>{change.field}:</strong>
+                                <div className="change-details">
+                                    <div className="previous-value">
+                                        <span className="label">Previous:</span>
+                                        <span className="value">{change.previous}</span>
+                                    </div>
+                                    <div className="new-value">
+                                        <span className="label">New:</span>
+                                        <span className="value">{change.new}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 

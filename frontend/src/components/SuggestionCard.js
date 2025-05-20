@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaQuestion, FaTrash, FaEdit } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
+import SuggestionInteractions from './SuggestionInteractions';
 import '../styles/SuggestionCard.css';
 
 const SuggestionCard = ({
@@ -11,7 +12,8 @@ const SuggestionCard = ({
                             formatDate,
                             onDelete,
                             onEdit,
-                            isOwner
+                            isOwner,
+                            onActionComplete
                         }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -33,7 +35,6 @@ const SuggestionCard = ({
 
     const navigateToUserProfile = (profileUuid) => {
         const targetUuid = profileUuid || post.user.uuid;
-
         if (!user) {
             if (location.pathname === `/profile/${targetUuid}`) {
                 return;
@@ -47,8 +48,14 @@ const SuggestionCard = ({
             if (location.pathname === targetPath) {
                 return;
             } else {
-                navigate(targetPath)
+                navigate(targetPath);
             }
+        }
+    };
+
+    const handleActionComplete = (updatedSuggestion) => {
+        if (onActionComplete) {
+            onActionComplete(updatedSuggestion);
         }
     };
 
@@ -69,7 +76,7 @@ const SuggestionCard = ({
             <div className="suggestion-card-content">
                 <div className="badges-container">
                     <div className="badge suggestion-badge">
-                        <FaQuestion className="badge-icon"/>
+                        <FaQuestion className="badge-icon" />
                         <span>{post.type || "Suggestion"}</span>
                     </div>
                 </div>
@@ -103,7 +110,6 @@ const SuggestionCard = ({
                     >
                         @{username}
                     </button>
-
                     {post.creationDate && (
                         <span className="date">{formatDate(post.creationDate)}</span>
                     )}
@@ -113,14 +119,10 @@ const SuggestionCard = ({
                     <div className="tags-section">
                         <div className="tags-inline">
                             {post.tags.slice(0, 5).map((tag, index) => (
-                                <span key={index} className="tag">
-                                    #{tag.name || tag}
-                                </span>
+                                <span key={index} className="tag">#{tag.name || tag}</span>
                             ))}
                             {showAllTags && post.tags.slice(5).map((tag, index) => (
-                                <span key={index + 5} className="tag">
-                                    #{tag.name || tag}
-                                </span>
+                                <span key={index + 5} className="tag">#{tag.name || tag}</span>
                             ))}
                         </div>
                         {post.tags.length > 5 && (
@@ -131,6 +133,14 @@ const SuggestionCard = ({
                     </div>
                 )}
 
+                {/* Add suggestion interactions component */}
+                <SuggestionInteractions
+                    user={user}
+                    suggestion={post}
+                    baseApiUrl={baseApiUrl}
+                    onActionComplete={handleActionComplete}
+                />
+
                 {isOwner && (
                     <div className="actions">
                         <button
@@ -138,14 +148,14 @@ const SuggestionCard = ({
                             onClick={onEdit}
                             aria-label="Edit Suggestion"
                         >
-                            <FaEdit/> Edit
+                            <FaEdit /> Edit
                         </button>
                         <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={onDelete}
                             aria-label="Delete Suggestion"
                         >
-                            <FaTrash/> Delete
+                            <FaTrash /> Delete
                         </button>
                     </div>
                 )}
