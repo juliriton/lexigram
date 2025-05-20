@@ -1,5 +1,6 @@
 package com.lexigram.app.controller;
 
+import com.lexigram.app.dto.ExperienceDTO;
 import com.lexigram.app.dto.PostExperienceDTO;
 import com.lexigram.app.dto.SuggestionDTO;
 import com.lexigram.app.service.SuggestionService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
@@ -115,6 +117,17 @@ public class SuggestionController {
 
     return ResponseEntity.ok(postLink);
 
+  }
+
+  @GetMapping("suggestion/{uuid}/replies")
+  public ResponseEntity<Set<ExperienceDTO>> getSuggestionReplies(HttpSession session,
+                                                                 @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Set<ExperienceDTO> experiences = suggestionService.getAllReplies(id, uuid);
+
+    return ResponseEntity.ok(experiences);
   }
 
 }

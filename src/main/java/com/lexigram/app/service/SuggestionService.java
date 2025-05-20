@@ -13,6 +13,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
@@ -323,6 +325,30 @@ public class SuggestionService {
       }
     }
     return publicSavedSuggestions;
+  }
+
+  public Set<ExperienceDTO> getAllReplies(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+
+    Set<ExperienceDTO> replies = new HashSet<>();
+
+    for (Experience e : suggestion.getReplies()) {
+      replies.add(new ExperienceDTO(e));
+    }
+
+    return replies;
   }
 
 }
