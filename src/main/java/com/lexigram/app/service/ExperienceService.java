@@ -7,6 +7,7 @@ import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.experience.ExperiencePrivacySettings;
 import com.lexigram.app.model.experience.ExperienceStyle;
 import com.lexigram.app.model.resonate.Resonate;
+import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.user.User;
 import com.lexigram.app.repository.*;
 import jakarta.transaction.Transactional;
@@ -22,6 +23,7 @@ import java.util.*;
 @Service
 public class ExperienceService {
 
+  private final SuggestionRepository suggestionRepository;
   @Value("${lexigram.upload.dir}")
   private String uploadDir;
 
@@ -42,7 +44,7 @@ public class ExperienceService {
                            ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository,
                            ResonateRepository resonateRepository,
                            CommentRepository commentRepository,
-                           SaveRepository saveRepository) {
+                           SaveRepository saveRepository, SuggestionRepository suggestionRepository) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
@@ -51,6 +53,7 @@ public class ExperienceService {
     this.resonateRepository = resonateRepository;
     this.commentRepository = commentRepository;
     this.saveRepository = saveRepository;
+    this.suggestionRepository = suggestionRepository;
   }
 
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
@@ -183,11 +186,25 @@ public class ExperienceService {
   }
 
   public boolean deleteExperience(UUID experienceUuid, Long userId) {
-    Optional<Experience> experience = experienceRepository.findByUuid(experienceUuid);
-    if (experience.isEmpty()){
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(experienceUuid);
+    if (experienceOptional.isEmpty()){
       return false;
     }
-    experienceRepository.deleteById(experience.get().getId());
+    Experience experience = experienceOptional.get();
+
+    if (experience.isReply()) {
+      Suggestion suggestion = experience.getSuggestion();
+      suggestion.removeReply(experience);
+      suggestionRepository.save(suggestion);
+    }
+
+    if (!experience.isOrigin()) {
+      Experience origin = experience.getOrigin();
+      origin.removeBranch(experience);
+      experienceRepository.save(origin);
+    }
+
+    experienceRepository.deleteById(experience.getId());
     User user = userRepository.findById(userId).get();
     userRepository.save(user);
     return true;

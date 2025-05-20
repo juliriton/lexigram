@@ -1,12 +1,14 @@
-package com.lexigram.app.model;
+package com.lexigram.app.model.suggestion;
 
+import com.lexigram.app.model.Save;
+import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.experience.ExperiencePrivacySettings;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -64,9 +66,14 @@ public class Suggestion {
   )
   private Set<Tag> tags = new HashSet<>();
 
+  @OneToOne(mappedBy = "suggestion", cascade = CascadeType.ALL, orphanRemoval = true)
+  private SuggestionPrivacySettings privacySettings;
+
   public Suggestion() {}
 
-  public Suggestion(User user, Set<Tag> tags, String body) {
+  public Suggestion(User user,
+                    Set<Tag> tags,
+                    String body) {
     this.user = user;
     this.tags = tags;
     this.body = body;
@@ -157,4 +164,13 @@ public class Suggestion {
   public long getSavesAmount() {
     return saveAmount;
   }
+
+  public SuggestionPrivacySettings getPrivacySettings() {
+    return privacySettings;
+  }
+
+  public void setPrivacySettings(SuggestionPrivacySettings privacySettings) {
+    this.privacySettings = privacySettings;
+  }
+
 }

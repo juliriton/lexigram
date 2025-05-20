@@ -1,7 +1,7 @@
 package com.lexigram.app.dto;
 
 import com.lexigram.app.model.Save;
-import com.lexigram.app.model.Suggestion;
+import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;

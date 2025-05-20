@@ -3,10 +3,11 @@ package com.lexigram.app.service;
 import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.model.Save;
-import com.lexigram.app.model.Suggestion;
+import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;
+import com.lexigram.app.model.suggestion.SuggestionPrivacySettings;
 import com.lexigram.app.model.user.User;
 import com.lexigram.app.repository.*;
 import jakarta.transaction.Transactional;
@@ -14,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
@@ -28,6 +28,7 @@ public class SuggestionService {
   private final UserRepository userRepository;
   private final ExperienceService experienceService;
   private final ExperienceRepository experienceRepository;
+  private final SuggestionPrivacySettingsRepository suggestionPrivacySettingsRepository;
   private SuggestionRepository suggestionRepository;
   private TagRepository tagRepository;
   private SaveRepository saveRepository;
@@ -40,7 +41,7 @@ public class SuggestionService {
                            ExperienceService experienceService,
                            ExperienceRepository experienceRepository,
                            SaveRepository saveRepository,
-                           ResonateRepository resonateRepository) {
+                           ResonateRepository resonateRepository, SuggestionPrivacySettingsRepository suggestionPrivacySettingsRepository) {
     this.suggestionRepository = suggestionRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
@@ -48,6 +49,7 @@ public class SuggestionService {
     this.experienceRepository = experienceRepository;
     this.saveRepository = saveRepository;
     this.resonateRepository = resonateRepository;
+    this.suggestionPrivacySettingsRepository = suggestionPrivacySettingsRepository;
   }
 
   public SuggestionDTO createSuggestion(Long id, PostSuggestionDTO postSuggestionDTO) {
@@ -66,8 +68,15 @@ public class SuggestionService {
 
     String body = postSuggestionDTO.getBody();
     User user = userRepository.findById(id).get();
+    PostSuggestionPrivacySettingsDTO privacySettings = postSuggestionDTO.getPrivacySettings();
 
     Suggestion suggestion = new Suggestion(user, tags, body);
+    SuggestionPrivacySettings suggestionPrivacySettings = new SuggestionPrivacySettings(suggestion,
+                                                                                        privacySettings.getAllowResonates(),
+                                                                                        privacySettings.getAllowSaves());
+    suggestionPrivacySettingsRepository.save(suggestionPrivacySettings);
+
+    suggestion.setPrivacySettings(suggestionPrivacySettings);
     suggestionRepository.save(suggestion);
 
     return new SuggestionDTO(suggestion);

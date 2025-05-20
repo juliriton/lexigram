@@ -1,6 +1,7 @@
 package com.lexigram.app.model;
 
 import com.lexigram.app.model.experience.Experience;
+import com.lexigram.app.model.suggestion.Suggestion;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;

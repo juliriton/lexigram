@@ -1,7 +1,6 @@
 package com.lexigram.app.repository;
 
-import com.lexigram.app.dto.SuggestionDTO;
-import com.lexigram.app.model.Suggestion;
+import com.lexigram.app.model.suggestion.Suggestion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
