@@ -1,0 +1,62 @@
+.experience-interactions {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid #eee;
+    margin-top: 0.5rem;
+}
+
+.experience-interactions .interaction-button {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    gap: 0.35rem;
+}
+
+.experience-interactions .interaction-button:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.experience-interactions .interaction-button.active {
+    color: #0d6efd;
+}
+
+.experience-interactions .interaction-button.resonated {
+    color: #e91e63;
+}
+
+.experience-interactions .interaction-button.resonated:hover {
+    color: #d81b60;
+}
+
+.experience-interactions .interaction-button.report:hover {
+    color: #dc3545;
+}
+
+.experience-interactions .interaction-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.experience-interactions .interaction-count {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+@media (max-width: 576px) {
+    .experience-interactions {
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .experience-interactions .interaction-button {
+        padding: 0.25rem;
+    }
+}

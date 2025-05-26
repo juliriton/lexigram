@@ -2,7 +2,7 @@ package com.lexigram.app.model.experience;
 
 import com.lexigram.app.model.Comment;
 import com.lexigram.app.model.Save;
-import com.lexigram.app.model.Suggestion;
+import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
@@ -82,7 +82,7 @@ public class Experience {
   private Suggestion suggestion;
 
   @OneToMany(mappedBy = "origin", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<Experience> branches;
+  private Set<Experience> branches = new HashSet<>();
   
   @OneToOne(mappedBy = "experience", cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "style_id", referencedColumnName = "id")
@@ -254,6 +254,11 @@ public class Experience {
     branchAmount +=1;
   }
 
+  public void removeBranch(Experience experience) {
+    branches.remove(experience);
+    branchAmount -=1;
+  }
+
   public void addComment(Comment comment) {
     comments.add(comment);
     commentAmount +=1;
@@ -266,6 +271,14 @@ public class Experience {
 
   public Set<Save> getSaves() {
     return saves;
+  }
+
+  public Suggestion getSuggestion() {
+    return suggestion;
+  }
+
+  public Experience getOrigin() {
+    return origin;
   }
 
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaTag, FaEdit, FaUserTag } from 'react-icons/fa';
-import '../styles/EditExperienceModal.css';
+import '../styles/EditPostModal.css';
 
 const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
     const [activeTab, setActiveTab] = useState('quote');
@@ -10,7 +10,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
     const [tagInput, setTagInput] = useState('');
     const [mentions, setMentions] = useState([]);
     const [mentionInput, setMentionInput] = useState('');
-    const [ setMentionResults] = useState([]);
+    const [mentionResults, setMentionResults] = useState([]);
     const [errors, setErrors] = useState({
         quote: null,
         reflection: null,
@@ -18,14 +18,13 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         mentions: null
     });
     const [success, setSuccess] = useState(null);
+    const [changes, setChanges] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         // Initialize tags from experience
         if (experience.tags && Array.isArray(experience.tags)) {
-            setTags(experience.tags.map(tag =>
-                typeof tag === 'string' ? tag : tag.name
-            ));
+            setTags(experience.tags.map(tag => typeof tag === 'string' ? tag : tag.name));
         }
 
         // Initialize mentions from experience
@@ -44,7 +43,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         if (tagInput.trim() !== '' && !tags.includes(tagInput.trim())) {
             setTags([...tags, tagInput.trim()]);
             setTagInput('');
-            setErrors({...errors, tags: null}); // Clear any tag errors
+            setErrors({ ...errors, tags: null }); // Clear any tag errors
         }
     };
 
@@ -55,14 +54,14 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         ));
     };
 
-    // Add direct mention from input (similar to post creation page)
+    // Add direct mention from input
     const handleAddDirectMention = () => {
         if (mentionInput.trim() === '') return;
 
         // Clear any previous errors
-        setErrors({...errors, mentions: null});
+        setErrors({ ...errors, mentions: null });
 
-        // Clean up the username (remove @ if present)
+        // Cleanup the username (remove @ if present)
         const username = mentionInput.trim().replace(/^@/, '');
 
         // Check if already mentioned by username
@@ -90,14 +89,14 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                         setMentions([...mentions, data]);
                     }
                 } else {
-                    setErrors({...errors, mentions: "User not found"});
+                    setErrors({ ...errors, mentions: "User not found" });
                 }
                 setMentionInput('');
-
                 setMentionResults([]);
             })
             .catch(err => {
                 console.error("Error adding mention:", err);
+                setErrors({ ...errors, mentions: "Error searching for user" });
                 setMentionInput('');
             });
     };
@@ -118,10 +117,11 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
     const handleSaveChanges = async () => {
         setIsSaving(true);
         setSuccess(null);
+        setChanges([]);
 
         const quoteError = validateField('quote', quote);
         if (quoteError) {
-            setErrors({...errors, quote: quoteError});
+            setErrors({ ...errors, quote: quoteError });
             setIsSaving(false);
             return;
         }
@@ -129,6 +129,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         try {
             let hasUpdated = false;
             let updateErrors = {};
+            let changesList = [];
 
             // Update quote if changed
             if (quote !== experience.quote) {
@@ -137,16 +138,18 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({
-                            uuid: experience.uuid,
-                            quote: quote
-                        })
+                        body: JSON.stringify({ uuid: experience.uuid, quote: quote })
                     });
 
                     if (!quoteRes.ok) {
                         updateErrors.quote = 'Failed to update quote';
                     } else {
                         hasUpdated = true;
+                        changesList.push({
+                            field: 'Quote',
+                            previous: experience.quote || '(none)',
+                            new: quote || '(none)'
+                        });
                     }
                 } catch (err) {
                     updateErrors.quote = 'Error updating quote';
@@ -160,16 +163,18 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({
-                            uuid: experience.uuid,
-                            reflection: reflection
-                        })
+                        body: JSON.stringify({ uuid: experience.uuid, reflection: reflection })
                     });
 
                     if (!reflectionRes.ok) {
                         updateErrors.reflection = 'Failed to update reflection';
                     } else {
                         hasUpdated = true;
+                        changesList.push({
+                            field: 'Reflection',
+                            previous: experience.reflection || '(none)',
+                            new: reflection || '(none)'
+                        });
                     }
                 } catch (err) {
                     updateErrors.reflection = 'Error updating reflection';
@@ -177,24 +182,25 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             }
 
             // Update tags if changed
-            const currentTags = experience.tags.map(tag =>
-                typeof tag === 'string' ? tag : tag.name
-            );
+            const currentTags = experience.tags?.map(tag => typeof tag === 'string' ? tag : tag.name) || [];
             if (JSON.stringify(tags.sort()) !== JSON.stringify(currentTags.sort())) {
                 try {
                     const tagsRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/tags`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({
-                            tags: tags
-                        })
+                        body: JSON.stringify({ tags: tags })
                     });
 
                     if (!tagsRes.ok) {
                         updateErrors.tags = 'Failed to update tags';
                     } else {
                         hasUpdated = true;
+                        changesList.push({
+                            field: 'Tags',
+                            previous: currentTags.join(', ') || '(none)',
+                            new: tags.join(', ') || '(none)'
+                        });
                     }
                 } catch (err) {
                     updateErrors.tags = 'Error updating tags';
@@ -204,21 +210,27 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             // Update mentions if changed
             const currentMentionUuids = experience.mentions?.map(m => m.uuid) || [];
             const newMentionUuids = mentions.map(m => m.uuid);
+
             if (JSON.stringify(newMentionUuids.sort()) !== JSON.stringify(currentMentionUuids.sort())) {
                 try {
                     const mentionsRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/mentions`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({
-                            mentions: mentions.map(m => m.username)
-                        })
+                        body: JSON.stringify({ mentions: mentions.map(m => m.username) })
                     });
 
                     if (!mentionsRes.ok) {
                         updateErrors.mentions = 'Failed to update mentions';
                     } else {
                         hasUpdated = true;
+                        const previousMentions = experience.mentions?.map(m => `@${m.username}`).join(', ') || '(none)';
+                        const newMentions = mentions.map(m => `@${m.username}`).join(', ') || '(none)';
+                        changesList.push({
+                            field: 'Mentions',
+                            previous: previousMentions,
+                            new: newMentions
+                        });
                     }
                 } catch (err) {
                     updateErrors.mentions = 'Error updating mentions';
@@ -227,11 +239,13 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
 
             // Set any errors that occurred
             if (Object.keys(updateErrors).length > 0) {
-                setErrors({...errors, ...updateErrors});
+                setErrors({ ...errors, ...updateErrors });
             }
 
             if (hasUpdated) {
+                setChanges(changesList);
                 setSuccess("Experience updated successfully!");
+
                 // Update the experience in the parent component
                 onUpdate({
                     ...experience,
@@ -239,12 +253,12 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                     reflection: reflection,
                     tags: tags.map(tag => typeof tag === 'string' ? { name: tag } : tag),
                     mentions: mentions
-                });
+                }, "Experience updated successfully!");
 
                 // Close modal after short delay to show success message
                 setTimeout(() => {
                     onClose();
-                }, 1000);
+                }, 2000);
             } else if (Object.keys(updateErrors).length === 0) {
                 setSuccess("No changes detected.");
                 setTimeout(() => {
@@ -253,7 +267,10 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             }
         } catch (err) {
             console.error("Error updating experience:", err);
-            setErrors({...errors, general: err.message || "Failed to update experience. Please try again."});
+            setErrors({
+                ...errors,
+                general: err.message || "Failed to update experience. Please try again."
+            });
         } finally {
             setIsSaving(false);
         }
@@ -301,14 +318,31 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 </div>
 
                 {errors.general && (
-                    <div className="alert alert-error">
-                        {errors.general}
-                    </div>
+                    <div className="alert alert-error">{errors.general}</div>
                 )}
 
                 {success && (
-                    <div className="alert alert-success">
-                        {success}
+                    <div className="alert alert-success">{success}</div>
+                )}
+
+                {changes.length > 0 && (
+                    <div className="changes-summary">
+                        <h3>Changes Made:</h3>
+                        {changes.map((change, index) => (
+                            <div key={index} className="change-item">
+                                <strong>{change.field}:</strong>
+                                <div className="change-details">
+                                    <div className="previous-value">
+                                        <span className="label">Previous:</span>
+                                        <span className="value">{change.previous}</span>
+                                    </div>
+                                    <div className="new-value">
+                                        <span className="label">New:</span>
+                                        <span className="value">{change.new}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 
@@ -322,7 +356,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                                 onChange={(e) => {
                                     setQuote(e.target.value);
                                     const error = validateField('quote', e.target.value);
-                                    setErrors({...errors, quote: error});
+                                    setErrors({ ...errors, quote: error });
                                 }}
                                 placeholder="Enter a quote..."
                                 rows={4}
@@ -366,13 +400,10 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                                 <button onClick={handleAddTag}>Add</button>
                             </div>
                             {errors.tags && <div className="field-error">{errors.tags}</div>}
-
                             <div className="tags-list">
                                 {tags.map((tag, index) => (
                                     <div key={index} className="tag-item">
-                                        <span>
-                                          {typeof tag === 'string' ? tag : tag.name}
-                                        </span>
+                                        <span>{typeof tag === 'string' ? tag : tag.name}</span>
                                         <button onClick={() => handleRemoveTag(tag)}>
                                             <FaTimes />
                                         </button>
@@ -400,9 +431,6 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                                 <button onClick={handleAddDirectMention}>Add</button>
                             </div>
                             {errors.mentions && <div className="field-error">{errors.mentions}</div>}
-
-
-
                             <div className="mentions-list">
                                 <h4>Current Mentions:</h4>
                                 {mentions.length === 0 ? (
@@ -423,18 +451,10 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 </div>
 
                 <div className="form-buttons">
-                    <button
-                        className="cancel-btn"
-                        onClick={onClose}
-                        disabled={isSaving}
-                    >
+                    <button className="cancel-btn" onClick={onClose} disabled={isSaving}>
                         Cancel
                     </button>
-                    <button
-                        className="submit-btn"
-                        onClick={handleSaveChanges}
-                        disabled={isSaving}
-                    >
+                    <button className="submit-btn" onClick={handleSaveChanges} disabled={isSaving}>
                         {isSaving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>

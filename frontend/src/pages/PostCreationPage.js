@@ -6,7 +6,6 @@ import '../styles/PostCreationPage.css';
 const PostCreationPage = ({ user }) => {
     const navigate = useNavigate();
     const [activeForm, setActiveForm] = useState('experience');
-
     const [quote, setQuote] = useState('');
     const [reflection, setReflection] = useState('');
     const [mentions, setMentions] = useState('');
@@ -103,21 +102,19 @@ const PostCreationPage = ({ user }) => {
 
         if (fontSize < 8 || fontSize > 30) return;
 
-        // Validate quote and reflection
         if (!validateTextContent(quote, QUOTE_MIN_CHARS, setQuoteError)) return;
         if (REFLECTION_MIN_CHARS > 0 && !validateTextContent(reflection, REFLECTION_MIN_CHARS, setReflectionError)) return;
 
-        // Process tags and mentions
         const tagArray = tags.split(',').map(t => t.trim()).filter(t => t);
         const mentionArray = mentions.split(',').map(m => m.trim().replace('@','')).filter(m => m);
 
-        // Trim spaces from quote and reflection for submission
         const trimmedQuote = quote.trim();
         const trimmedReflection = reflection.trim();
 
         const postObj = {
             quote: trimmedQuote,
             reflection: trimmedReflection,
+            isReply: false,
             isOrigin: true,
             tags: tagArray,
             mentions: mentionArray,

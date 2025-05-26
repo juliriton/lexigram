@@ -1,0 +1,102 @@
+.suggestion-interactions {
+    margin-top: 15px;
+    border-top: 1px solid #eaeaea;
+    padding-top: 12px;
+}
+
+.interaction-btn-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.interaction-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.interaction-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.interaction-btn.active {
+    color: #0d6efd;
+}
+
+.interaction-btn.active:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.interaction-count {
+    font-size: 0.8rem;
+    min-width: 20px;
+}
+
+.interaction-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Animation for button presses */
+.interaction-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+/* Modal styling for reply functionality */
+.reply-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.reply-modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.reply-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.reply-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+@media (max-width: 576px) {
+    .interaction-btn {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+
+    .interaction-count {
+        font-size: 0.7rem;
+    }
+}

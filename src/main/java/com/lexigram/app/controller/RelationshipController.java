@@ -85,4 +85,19 @@ public class RelationshipController {
     return ResponseEntity.status(401).build();
   }
 
+  @GetMapping("/users/{uuid}")
+  public ResponseEntity<ConnectionProfileDTO> getRelationshipProfileByUuid(HttpSession session, @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<ConnectionProfileDTO> optionalConnection = relationshipProfileService.getRelationshipProfileByUuid(id, uuid);
+
+    if (optionalConnection.isPresent()) {
+      ConnectionProfileDTO connection = optionalConnection.get();
+      return ResponseEntity.ok(connection);
+    }
+
+    return ResponseEntity.status(401).build();
+  }
+
 }

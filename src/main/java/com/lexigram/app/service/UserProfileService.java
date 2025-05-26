@@ -3,13 +3,14 @@ package com.lexigram.app.service;
 import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.model.experience.Experience;
-import com.lexigram.app.model.Suggestion;
+import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.user.User;
 import com.lexigram.app.model.user.UserProfile;
 import com.lexigram.app.repository.ExperienceRepository;
 import com.lexigram.app.repository.SuggestionRepository;
 import com.lexigram.app.repository.UserProfileRepository;
 import com.lexigram.app.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -180,5 +181,35 @@ public class UserProfileService {
     }
     return following;
   }
+
+  @Transactional
+  public ConnectionDTO removeFollower(Long id, UUID followerUuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+    Optional<User> followerOptional = userRepository.findByUuid(followerUuid);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    if (followerOptional.isEmpty()) {
+      throw new UnsupportedOperationException();
+    }
+
+    User user = userOptional.get();
+    User follower = followerOptional.get();
+    UserProfile followerProfile = userProfileRepository.findById(follower.getId()).get();
+
+    user.removeFollower(follower);
+    follower.removeFollowing(user);
+
+    userRepository.save(user);
+    userRepository.save(follower);
+
+    return new ConnectionDTO(follower.getUuid(),
+        follower.getUsername(),
+        follower.getEmail(),
+        followerProfile.getProfilePictureUrl());
+  }
+
 }
 

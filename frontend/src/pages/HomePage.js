@@ -82,7 +82,6 @@ const HomePage = ({ user, setUser }) => {
             return;
         }
 
-        // Prevent searching while already in progress
         if (searching) {
             return;
         }
@@ -115,7 +114,6 @@ const HomePage = ({ user, setUser }) => {
     const clearSearch = () => {
         setSearchQuery('');
         setSearchResults(null);
-        // No need to refetch, the experiences and suggestions are still in state
     };
 
     const handleMentionClick = (mentionUuid) => {

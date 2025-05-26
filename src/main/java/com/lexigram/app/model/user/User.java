@@ -2,7 +2,7 @@ package com.lexigram.app.model.user;
 
 import com.lexigram.app.model.Comment;
 import com.lexigram.app.model.Save;
-import com.lexigram.app.model.Suggestion;
+import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;
 import jakarta.persistence.*;

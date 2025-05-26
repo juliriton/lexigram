@@ -31,7 +31,9 @@ public class UserProfileController {
   private final UserProfileService userProfileService;
 
   @Autowired
-  public UserProfileController(UserProfileService userProfileService, ExperienceService experienceService, SuggestionService suggestionService) {
+  public UserProfileController(UserProfileService userProfileService,
+                               ExperienceService experienceService,
+                               SuggestionService suggestionService) {
     this.userProfileService = userProfileService;
     this.experienceService = experienceService;
     this.suggestionService = suggestionService;
@@ -202,6 +204,15 @@ public class UserProfileController {
     if (id == null) return ResponseEntity.status(401).build();
 
     return ResponseEntity.ok(userProfileService.getFollowing(id));
+  }
+
+  @GetMapping("/followers/{followerUuid}")
+  public ResponseEntity<ConnectionDTO> removeFollower(HttpSession session,
+                                                           @PathVariable UUID followerUuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    return ResponseEntity.ok(userProfileService.removeFollower(id, followerUuid));
   }
 
   @PostMapping("/posts/delete/suggestions/{suggestionUuid}")

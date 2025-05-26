@@ -1,5 +1,6 @@
 package com.lexigram.app.controller;
 
+import com.lexigram.app.dto.ExperienceDTO;
 import com.lexigram.app.dto.PostExperienceDTO;
 import com.lexigram.app.dto.SuggestionDTO;
 import com.lexigram.app.service.SuggestionService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
@@ -25,8 +27,8 @@ public class SuggestionController {
     this.suggestionService = suggestionService;
   }
 
-  @PutMapping("suggestion/{uuid}/resonate")
-  public ResponseEntity<SuggestionDTO> resonateExperience(HttpSession session, @PathVariable UUID uuid) {
+  @PostMapping("suggestion/{uuid}/resonate")
+  public ResponseEntity<SuggestionDTO> resonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
@@ -40,8 +42,8 @@ public class SuggestionController {
     return ResponseEntity.status(401).build();
   }
 
-  @PutMapping("suggestion/{uuid}/unresonate")
-  public ResponseEntity<SuggestionDTO> unResonateExperience(HttpSession session, @PathVariable UUID uuid) {
+  @DeleteMapping("suggestion/{uuid}/un-resonate")
+  public ResponseEntity<SuggestionDTO> unResonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
@@ -56,7 +58,7 @@ public class SuggestionController {
 
   }
 
-  @PutMapping(value = "suggestion/{uuid}/reply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(value = "suggestion/{uuid}/reply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<SuggestionDTO> replySuggestion(HttpSession session,
                                                        @PathVariable UUID uuid,
                                                        @RequestBody PostExperienceDTO experienceDTO,
@@ -75,7 +77,7 @@ public class SuggestionController {
 
   }
 
-  @PutMapping("suggestion/{uuid}/save")
+  @PostMapping("suggestion/{uuid}/save")
   public ResponseEntity<SuggestionDTO> saveSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -90,7 +92,7 @@ public class SuggestionController {
     return ResponseEntity.status(401).build();
   }
 
-  @PutMapping("suggestion/{uuid}/un-save")
+  @DeleteMapping("suggestion/{uuid}/un-save")
   public ResponseEntity<SuggestionDTO> unSaveSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -115,6 +117,17 @@ public class SuggestionController {
 
     return ResponseEntity.ok(postLink);
 
+  }
+
+  @GetMapping("suggestion/{uuid}/replies")
+  public ResponseEntity<Set<ExperienceDTO>> getSuggestionReplies(HttpSession session,
+                                                                 @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Set<ExperienceDTO> experiences = suggestionService.getAllReplies(id, uuid);
+
+    return ResponseEntity.ok(experiences);
   }
 
 }
