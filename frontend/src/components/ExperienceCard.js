@@ -368,21 +368,6 @@ const ExperienceCard = ({
                         >
                             "{rawQuote}"
                         </div>
-
-                        {isOwner && (
-                            <div className="edit-quote-btn-container">
-                                <button
-                                    className="edit-quote-btn"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setQuoteModalOpen(false);
-                                        setShowEditModal(true);
-                                    }}
-                                >
-                                    <FaEdit size={14} /> Edit Quote
-                                </button>
-                            </div>
-                        )}
                     </div>
                 </div>
             )}

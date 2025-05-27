@@ -523,17 +523,17 @@ New: "${bioToUpdate}"`);
             </div>
 
             <div className="profile-stats">
-                <div className="stat-item">
-                    <div className="stat-count">{postCount}</div>
-                    <div className="stat-label">Posts</div>
+                <div className="profile-stat">
+                    <div className="profile-stat-value">{postCount}</div>
+                    <div className="profile-stat-label">Posts</div>
                 </div>
-                <div className="stat-item">
-                    <div className="stat-count">{followerCount}</div>
-                    <div className="stat-label">Followers</div>
+                <div className="profile-stat">
+                    <div className="profile-stat-value">{followerCount}</div>
+                    <div className="profile-stat-label">Followers</div>
                 </div>
-                <div className="stat-item">
-                    <div className="stat-count">{followingCount}</div>
-                    <div className="stat-label">Following</div>
+                <div className="profile-stat">
+                    <div className="profile-stat-value">{followingCount}</div>
+                    <div className="profile-stat-label">Following</div>
                 </div>
             </div>
 
@@ -627,8 +627,10 @@ New: "${bioToUpdate}"`);
                             <p>No posts found for this filter.</p>
                         </div>
                     ) : (
-                        <div className="posts-grid">
-                            {posts.map(renderPost)}
+                        <div className="post-carousel">
+                            <div className="carousel-track">
+                                {posts.map(renderPost)}
+                            </div>
                         </div>
                     )}
                 </div>
