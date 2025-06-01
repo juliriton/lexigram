@@ -86,25 +86,23 @@ const ExperienceCard = ({
         setUpdatedPost(updatedExperience);
     };
 
-    const navigateToUserProfile = (profileUuid) => {
-        const targetUuid = profileUuid || post.user.uuid;
+    const navigateToUserProfile = () => {
+        const targetUuid = post?.user?.uuid;
+
+        if (!targetUuid)  return;
+
         if (!user) {
-            if (location.pathname === `/profile/${targetUuid}`) {
-                return;
-            }
             navigate('/login');
             return;
         }
 
-        if (targetUuid) {
-            const targetPath = `/profile/${targetUuid}`;
-            if (location.pathname === targetPath) {
-                return;
-            } else {
-                navigate(targetPath);
-            }
+        if (user.uuid === targetUuid) {
+            navigate('/profile');
+        } else {
+            navigate(`/profile/${targetUuid}`);
         }
     };
+
 
     const handleMentionClick = (mentionUuid) => {
         if (!user) {
@@ -118,6 +116,7 @@ const ExperienceCard = ({
         if (onActionComplete) {
             onActionComplete(updatedExperience);
         }
+        setUpdatedPost(updatedExperience);
     };
 
     const renderMentions = (mentions) => {
@@ -257,7 +256,7 @@ const ExperienceCard = ({
                     <div className="meta">
                         <button
                             className="username-link-btn"
-                            onClick={() => navigateToUserProfile()}
+                            onClick={navigateToUserProfile}
                             style={{
                                 background: 'none',
                                 border: 'none',

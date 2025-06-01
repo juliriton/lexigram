@@ -65,15 +65,27 @@ const SavedContent = ({ user, baseApiUrl }) => {
     };
 
     const handleExperienceActionComplete = (updatedExperience) => {
-        setSavedExperiences(prev =>
-            prev.map(exp => exp.uuid === updatedExperience.uuid ? updatedExperience : exp)
-        );
+        if (updatedExperience.saved === false) {
+            setSavedExperiences(prev =>
+                prev.filter(exp => exp.uuid !== updatedExperience.uuid)
+            );
+        } else {
+            setSavedExperiences(prev =>
+                prev.map(exp => exp.uuid === updatedExperience.uuid ? updatedExperience : exp)
+            );
+        }
     };
 
     const handleSuggestionActionComplete = (updatedSuggestion) => {
-        setSavedSuggestions(prev =>
-            prev.map(sug => sug.uuid === updatedSuggestion.uuid ? updatedSuggestion : sug)
-        );
+        if (updatedSuggestion.saved === false) {
+            setSavedSuggestions(prev =>
+                prev.filter(sug => sug.uuid !== updatedSuggestion.uuid)
+            );
+        } else {
+            setSavedSuggestions(prev =>
+                prev.map(sug => sug.uuid === updatedSuggestion.uuid ? updatedSuggestion : sug)
+            );
+        }
     };
 
     if (loading) {
