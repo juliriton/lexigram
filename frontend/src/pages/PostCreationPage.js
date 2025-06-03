@@ -20,6 +20,8 @@ const PostCreationPage = ({ user }) => {
     const [allowSaves, setAllowSaves] = useState(true);
     const [suggestionText, setSuggestionText] = useState('');
     const [suggestionTags, setSuggestionTags] = useState('');
+    const [suggestionAllowResonates, setSuggestionAllowResonates] = useState(true);
+    const [suggestionAllowSaves, setSuggestionAllowSaves] = useState(true);
     const [fontSizeError, setFontSizeError] = useState('');
     const [quoteError, setQuoteError] = useState('');
     const [reflectionError, setReflectionError] = useState('');
@@ -164,11 +166,21 @@ const PostCreationPage = ({ user }) => {
             .map(t => t.trim())
             .filter(t => t);
 
+        // Create suggestion object with privacy settings
+        const suggestionObj = {
+            body: trimmedSuggestionText,
+            tags: tagArray,
+            privacySettings: {
+                allowResonates: suggestionAllowResonates,
+                allowSaves: suggestionAllowSaves
+            }
+        };
+
         try {
             const resp = await fetch('http://localhost:8080/api/auth/me/post/suggestion', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ body: trimmedSuggestionText, tags: tagArray }),
+                body: JSON.stringify(suggestionObj),
                 credentials: 'include'
             });
             if (resp.ok) navigate('/');
@@ -302,7 +314,7 @@ const PostCreationPage = ({ user }) => {
                                 className="submit-btn"
                                 disabled={!quote.trim() || !!quoteError || !!reflectionError}
                             >
-                            Share Experience
+                                Share Experience
                             </button>
                             <button
                                 type="button"
@@ -335,6 +347,24 @@ const PostCreationPage = ({ user }) => {
                             value={suggestionTags}
                             onChange={e=>setSuggestionTags(e.target.value)}
                         />
+
+                        <div className="checkbox-group">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={suggestionAllowResonates}
+                                    onChange={() => setSuggestionAllowResonates(r => !r)}
+                                /> Resonates
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={suggestionAllowSaves}
+                                    onChange={() => setSuggestionAllowSaves(s => !s)}
+                                /> Saves
+                            </label>
+                        </div>
+
                         <div className="form-buttons">
                             <button
                                 type="submit"

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
 import ExperienceInteractions from './ExperienceInteractions';
 import '../styles/ExperienceCard.css';
@@ -20,7 +20,6 @@ const ExperienceCard = ({
                             isOwner,
                             onActionComplete
                         }) => {
-    const location = useLocation();
     const navigate = useNavigate();
     const postId = post.uuid;
     const isQuoteHidden = hiddenQuotes[postId];
@@ -87,9 +86,7 @@ const ExperienceCard = ({
     };
 
     const navigateToUserProfile = () => {
-        const targetUuid = post?.user?.uuid;
-
-        if (!targetUuid)  return;
+        const targetUuid = post.user.uuid;
 
         if (!user) {
             navigate('/login');
@@ -102,7 +99,6 @@ const ExperienceCard = ({
             navigate(`/profile/${targetUuid}`);
         }
     };
-
 
     const handleMentionClick = (mentionUuid) => {
         if (!user) {
