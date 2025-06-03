@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
-import { useNavigate } from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
 import ExperienceInteractions from './ExperienceInteractions';
 import '../styles/ExperienceCard.css';
@@ -21,6 +21,7 @@ const ExperienceCard = ({
                             onActionComplete
                         }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const postId = post.uuid;
     const isQuoteHidden = hiddenQuotes[postId];
     const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
@@ -87,16 +88,20 @@ const ExperienceCard = ({
 
     const navigateToUserProfile = () => {
         const targetUuid = post.user.uuid;
-
         if (!user) {
+            if (location.pathname === `/profile/${targetUuid}`) {
+                return;
+            }
             navigate('/login');
             return;
         }
 
-        if (user.uuid === targetUuid) {
-            navigate('/profile');
-        } else {
-            navigate(`/profile/${targetUuid}`);
+        if (targetUuid) {
+            const targetPath = `/profile/${targetUuid}`;
+            if (location.pathname === targetPath) {
+            } else {
+                navigate(targetPath);
+            }
         }
     };
 
@@ -252,7 +257,7 @@ const ExperienceCard = ({
                     <div className="meta">
                         <button
                             className="username-link-btn"
-                            onClick={navigateToUserProfile}
+                            onClick={() => navigateToUserProfile()}
                             style={{
                                 background: 'none',
                                 border: 'none',

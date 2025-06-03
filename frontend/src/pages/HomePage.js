@@ -128,16 +128,13 @@ const HomePage = ({ user, setUser }) => {
 
     const renderExperienceCards = (experiencesArray) => {
         return experiencesArray.map(exp => {
-            const userUuid = exp.user?.uuid || null;
-
             return (
                 <ExperienceCard
                     key={exp.uuid}
                     user={user}
                     post={exp}
                     baseApiUrl={baseApiUrl}
-                    username={exp.user?.username ?? user?.username ?? 'Usuario'}
-                    userUuid={userUuid}
+                    username={exp.user?.username || user?.username || 'Usuario'}
                     hiddenQuotes={hiddenQuotes}
                     toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
                     showMentions={showMentions}
@@ -232,12 +229,10 @@ const HomePage = ({ user, setUser }) => {
         ))
     );
 
-    // Filter the posts based on both search results and post filter
     let displayExperiences = [];
     let displaySuggestions = [];
 
     if (searchResults) {
-        // When searching, apply the postFilter to the search results
         const allSearchExperiences = searchResults.experiences || [];
         const allSearchSuggestions = searchResults.suggestions || [];
 
@@ -252,7 +247,6 @@ const HomePage = ({ user, setUser }) => {
             displaySuggestions = allSearchSuggestions;
         }
     } else {
-        // Normal feed filtering
         if (postFilter === 'all') {
             displayExperiences = experiences;
             displaySuggestions = suggestions;

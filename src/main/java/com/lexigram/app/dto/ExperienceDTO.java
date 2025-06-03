@@ -142,7 +142,7 @@ public class ExperienceDTO {
   public long getSaveAmount() { return saveAmount; }
   public long getBranchAmount() { return branchAmount; }
   public boolean isOrigin() { return isOrigin; }
-  public UserDTO buildUserDTO() { return user; }
+  public UserDTO getUser() { return user; }
   public Set<TagDTO> getTags() { return tags; }
   public ExperienceStyleDTO getStyle() { return style; }
   public ExperiencePrivacySettingsDTO getPrivacySettings() { return privacySettings; }
