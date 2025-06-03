@@ -206,7 +206,7 @@ public class UserProfileController {
     return ResponseEntity.ok(userProfileService.getFollowing(id));
   }
 
-  @GetMapping("/followers/{followerUuid}")
+  @DeleteMapping("/followers/remove/{followerUuid}")
   public ResponseEntity<ConnectionDTO> removeFollower(HttpSession session,
                                                            @PathVariable UUID followerUuid) {
     Long id = (Long) session.getAttribute("user");
@@ -215,7 +215,7 @@ public class UserProfileController {
     return ResponseEntity.ok(userProfileService.removeFollower(id, followerUuid));
   }
 
-  @PostMapping("/posts/delete/suggestions/{suggestionUuid}")
+  @DeleteMapping("/posts/delete/suggestions/{suggestionUuid}")
   public ResponseEntity<Void> deleteSuggestion(HttpSession session, @PathVariable UUID suggestionUuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -226,7 +226,7 @@ public class UserProfileController {
     return ResponseEntity.notFound().build();
   }
 
-  @PostMapping("/posts/delete/experiences/{experienceUuid}")
+  @DeleteMapping("/posts/delete/experiences/{experienceUuid}")
   public ResponseEntity<Void> deleteExperience(HttpSession session, @PathVariable UUID experienceUuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();

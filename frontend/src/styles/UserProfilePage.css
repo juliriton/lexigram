@@ -552,3 +552,189 @@ input[type="file"]:hover {
     margin-left: 0.5rem;
 }
 
+/*Para eliminar usuarios*/
+.connection-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.connection-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.connection-info-clickable {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    cursor: pointer;
+}
+
+.connection-avatar {
+    margin-right: 12px;
+}
+
+.connection-avatar img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.connection-info {
+    flex: 1;
+}
+
+.connection-username {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.connection-email {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.remove-follower-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.remove-follower-btn:hover {
+    background: #c82333;
+    transform: scale(1.1);
+}
+
+.remove-follower-btn:active {
+    transform: scale(0.95);
+}
+
+/* Modal styles para confirmación */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.delete-confirmation-modal {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.delete-confirmation-modal h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 20px;
+}
+
+.delete-confirmation-modal p {
+    margin: 0 0 20px 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .connection-card {
+        padding: 12px;
+    }
+
+    .connection-avatar img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .connection-username {
+        font-size: 14px;
+    }
+
+    .connection-email {
+        font-size: 12px;
+    }
+
+    .remove-follower-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .delete-confirmation-modal {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+
+    .btn-secondary,
+    .btn-danger {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}

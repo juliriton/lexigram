@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaHome, FaArrowLeft, FaUser, FaUsers, FaBookmark } from 'react-icons/fa';
+import { FaHome, FaArrowLeft, FaUser, FaUsers, FaBookmark, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import '../styles/UserProfilePage.css';
 import ExperienceCard from '../components/ExperienceCard';
@@ -32,6 +32,7 @@ const UserProfilePage = ({ user }) => {
     const [postCount, setPostCount] = useState(0);
     const [followerCount, setFollowerCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
+    const [removeFollowerConfirmation, setRemoveFollowerConfirmation] = useState(null);
 
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
@@ -266,7 +267,7 @@ New: "${bioToUpdate}"`);
                 : `${baseApiUrl}/api/auth/me/profile/posts/delete/suggestions/${uuid}`;
 
             const res = await fetch(endpoint, {
-                method: 'POST',
+                method: 'DELETE',
                 credentials: 'include',
             });
 
@@ -282,6 +283,53 @@ New: "${bioToUpdate}"`);
             console.error(`Error deleting ${type.toLowerCase()}:`, err);
             setUpdateMessage(`Error deleting ${type.toLowerCase()}: ${err.message}`);
         }
+    };
+
+    // Nueva función para remover follower
+    const handleRemoveFollower = async () => {
+        if (!removeFollowerConfirmation) return;
+
+        const { uuid, username } = removeFollowerConfirmation;
+
+        try {
+            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/followers/remove/${uuid}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to remove follower');
+            }
+
+            // Actualizar la lista de followers localmente
+            setFollowers(followers.filter(follower => follower.uuid !== uuid));
+            setFollowerCount(prevCount => prevCount - 1);
+            setUpdateMessage(`${username} has been removed from your followers`);
+            setRemoveFollowerConfirmation(null);
+        } catch (err) {
+            console.error('Error removing follower:', err);
+            setUpdateMessage(`Error removing follower: ${err.message}`);
+            setRemoveFollowerConfirmation(null);
+        }
+    };
+
+    // Nueva función para confirmar remover follower
+    const confirmRemoveFollower = (follower) => {
+        const uuid = follower?.uuid;
+        const username = follower?.username;
+
+        if (!uuid || !username) {
+            console.error("Cannot remove follower: Missing UUID or username", follower);
+            setUpdateMessage("Error: Cannot remove this follower. Missing information.");
+            return;
+        }
+
+        setRemoveFollowerConfirmation({ uuid, username });
+    };
+
+    // Función para cancelar remover follower
+    const cancelRemoveFollower = () => {
+        setRemoveFollowerConfirmation(null);
     };
 
     const confirmDelete = (post, postType) => {
@@ -455,24 +503,38 @@ New: "${bioToUpdate}"`);
         return (
             <div className="connections-list">
                 {connections.map(connection => (
-                    <div
-                        key={connection.uuid}
-                        className="connection-card"
-                        onClick={() => handleNavigateToUserProfile(connection.uuid)}
-                    >
-                        <div className="connection-avatar">
-                            <img
-                                src={getConnectionProfileImageUrl(connection)}
-                                alt={connection.username}
-                                onError={(e) => {
-                                    e.target.src = defaultProfilePic;
+                    <div key={connection.uuid} className="connection-card">
+                        <div
+                            className="connection-info-clickable"
+                            onClick={() => handleNavigateToUserProfile(connection.uuid)}
+                        >
+                            <div className="connection-avatar">
+                                <img
+                                    src={getConnectionProfileImageUrl(connection)}
+                                    alt={connection.username}
+                                    onError={(e) => {
+                                        e.target.src = defaultProfilePic;
+                                    }}
+                                />
+                            </div>
+                            <div className="connection-info">
+                                <h4 className="connection-username">{connection.username}</h4>
+                                <p className="connection-email">{connection.email}</p>
+                            </div>
+                        </div>
+                        {/* Mostrar botón de remover solo para followers */}
+                        {connectionType === 'followers' && (
+                            <button
+                                className="remove-follower-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    confirmRemoveFollower(connection);
                                 }}
-                            />
-                        </div>
-                        <div className="connection-info">
-                            <h4 className="connection-username">{connection.username}</h4>
-                            <p className="connection-email">{connection.email}</p>
-                        </div>
+                                title="Remove follower"
+                            >
+                                <FaTimes />
+                            </button>
+                        )}
                     </div>
                 ))}
             </div>
@@ -552,6 +614,20 @@ New: "${bioToUpdate}"`);
                         <div className="modal-buttons">
                             <button className="btn-secondary" onClick={cancelDelete}>Cancel</button>
                             <button className="btn-danger" onClick={handleDeletePost}>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Nuevo modal de confirmación para remover follower */}
+            {removeFollowerConfirmation && (
+                <div className="modal-backdrop">
+                    <div className="delete-confirmation-modal">
+                        <h3>Remove Follower</h3>
+                        <p>Are you sure you want to remove <strong>{removeFollowerConfirmation.username}</strong> from your followers? They will no longer see your updates.</p>
+                        <div className="modal-buttons">
+                            <button className="btn-secondary" onClick={cancelRemoveFollower}>Cancel</button>
+                            <button className="btn-danger" onClick={handleRemoveFollower}>Remove</button>
                         </div>
                     </div>
                 </div>
