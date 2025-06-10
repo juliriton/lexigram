@@ -4,6 +4,7 @@ import { FaStar } from 'react-icons/fa6';
 import {useLocation, useNavigate} from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
 import ExperienceInteractions from './ExperienceInteractions';
+import PostPopupModal from '../components/PostPopUpModal';
 import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
@@ -30,6 +31,7 @@ const ExperienceCard = ({
 
     // Estados para la UI
     const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
+    const [isPopupModalOpen, setPopupModalOpen] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [updatedPost, setUpdatedPost] = useState(post);
@@ -86,6 +88,16 @@ const ExperienceCard = ({
         setUpdatedPost(updatedExperience);
     };
 
+    const handleCardClick = (e) => {
+        if (e.target.closest('button') ||
+            e.target.closest('.options-dropdown') ||
+            e.target.closest('.experience-interactions') ||
+            e.target.closest('.clickable')) {
+            return;
+        }
+        setPopupModalOpen(true);
+    };
+
     const navigateToUserProfile = () => {
         const targetUuid = post.user.uuid;
         if (!user) {
@@ -113,11 +125,18 @@ const ExperienceCard = ({
         navigate(`/profile/${mentionUuid}`);
     };
 
-    const handleActionComplete = (updatedExperience) => {
+    const handleExperienceInteractionComplete = (updatedExperience) => {
         if (onActionComplete) {
             onActionComplete(updatedExperience);
         }
         setUpdatedPost(updatedExperience);
+    };
+
+    const handlePopupActionComplete = (updatedExperience) => {
+        setUpdatedPost(updatedExperience);
+        if (onActionComplete) {
+            onActionComplete(updatedExperience);
+        }
     };
 
     const renderMentions = (mentions) => {
@@ -144,7 +163,7 @@ const ExperienceCard = ({
 
     return (
         <>
-            <div className="experience-card">
+            <div className="experience-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
                 {showEditModal && (
                     <EditExperienceModal
                         experience={updatedPost}
@@ -191,7 +210,10 @@ const ExperienceCard = ({
                                 {needsQuoteTruncate && (
                                     <button
                                         className="view-full-quote-btn"
-                                        onClick={() => setQuoteModalOpen(true)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setQuoteModalOpen(true);
+                                        }}
                                     >
                                         View Full Quote
                                     </button>
@@ -244,7 +266,10 @@ const ExperienceCard = ({
                         {needsReflTruncate && (
                             <button
                                 className="show-more-btn"
-                                onClick={() => setShowFullRefl(r => !r)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowFullRefl(r => !r);
+                                }}
                             >
                                 {showFullRefl ? 'Show less' : 'Show more'}
                             </button>
@@ -253,8 +278,11 @@ const ExperienceCard = ({
 
                     <div className="meta">
                         <button
-                            className="username-link-btn"
-                            onClick={() => navigateToUserProfile()}
+                            className="username-link-btn clickable"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigateToUserProfile();
+                            }}
                             style={{
                                 background: 'none',
                                 border: 'none',
@@ -285,7 +313,10 @@ const ExperienceCard = ({
                             {extraTags.length > 0 && (
                                 <button
                                     className="show-more-btn"
-                                    onClick={() => setShowAllTags(x => !x)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowAllTags(x => !x);
+                                    }}
                                 >
                                     {showAllTags ? 'Show less' : `+${extraTags.length} more`}
                                 </button>
@@ -297,21 +328,26 @@ const ExperienceCard = ({
                         user={user}
                         experience={updatedPost}
                         baseApiUrl={baseApiUrl}
-                        onActionComplete={onActionComplete}
-                        onClick={() => handleActionComplete(updatedPost)}
+                        onActionComplete={handleExperienceInteractionComplete}
                     />
 
                     <div className="actions">
                         <button
                             className="btn btn-sm btn-outline-primary"
-                            onClick={() => toggleQuote(postId)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleQuote(postId);
+                            }}
                         >
                             {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
                         </button>
                         {updatedPost.mentions?.length > 0 && (
                             <button
                                 className="btn btn-sm btn-outline-secondary"
-                                onClick={toggleMentions}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleMentions();
+                                }}
                             >
                                 {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
                             </button>
@@ -349,6 +385,7 @@ const ExperienceCard = ({
                 </div>
             </div>
 
+            {/* Original Quote Modal */}
             {isQuoteModalOpen && (
                 <div className="modal-overlay" onClick={() => setQuoteModalOpen(false)}>
                     <div className="quote-modal-content" onClick={e => e.stopPropagation()}>
@@ -368,6 +405,17 @@ const ExperienceCard = ({
                     </div>
                 </div>
             )}
+
+            <PostPopupModal
+                isOpen={isPopupModalOpen}
+                onClose={() => setPopupModalOpen(false)}
+                post={updatedPost}
+                postType="experience"
+                user={user}
+                baseApiUrl={baseApiUrl}
+                formatDate={formatDate}
+                onActionComplete={handlePopupActionComplete}
+            />
         </>
     );
 };
