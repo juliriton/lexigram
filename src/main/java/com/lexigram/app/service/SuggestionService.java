@@ -292,7 +292,10 @@ public class SuggestionService {
     throw new UnsupportedOperationException();
   }
 
-  public Optional<SuggestionDTO> replySuggestion(Long id, UUID uuid, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
+  public Optional<SuggestionDTO> replySuggestion(Long id,
+                                                 UUID uuid,
+                                                 PostExperienceDTO postExperienceDTO,
+                                                 MultipartFile file) throws IOException {
     Optional<User> userOptional = userRepository.findById(id);
 
     if (userOptional.isEmpty()) {

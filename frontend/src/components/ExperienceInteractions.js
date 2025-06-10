@@ -4,26 +4,44 @@ import '../styles/ExperienceInteractions.css';
 import { FaCodeFork } from "react-icons/fa6";
 
 const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete }) => {
-    const [interactions, setInteractions] = useState({
-        saved: experience.saved || false,
-        saveAmount: experience.saveAmount || 0,
-        resonated: experience.resonated || false,
-        resonatesAmount: experience.resonatesAmount || 0,
-        commentAmount: experience.commentAmount || 0
+
+    const getUserInteractionStatus = (experience, user) => {
+        if (!user || !user.uuid) {
+            return {
+                saved: false,
+                resonated: false
+            };
+        }
+
+        return {
+            saved: experience.savedBy?.includes(user.uuid) || false,
+            resonated: experience.resonatedBy?.includes(user.uuid) || false
+        };
+    };
+
+    const [interactions, setInteractions] = useState(() => {
+        const userStatus = getUserInteractionStatus(experience, user);
+        return {
+            saved: userStatus.saved,
+            saveAmount: experience.saveAmount || 0,
+            resonated: userStatus.resonated,
+            resonatesAmount: experience.resonatesAmount || 0,
+            commentAmount: experience.commentAmount || 0
+        };
     });
 
     const [processingAction, setProcessingAction] = useState(false);
 
-    // 🔁 Sync con nuevas props (como después de un refresh)
     useEffect(() => {
+        const userStatus = getUserInteractionStatus(experience, user);
         setInteractions({
-            saved: experience.saved || false,
+            saved: userStatus.saved,
             saveAmount: experience.saveAmount || 0,
-            resonated: experience.resonated || false,
+            resonated: userStatus.resonated,
             resonatesAmount: experience.resonatesAmount || 0,
             commentAmount: experience.commentAmount || 0
         });
-    }, [experience]);
+    }, [experience, user]);
 
     const handleSaveToggle = async () => {
         if (!user) {
@@ -42,24 +60,25 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
                 credentials: 'include',
             });
 
-            if (!res.ok) throw new Error(`Failed to ${interactions.saved ? 'un-save' : 'save'} experience`);
+            if (!res.ok) {
+                console.error(`Failed to ${interactions.saved ? 'un-save' : 'save'} experience:`, res.status, res.statusText);
+                throw new Error(`Failed to ${interactions.saved ? 'un-save' : 'save'} experience`);
+            }
+
+            // Get updated experience from response
+            const updatedExperience = await res.json();
+            const userStatus = getUserInteractionStatus(updatedExperience, user);
 
             const updatedInteractions = {
                 ...interactions,
-                saved: !interactions.saved,
-                saveAmount: interactions.saved
-                    ? Math.max(0, interactions.saveAmount - 1)
-                    : interactions.saveAmount + 1
+                saved: userStatus.saved,
+                saveAmount: updatedExperience.saveAmount || 0
             };
 
             setInteractions(updatedInteractions);
 
             if (onActionComplete) {
-                onActionComplete({
-                    ...experience,
-                    saved: updatedInteractions.saved,
-                    saveAmount: updatedInteractions.saveAmount
-                });
+                onActionComplete(updatedExperience);
             }
         } catch (err) {
             console.error('Error toggling save:', err);
@@ -85,24 +104,25 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
                 credentials: 'include',
             });
 
-            if (!res.ok) throw new Error(`Failed to ${interactions.resonated ? 'un-resonate' : 'resonate'} experience`);
+            if (!res.ok) {
+                console.error(`Failed to ${interactions.resonated ? 'un-resonate' : 'resonate'} experience:`, res.status, res.statusText);
+                throw new Error(`Failed to ${interactions.resonated ? 'un-resonate' : 'resonate'} experience`);
+            }
+
+            // Get updated experience from response
+            const updatedExperience = await res.json();
+            const userStatus = getUserInteractionStatus(updatedExperience, user);
 
             const updatedInteractions = {
                 ...interactions,
-                resonated: !interactions.resonated,
-                resonatesAmount: interactions.resonated
-                    ? Math.max(0, interactions.resonatesAmount - 1)
-                    : interactions.resonatesAmount + 1
+                resonated: userStatus.resonated,
+                resonatesAmount: updatedExperience.resonatesAmount || 0
             };
 
             setInteractions(updatedInteractions);
 
             if (onActionComplete) {
-                onActionComplete({
-                    ...experience,
-                    resonated: updatedInteractions.resonated,
-                    resonatesAmount: updatedInteractions.resonatesAmount
-                });
+                onActionComplete(updatedExperience);
             }
         } catch (err) {
             console.error('Error toggling resonate:', err);
@@ -119,12 +139,51 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
         console.log('Comment on experience:', experience.uuid);
     };
 
-    const handleShare = () => {
-        console.log('Share experience:', experience.uuid);
+    const handleShare = async () => {
+        try {
+            const endpoint = `${baseApiUrl}/api/auth/me/experience/${experience.uuid}/share`;
+            const res = await fetch(endpoint, {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            if (res.ok) {
+                const shareLink = await res.text();
+                navigator.clipboard.writeText(shareLink);
+                console.log('Share link copied:', shareLink);
+            }
+        } catch (err) {
+            console.error('Error getting share link:', err);
+        }
     };
 
     const handleFork = () => {
+        if (!user) {
+            window.location.href = '/login';
+            return;
+        }
         console.log('Fork experience:', experience.uuid);
+    };
+
+    const handleBranches = async () => {
+        if (!user) {
+            window.location.href = '/login';
+            return;
+        }
+        try {
+            const endpoint = `${baseApiUrl}/api/auth/me/experience/${experience.uuid}/branches`;
+            const res = await fetch(endpoint, {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            if (res.ok) {
+                const branches = await res.json();
+                console.log('Experience branches:', branches);
+            }
+        } catch (err) {
+            console.error('Error getting branches:', err);
+        }
     };
 
     return (
@@ -132,6 +191,7 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
             <button
                 className={`interaction-button ${interactions.resonated ? 'active resonated' : ''}`}
                 onClick={handleResonateToggle}
+                disabled={processingAction}
                 title={user ? (interactions.resonated ? 'Remove resonate' : 'Resonate') : 'Log in to resonate'}
             >
                 {interactions.resonated ? <FaHeart /> : <FaRegHeart />}
@@ -141,6 +201,7 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
             <button
                 className={`interaction-button ${interactions.saved ? 'active' : ''}`}
                 onClick={handleSaveToggle}
+                disabled={processingAction}
                 title={user ? (interactions.saved ? 'Unsave' : 'Save') : 'Log in to save'}
             >
                 {interactions.saved ? <FaBookmark /> : <FaRegBookmark />}
@@ -165,9 +226,9 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
             </button>
 
             <button
-                className="interaction-button report"
+                className="interaction-button"
                 onClick={handleFork}
-                title="Report"
+                title={user ? 'Fork' : 'Log in to fork'}
             >
                 <FaCodeFork />
             </button>

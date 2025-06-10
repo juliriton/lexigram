@@ -1,169 +1,225 @@
-import React, { useState } from 'react';
-import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaReply, FaShare } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { FaBookmark, FaRegBookmark, FaReply, FaShare, FaHeart, FaRegHeart } from 'react-icons/fa';
 import '../styles/SuggestionInteractions.css';
 
-const SuggestionInteractions = ({
-                                    user,
-                                    suggestion,
-                                    baseApiUrl,
-                                    onActionComplete
-                                }) => {
-    const navigate = useNavigate();
-    const [isResonated, setIsResonated] = useState(
-        user && suggestion.resonatedBy && suggestion.resonatedBy.includes(user.uuid)
-    );
-    const [isSaved, setIsSaved] = useState(
-        user && suggestion.savedBy && suggestion.savedBy.includes(user.uuid)
-    );
-    const [resonateCount, setResonateCount] = useState(suggestion.resonatesAmount || 0);
-    const [saveCount, setSaveCount] = useState(suggestion.savesAmount || 0);
-    const [replyCount, setReplyCount] = useState(suggestion.replyAmount || 0);
-    const [isLoading, setIsLoading] = useState(false);
+const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete }) => {
+    const [interactions, setInteractions] = useState({
+        saved: false,
+        saveAmount: 0,
+        resonated: false,
+        resonatesAmount: 0,
+        replyAmount: 0
+    });
 
-    const handleResonate = async () => {
+    const [processingAction, setProcessingAction] = useState(false);
+
+    const checkUserInteraction = (userSet, userUuid) => {
+        return userSet && userUuid ? userSet.includes(userUuid) : false;
+    };
+
+    useEffect(() => {
+        const userUuid = user?.uuid;
+
+        setInteractions({
+            saved: checkUserInteraction(suggestion.savedBy, userUuid),
+            saveAmount: suggestion.savesAmount || 0,
+            resonated: checkUserInteraction(suggestion.resonatedBy, userUuid),
+            resonatesAmount: suggestion.resonatesAmount || 0,
+            replyAmount: suggestion.replyAmount || 0
+        });
+    }, [suggestion, user]);
+
+    const handleSaveToggle = async () => {
         if (!user) {
-            navigate('/login');
+            window.location.href = '/login';
             return;
         }
+        if (processingAction) return;
 
-        setIsLoading(true);
+        setProcessingAction(true);
+
+        const currentlySaved = interactions.saved;
+
         try {
-            const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/${isResonated ? 'un-resonate' : 'resonate'}`;
-            const method = isResonated ? 'DELETE' : 'POST';
+            const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/${currentlySaved ? 'un-save' : 'save'}`;
+            const method = currentlySaved ? 'DELETE' : 'POST';
 
-            const response = await fetch(endpoint, {
+            console.log(`Attempting to ${currentlySaved ? 'un-save' : 'save'} suggestion ${suggestion.uuid}`);
+
+            const res = await fetch(endpoint, {
                 method: method,
                 credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
             });
 
-            if (response.ok) {
-                const updatedSuggestion = await response.json();
-                setIsResonated(!isResonated);
-                setResonateCount(isResonated ? resonateCount - 1 : resonateCount + 1);
-                if (onActionComplete) onActionComplete(updatedSuggestion);
-            } else {
-                console.error("Error with resonate action:", await response.text());
+            if (!res.ok) {
+                console.error(`Failed to ${currentlySaved ? 'un-save' : 'save'} suggestion:`, res.status, res.statusText);
+                throw new Error(`Failed to ${currentlySaved ? 'un-save' : 'save'} suggestion`);
             }
-        } catch (error) {
-            console.error("Error toggling resonate:", error);
+
+            const updatedSuggestion = await res.json();
+
+            const userUuid = user?.uuid;
+            const updatedInteractions = {
+                ...interactions,
+                saved: checkUserInteraction(updatedSuggestion.savedBy, userUuid),
+                saveAmount: updatedSuggestion.savesAmount
+            };
+
+            setInteractions(updatedInteractions);
+
+            if (onActionComplete) {
+                onActionComplete(updatedSuggestion);
+            }
+        } catch (err) {
+            console.error('Error toggling save:', err);
         } finally {
-            setIsLoading(false);
+            setProcessingAction(false);
         }
     };
 
-    const handleSave = async () => {
+    const handleResonateToggle = async () => {
         if (!user) {
-            navigate('/login');
+            window.location.href = '/login';
             return;
         }
+        if (processingAction) return;
 
-        setIsLoading(true);
+        setProcessingAction(true);
+
+        const currentlyResonated = interactions.resonated;
+
         try {
-            const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/${isSaved ? 'un-save' : 'save'}`;
-            const method = isSaved ? 'DELETE' : 'POST';
+            const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/${currentlyResonated ? 'un-resonate' : 'resonate'}`;
+            const method = currentlyResonated ? 'DELETE' : 'POST';
 
-            const response = await fetch(endpoint, {
+            console.log(`Attempting to ${currentlyResonated ? 'un-resonate' : 'resonate'} suggestion ${suggestion.uuid}`);
+
+            const res = await fetch(endpoint, {
                 method: method,
                 credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
             });
 
-            if (response.ok) {
-                const updatedSuggestion = await response.json();
-                setIsSaved(!isSaved);
-                setSaveCount(isSaved ? saveCount - 1 : saveCount + 1);
-                if (onActionComplete) onActionComplete(updatedSuggestion);
-            } else {
-                console.error("Error with save action:", await response.text());
+            if (!res.ok) {
+                console.error(`Failed to ${currentlyResonated ? 'un-resonate' : 'resonate'} suggestion:`, res.status, res.statusText);
+                throw new Error(`Failed to ${currentlyResonated ? 'un-resonate' : 'resonate'} suggestion`);
             }
-        } catch (error) {
-            console.error("Error toggling save:", error);
+
+            const updatedSuggestion = await res.json();
+
+            const userUuid = user?.uuid;
+            const updatedInteractions = {
+                ...interactions,
+                resonated: checkUserInteraction(updatedSuggestion.resonatedBy, userUuid),
+                resonatesAmount: updatedSuggestion.resonatesAmount
+            };
+
+            setInteractions(updatedInteractions);
+
+            if (onActionComplete) {
+                onActionComplete(updatedSuggestion);
+            }
+        } catch (err) {
+            console.error('Error toggling resonate:', err);
         } finally {
-            setIsLoading(false);
+            setProcessingAction(false);
         }
     };
 
     const handleReply = () => {
         if (!user) {
-            navigate('/login');
+            window.location.href = '/login';
             return;
         }
-        sessionStorage.setItem('replyToSuggestion', suggestion.uuid);
-        navigate('/post/create');
+        console.log('Reply to suggestion:', suggestion.uuid);
     };
 
     const handleShare = async () => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
-
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/share`, {
+            const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/share`;
+            const res = await fetch(endpoint, {
                 method: 'GET',
-                credentials: 'include'
+                credentials: 'include',
             });
 
-            if (response.ok) {
-                const shareLink = await response.text();
-                await navigator.clipboard.writeText(shareLink);
-                alert('Link copied to clipboard!');
-            } else {
-                console.error("Error getting share link:", await response.text());
+            if (res.ok) {
+                const shareLink = await res.text();
+                navigator.clipboard.writeText(shareLink);
+                console.log('Share link copied:', shareLink);
             }
-        } catch (error) {
-            console.error("Error sharing suggestion:", error);
+        } catch (err) {
+            console.error('Error getting share link:', err);
+        }
+    };
+
+    const handleViewReplies = async () => {
+        if (!user) {
+            window.location.href = '/login';
+            return;
+        }
+        try {
+            const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/replies`;
+            const res = await fetch(endpoint, {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            if (res.ok) {
+                const replies = await res.json();
+                console.log('Suggestion replies:', replies);
+            }
+        } catch (err) {
+            console.error('Error getting replies:', err);
         }
     };
 
     return (
         <div className="suggestion-interactions">
-            <div className="interaction-btn-group">
-                <button
-                    className={`interaction-btn ${isResonated ? 'active' : ''}`}
-                    onClick={handleResonate}
-                    disabled={isLoading}
-                    aria-label={isResonated ? "Un-resonate" : "Resonate"}
-                >
-                    {isResonated ? <FaHeart /> : <FaRegHeart />}
-                    <span className="interaction-count">{resonateCount}</span>
-                </button>
+            <button
+                className={`interaction-button ${interactions.resonated ? 'active resonated' : ''}`}
+                onClick={handleResonateToggle}
+                disabled={processingAction}
+                title={user ? (interactions.resonated ? 'Remove resonate' : 'Resonate') : 'Log in to resonate'}
+            >
+                {interactions.resonated ? <FaHeart /> : <FaRegHeart />}
+                <span className="interaction-count">{interactions.resonatesAmount}</span>
+            </button>
 
-                <button
-                    className={`interaction-btn ${isSaved ? 'active' : ''}`}
-                    onClick={handleSave}
-                    disabled={isLoading}
-                    aria-label={isSaved ? "Un-save" : "Save"}
-                >
-                    {isSaved ? <FaBookmark /> : <FaRegBookmark />}
-                    <span className="interaction-count">{saveCount}</span>
-                </button>
+            <button
+                className={`interaction-button ${interactions.saved ? 'active' : ''}`}
+                onClick={handleSaveToggle}
+                disabled={processingAction}
+                title={user ? (interactions.saved ? 'Unsave' : 'Save') : 'Log in to save'}
+            >
+                {interactions.saved ? <FaBookmark /> : <FaRegBookmark />}
+                <span className="interaction-count">{interactions.saveAmount}</span>
+            </button>
 
-                <button
-                    className="interaction-btn"
-                    onClick={handleReply}
-                    disabled={isLoading}
-                    aria-label="Reply"
-                >
-                    <FaReply />
-                    <span className="interaction-count">{replyCount}</span>
-                </button>
+            <button
+                className="interaction-button"
+                onClick={handleReply}
+                title={user ? 'Reply to suggestion' : 'Log in to reply'}
+            >
+                <FaReply />
+                <span className="interaction-count">{interactions.replyAmount}</span>
+            </button>
 
+            <button
+                className="interaction-button"
+                onClick={handleShare}
+                title="Share"
+            >
+                <FaShare />
+            </button>
+
+            {interactions.replyAmount > 0 && (
                 <button
-                    className="interaction-btn"
-                    onClick={handleShare}
-                    disabled={isLoading}
-                    aria-label="Share"
+                    className="interaction-button view-replies"
+                    onClick={handleViewReplies}
+                    title="View replies"
                 >
-                    <FaShare />
+                    View Replies ({interactions.replyAmount})
                 </button>
-            </div>
+            )}
         </div>
     );
 };

@@ -52,7 +52,7 @@ const SuggestionCard = ({
         }
     };
 
-    const handleActionComplete = (updatedSuggestion) => {
+    const handleSuggestionInteractionComplete = (updatedSuggestion) => {
         if (onActionComplete) {
             onActionComplete(updatedSuggestion);
         }
@@ -132,12 +132,11 @@ const SuggestionCard = ({
                     </div>
                 )}
 
-                {/* Add suggestion interactions component */}
                 <SuggestionInteractions
                     user={user}
                     suggestion={post}
                     baseApiUrl={baseApiUrl}
-                    onActionComplete={handleActionComplete}
+                    onActionComplete={handleSuggestionInteractionComplete}
                 />
 
                 {isOwner && (

@@ -61,7 +61,7 @@ public class ExperienceDTO {
   private Set<UUID> buildBranches(Experience experience) {
     Set<UUID> branches = new HashSet<>();
     for (Experience branch : experience.getBranches()) {
-      branches.add(branch.getUuid());
+      branches.add(branch.getUser().getUuid());
     }
     return branches;
   }
@@ -69,7 +69,7 @@ public class ExperienceDTO {
   private Set<UUID> buildForkedBy(Experience experience) {
     Set<UUID> branchedBy = new HashSet<>();
     for (Experience branch : experience.getBranches()) {
-      branchedBy.add(branch.getUuid());
+      branchedBy.add(branch.getUser().getUuid());
     }
     return branchedBy;
   }
@@ -77,7 +77,7 @@ public class ExperienceDTO {
   private Set<UUID> buildSavedBy(Experience experience) {
     Set<UUID> savedBy = new HashSet<>();
     for (Save save : experience.getSaves()){
-      savedBy.add(save.getUuid());
+      savedBy.add(save.getUser().getUuid());
     }
     return savedBy;
   }
@@ -94,7 +94,7 @@ public class ExperienceDTO {
   private Set<UUID> buildCommentedBy(Experience experience) {
     Set<UUID> commentedBy = new HashSet<>();
     for (Comment comment : experience.getComments()) {
-      commentedBy.add(comment.getUuid());
+      commentedBy.add(comment.getUser().getUuid());
     }
     return commentedBy;
   }
@@ -102,7 +102,7 @@ public class ExperienceDTO {
   private Set<UUID> buildResonatedBy(Experience experience) {
     Set<UUID> resonatedBy = new HashSet<>();
     for (Resonate r : experience.getResonates()){
-      resonatedBy.add(r.getUuid());
+      resonatedBy.add(r.getUser().getUuid());
     }
     return resonatedBy;
   }

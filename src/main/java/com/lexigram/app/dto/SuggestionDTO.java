@@ -5,7 +5,6 @@ import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
