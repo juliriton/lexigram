@@ -143,13 +143,6 @@ const SuggestionCard = ({
                 {isOwner && (
                     <div className="actions">
                         <button
-                            className="btn btn-sm btn-outline-primary me-2"
-                            onClick={onEdit}
-                            aria-label="Edit Suggestion"
-                        >
-                            <FaEdit /> Edit
-                        </button>
-                        <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={onDelete}
                             aria-label="Delete Suggestion"

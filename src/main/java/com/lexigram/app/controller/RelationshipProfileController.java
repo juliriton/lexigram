@@ -1,6 +1,7 @@
 package com.lexigram.app.controller;
 
 import com.lexigram.app.dto.*;
+import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.service.RelationshipProfileService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,42 +36,67 @@ public class RelationshipProfileController {
 
   @GetMapping("/posts")
   public ResponseEntity<UserPostsDTO> getAllPosts(@PathVariable UUID uuid, HttpSession session) {
-    Long id = (Long) session.getAttribute("user");
-    if (id == null) return ResponseEntity.status(401).build();
+    Long viewerId = (Long) session.getAttribute("user");
+    if (viewerId == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(relationshipProfileService.getAllRelationshipPosts(uuid));
+    try {
+      UserPostsDTO posts = relationshipProfileService.getAllRelationshipPosts(viewerId, uuid);
+      return ResponseEntity.ok(posts);
+    } catch (UserNotFoundException e) {
+      return ResponseEntity.notFound().build();
+    }
   }
 
   @GetMapping("/posts/experiences")
   public ResponseEntity<Set<ExperienceDTO>> getAllExperiences(@PathVariable UUID uuid, HttpSession session) {
-    Long id = (Long) session.getAttribute("user");
-    if (id == null) return ResponseEntity.status(401).build();
+    Long viewerId = (Long) session.getAttribute("user");
+    if (viewerId == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(relationshipProfileService.getAllRelationshipExperiences(uuid));
+    try {
+      Set<ExperienceDTO> experiences = relationshipProfileService.getAllRelationshipExperiences(viewerId, uuid);
+      return ResponseEntity.ok(experiences);
+    } catch (UserNotFoundException e) {
+      return ResponseEntity.notFound().build();
+    }
   }
 
   @GetMapping("/posts/suggestions")
   public ResponseEntity<Set<SuggestionDTO>> getAllSuggestions(@PathVariable UUID uuid, HttpSession session) {
-    Long id = (Long) session.getAttribute("user");
-    if (id == null) return ResponseEntity.status(401).build();
+    Long viewerId = (Long) session.getAttribute("user");
+    if (viewerId == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(relationshipProfileService.getAllRelationshipSuggestions(uuid));
+    try {
+      Set<SuggestionDTO> suggestions = relationshipProfileService.getAllRelationshipSuggestions(viewerId, uuid);
+      return ResponseEntity.ok(suggestions);
+    } catch (UserNotFoundException e) {
+      return ResponseEntity.notFound().build();
+    }
   }
 
   @GetMapping("/followers")
   public ResponseEntity<Set<ConnectionDTO>> getFollowers(@PathVariable UUID uuid, HttpSession session) {
-    Long id = (Long) session.getAttribute("user");
-    if (id == null) return ResponseEntity.status(401).build();
+    Long viewerId = (Long) session.getAttribute("user");
+    if (viewerId == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(relationshipProfileService.getRelationshipFollowers(uuid));
+    try {
+      Set<ConnectionDTO> followers = relationshipProfileService.getRelationshipFollowers(viewerId, uuid);
+      return ResponseEntity.ok(followers);
+    } catch (UserNotFoundException e) {
+      return ResponseEntity.notFound().build();
+    }
   }
 
   @GetMapping("/following")
   public ResponseEntity<Set<ConnectionDTO>> getFollowing(@PathVariable UUID uuid, HttpSession session) {
-    Long id = (Long) session.getAttribute("user");
-    if (id == null) return ResponseEntity.status(401).build();
+    Long viewerId = (Long) session.getAttribute("user");
+    if (viewerId == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(relationshipProfileService.getRelationshipFollowing(uuid));
+    try {
+      Set<ConnectionDTO> following = relationshipProfileService.getRelationshipFollowing(viewerId, uuid);
+      return ResponseEntity.ok(following);
+    } catch (UserNotFoundException e) {
+      return ResponseEntity.notFound().build();
+    }
   }
 
 }
