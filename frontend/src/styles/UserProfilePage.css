@@ -507,7 +507,7 @@ input[type="file"]:hover {
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    flex: 1;
+    flex:1;
 }
 
 .carousel-track {
@@ -737,4 +737,68 @@ input[type="file"]:hover {
         width: 100%;
         margin-bottom: 8px;
     }
+}
+
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.edit-post-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.selected-post-info {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.btn-edit-selected {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-cancel-selection {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.post-wrapper {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.post-wrapper.selected {
+    outline: 2px solid #007bff;
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.selection-indicator {
+    text-align: center;
+    background: #e3f2fd;
+    color: #1976d2;
+    font-size: 0.9rem;
+    border-radius: 0 0 4px 4px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-weight: 500;
+    border: 1px solid #90caf9;
+    white-space: nowrap;
+    overflow: visible;
 }

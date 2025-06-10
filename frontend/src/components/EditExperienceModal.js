@@ -287,43 +287,26 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 </div>
 
                 <div className="form-toggle-buttons">
-                    <div
-                        className={`toggle-button ${activeTab === 'quote' ? 'active' : ''}`}
-                        onClick={() => handleTabChange('quote')}
-                    >
+                    <div className={`toggle-button ${activeTab === 'quote' ? 'active' : ''}`} onClick={() => handleTabChange('quote')}>
                         <FaEdit />
                         <span>Quote</span>
                     </div>
-                    <div
-                        className={`toggle-button ${activeTab === 'reflection' ? 'active' : ''}`}
-                        onClick={() => handleTabChange('reflection')}
-                    >
+                    <div className={`toggle-button ${activeTab === 'reflection' ? 'active' : ''}`} onClick={() => handleTabChange('reflection')}>
                         <FaEdit />
                         <span>Reflection</span>
                     </div>
-                    <div
-                        className={`toggle-button ${activeTab === 'tags' ? 'active' : ''}`}
-                        onClick={() => handleTabChange('tags')}
-                    >
+                    <div className={`toggle-button ${activeTab === 'tags' ? 'active' : ''}`} onClick={() => handleTabChange('tags')}>
                         <FaTag />
                         <span>Tags</span>
                     </div>
-                    <div
-                        className={`toggle-button ${activeTab === 'mentions' ? 'active' : ''}`}
-                        onClick={() => handleTabChange('mentions')}
-                    >
+                    <div className={`toggle-button ${activeTab === 'mentions' ? 'active' : ''}`} onClick={() => handleTabChange('mentions')}>
                         <FaUserTag />
                         <span>Mentions</span>
                     </div>
                 </div>
 
-                {errors.general && (
-                    <div className="alert alert-error">{errors.general}</div>
-                )}
-
-                {success && (
-                    <div className="alert alert-success">{success}</div>
-                )}
+                {errors.general && <div className="alert alert-error">{errors.general}</div>}
+                {success && <div className="alert alert-success">{success}</div>}
 
                 {changes.length > 0 && (
                     <div className="changes-summary">
@@ -404,9 +387,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                                 {tags.map((tag, index) => (
                                     <div key={index} className="tag-item">
                                         <span>{typeof tag === 'string' ? tag : tag.name}</span>
-                                        <button onClick={() => handleRemoveTag(tag)}>
-                                            <FaTimes />
-                                        </button>
+                                        <button onClick={() => handleRemoveTag(tag)}><FaTimes /></button>
                                     </div>
                                 ))}
                             </div>
@@ -439,9 +420,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                                     mentions.map((user) => (
                                         <div key={user.uuid} className="mention-item">
                                             <span>@{user.username}</span>
-                                            <button onClick={() => handleRemoveMention(user.uuid)}>
-                                                <FaTimes />
-                                            </button>
+                                            <button onClick={() => handleRemoveMention(user.uuid)}><FaTimes /></button>
                                         </div>
                                     ))
                                 )}
@@ -451,9 +430,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 </div>
 
                 <div className="form-buttons">
-                    <button className="cancel-btn" onClick={onClose} disabled={isSaving}>
-                        Cancel
-                    </button>
+                    <button className="cancel-btn" onClick={onClose} disabled={isSaving}>Cancel</button>
                     <button className="submit-btn" onClick={handleSaveChanges} disabled={isSaving}>
                         {isSaving ? 'Saving...' : 'Save Changes'}
                     </button>
@@ -461,6 +438,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             </div>
         </div>
     );
+
 };
 
 export default EditExperienceModal;

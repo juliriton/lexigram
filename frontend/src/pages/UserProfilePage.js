@@ -23,6 +23,7 @@ const UserProfilePage = ({ user }) => {
     const [usingDefaultImage, setUsingDefaultImage] = useState(false);
     const [attemptedLoad, setAttemptedLoad] = useState(false);
     const [hiddenQuotes, setHiddenQuotes] = useState({});
+    const [selectedPostForEdit, setSelectedPostForEdit] = useState(null);
     const [showMentions, setShowMentions] = useState({});
     const [activeTab, setActiveTab] = useState('posts');
     const [updateMessage, setUpdateMessage] = useState('');
@@ -327,7 +328,6 @@ New: "${bioToUpdate}"`);
         setRemoveFollowerConfirmation({ uuid, username });
     };
 
-    // Función para cancelar remover follower
     const cancelRemoveFollower = () => {
         setRemoveFollowerConfirmation(null);
     };
@@ -364,17 +364,47 @@ New: "${bioToUpdate}"`);
     };
 
     const handleUpdateSuggestion = (updatedSuggestion, message) => {
-        setPosts(posts.map(post =>
-            post.uuid === updatedSuggestion.uuid ? { ...post, ...updatedSuggestion } : post
+        // Actualizar en la lista de posts
+        setPosts(prevPosts => prevPosts.map(post =>
+            post.uuid === updatedSuggestion.uuid ? {
+                ...post,
+                ...updatedSuggestion,
+                type: 'Suggestion' // Asegurar que mantenga el tipo
+            } : post
         ));
+
+        // Limpiar la selección
+        setSelectedPostForEdit(null);
+
+        // Mostrar mensaje de éxito
         setUpdateMessage(message || "Suggestion updated successfully!");
+
+        // Limpiar el mensaje después de 3 segundos
+        setTimeout(() => {
+            setUpdateMessage('');
+        }, 3000);
     };
 
     const handleUpdateExperience = (updatedExperience, message) => {
-        setPosts(posts.map(post =>
-            post.uuid === updatedExperience.uuid ? { ...post, ...updatedExperience } : post
+        // Actualizar en la lista de posts
+        setPosts(prevPosts => prevPosts.map(post =>
+            post.uuid === updatedExperience.uuid ? {
+                ...post,
+                ...updatedExperience,
+                type: 'Experience' // Asegurar que mantenga el tipo
+            } : post
         ));
+
+        // Limpiar la selección
+        setSelectedPostForEdit(null);
+
+        // Mostrar mensaje de éxito
         setUpdateMessage(message || "Experience updated successfully!");
+
+        // Limpiar el mensaje después de 3 segundos
+        setTimeout(() => {
+            setUpdateMessage('');
+        }, 3000);
     };
 
     const getProfileImageUrl = () => {
@@ -445,11 +475,45 @@ New: "${bioToUpdate}"`);
     const renderPost = (post) => {
         const isExperience = post.type === 'Experience';
         const postId = post.uuid || post.id;
+        const isSelected = selectedPostForEdit?.uuid === post.uuid;
 
         if (isExperience) {
             return (
-                <ExperienceCard
+                <div
                     key={postId}
+                    className={`post-wrapper ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setSelectedPostForEdit(post)}
+                >
+                    <ExperienceCard
+                        user={user}
+                        post={post}
+                        baseApiUrl={baseApiUrl}
+                        username={'Me'}
+                        hiddenQuotes={hiddenQuotes}
+                        toggleQuote={toggleQuote}
+                        showMentions={showMentions}
+                        setShowMentions={setShowMentions}
+                        renderMentions={renderMentions}
+                        renderTags={renderTags}
+                        formatDate={formatDate}
+                        onDelete={() => confirmDelete(post, 'Experience')}
+                        onEdit={null} // Eliminar la función de edición
+                        isOwner={true}
+                        disableInteractions={true}
+                        showEditOption={false} // Nueva prop para ocultar opción de editar
+                    />
+                    {isSelected && <div className="selection-indicator">Click "Edit Selected Post" to modify</div>}
+                </div>
+            );
+        }
+
+        return (
+            <div
+                key={postId}
+                className={`post-wrapper ${isSelected ? 'selected' : ''}`}
+                onClick={() => setSelectedPostForEdit(post)}
+            >
+                <SuggestionCard
                     user={user}
                     post={post}
                     baseApiUrl={baseApiUrl}
@@ -461,33 +525,14 @@ New: "${bioToUpdate}"`);
                     renderMentions={renderMentions}
                     renderTags={renderTags}
                     formatDate={formatDate}
-                    onDelete={() => confirmDelete(post, 'Experience')}
-                    onEdit={() => handleEditExperience(post)}
+                    onDelete={() => confirmDelete(post, 'Suggestion')}
+                    onEdit={null} // Deshabilitar edición interna
                     isOwner={true}
                     disableInteractions={true}
+                    disableInternalEdit={true} // Nueva prop
                 />
-            );
-        }
-
-        return (
-            <SuggestionCard
-                key={postId}
-                user={user}
-                post={post}
-                baseApiUrl={baseApiUrl}
-                username={'Me'}
-                hiddenQuotes={hiddenQuotes}
-                toggleQuote={toggleQuote}
-                showMentions={showMentions}
-                setShowMentions={setShowMentions}
-                renderMentions={renderMentions}
-                renderTags={renderTags}
-                formatDate={formatDate}
-                onDelete={() => confirmDelete(post, 'Suggestion')}
-                onEdit={() => handleEditSuggestion(post)}
-                isOwner={true}
-                disableInteractions={true}
-            />
+                {isSelected && <div className="selection-indicator">Click "Edit Selected Post" to modify</div>}
+            </div>
         );
     };
 
@@ -687,15 +732,43 @@ New: "${bioToUpdate}"`);
             {activeTab === 'posts' && (
                 <div className="profile-content profile-posts">
                     <div className="post-filter">
-                        <select
-                            value={postFilter}
-                            onChange={(e) => setPostFilter(e.target.value)}
-                            className="filter-select"
-                        >
-                            <option value="all">All Posts</option>
-                            <option value="suggestions">Suggestions</option>
-                            <option value="experiences">Experiences</option>
-                        </select>
+                        <div className="filter-controls">
+                            <select
+                                value={postFilter}
+                                onChange={(e) => setPostFilter(e.target.value)}
+                                className="filter-select"
+                            >
+                                <option value="all">All Posts</option>
+                                <option value="suggestions">Suggestions</option>
+                                <option value="experiences">Experiences</option>
+                            </select>
+
+                            {selectedPostForEdit && (
+                                <div className="edit-post-controls">
+                <span className="selected-post-info">
+                    Selected: {selectedPostForEdit.title || 'Untitled'}
+                </span>
+                                    <button
+                                        className="btn-edit-selected"
+                                        onClick={() => {
+                                            if (selectedPostForEdit.type === 'Experience') {
+                                                handleEditExperience(selectedPostForEdit);
+                                            } else {
+                                                handleEditSuggestion(selectedPostForEdit);
+                                            }
+                                        }}
+                                    >
+                                        Edit Selected Post
+                                    </button>
+                                    <button
+                                        className="btn-cancel-selection"
+                                        onClick={() => setSelectedPostForEdit(null)}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {posts.length === 0 ? (
