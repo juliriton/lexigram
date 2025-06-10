@@ -225,9 +225,6 @@ const ExperienceCard = ({
 
                                 {showOptions && (
                                     <div className="options-dropdown">
-                                        <button onClick={handleEdit} className="option-item">
-                                            <FaEdit size={14} /> <span>Edit</span>
-                                        </button>
                                         <button onClick={handleDelete} className="option-item delete">
                                             <FaTrash size={14} /> <span>Delete</span>
                                         </button>
