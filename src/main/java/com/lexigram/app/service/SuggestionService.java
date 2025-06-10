@@ -71,6 +71,7 @@ public class SuggestionService {
     PostSuggestionPrivacySettingsDTO privacySettings = postSuggestionDTO.getPrivacySettings();
 
     Suggestion suggestion = new Suggestion(user, tags, body);
+    suggestionRepository.save(suggestion);
     SuggestionPrivacySettings suggestionPrivacySettings = new SuggestionPrivacySettings(suggestion,
                                                                                         privacySettings.getAllowResonates(),
                                                                                         privacySettings.getAllowSaves());

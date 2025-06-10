@@ -33,8 +33,8 @@ const SuggestionCard = ({
     const needsSuggestionTruncate = suggestionText.length > suggestionPreviewLen;
     const suggestionPreview = suggestionText.slice(0, suggestionPreviewLen) + (needsSuggestionTruncate ? '…' : '');
 
-    const navigateToUserProfile = (profileUuid) => {
-        const targetUuid = profileUuid || post.user.uuid;
+    const navigateToUserProfile = () => {
+        const targetUuid = post.user.uuid;
         if (!user) {
             if (location.pathname === `/profile/${targetUuid}`) {
                 return;
@@ -46,7 +46,6 @@ const SuggestionCard = ({
         if (targetUuid) {
             const targetPath = `/profile/${targetUuid}`;
             if (location.pathname === targetPath) {
-                return;
             } else {
                 navigate(targetPath);
             }
