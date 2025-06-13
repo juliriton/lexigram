@@ -58,7 +58,8 @@ public class FeedService {
     Set<SuggestionDTO> suggestions = suggestionService.getAllPublicSuggestions();
     return new PostsDTO(experiences, suggestions);
   }
-  public SearchDTO getSearchObject(String object) {
+
+  public SearchDTO getSearchObject(String object, Long searcherId) {
     Map<UUID, Experience> uniqueExperiences = new HashMap<>();
     Map<UUID, Suggestion> uniqueSuggestions = new HashMap<>();
 
@@ -66,9 +67,21 @@ public class FeedService {
     Set<Experience> experiencesByTag = experienceRepository.findByTagsNameStartingWithIgnoreCase(object);
     Set<Experience> experiencesByUser = experienceRepository.findByUserUsernameStartingWithIgnoreCase(object);
 
-    for (Experience e : experiencesByQuote) uniqueExperiences.put(e.getUuid(), e);
-    for (Experience e : experiencesByTag) uniqueExperiences.put(e.getUuid(), e);
-    for (Experience e : experiencesByUser) uniqueExperiences.put(e.getUuid(), e);
+    for (Experience e : experiencesByQuote) {
+      if (isPostVisibleToUser(e.getUser(), searcherId)) {
+        uniqueExperiences.put(e.getUuid(), e);
+      }
+    }
+    for (Experience e : experiencesByTag) {
+      if (isPostVisibleToUser(e.getUser(), searcherId)) {
+        uniqueExperiences.put(e.getUuid(), e);
+      }
+    }
+    for (Experience e : experiencesByUser) {
+      if (isPostVisibleToUser(e.getUser(), searcherId)) {
+        uniqueExperiences.put(e.getUuid(), e);
+      }
+    }
 
     Set<ExperienceDTO> experienceDTOS = new HashSet<>();
     for (Experience e : uniqueExperiences.values()) {
@@ -79,9 +92,21 @@ public class FeedService {
     Set<Suggestion> suggestionsByTag = suggestionRepository.findByTagsNameStartingWithIgnoreCase(object);
     Set<Suggestion> suggestionsByUser = suggestionRepository.findByUserUsernameStartingWithIgnoreCase(object);
 
-    for (Suggestion s : suggestionsByBody) uniqueSuggestions.put(s.getUuid(), s);
-    for (Suggestion s : suggestionsByTag) uniqueSuggestions.put(s.getUuid(), s);
-    for (Suggestion s : suggestionsByUser) uniqueSuggestions.put(s.getUuid(), s);
+    for (Suggestion s : suggestionsByBody) {
+      if (isPostVisibleToUser(s.getUser(), searcherId)) {
+        uniqueSuggestions.put(s.getUuid(), s);
+      }
+    }
+    for (Suggestion s : suggestionsByTag) {
+      if (isPostVisibleToUser(s.getUser(), searcherId)) {
+        uniqueSuggestions.put(s.getUuid(), s);
+      }
+    }
+    for (Suggestion s : suggestionsByUser) {
+      if (isPostVisibleToUser(s.getUser(), searcherId)) {
+        uniqueSuggestions.put(s.getUuid(), s);
+      }
+    }
 
     Set<SuggestionDTO> suggestionDTOS = new HashSet<>();
     for (Suggestion s : uniqueSuggestions.values()) {
@@ -96,6 +121,22 @@ public class FeedService {
     }
 
     return new SearchDTO(experienceDTOS, connectionDTOs, suggestionDTOS);
+  }
+
+  private boolean isPostVisibleToUser(User postOwner, Long searcherId) {
+    if (postOwner.getUserPrivacySettings().getVisibility()) {
+      return true;
+    }
+
+    if (searcherId != null) {
+      Optional<User> searcherOptional = userRepository.findById(searcherId);
+      if (searcherOptional.isPresent()) {
+        User searcher = searcherOptional.get();
+        return searcher.getFollowing().contains(postOwner);
+      }
+    }
+
+    return false;
   }
 
   /*
