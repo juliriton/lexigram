@@ -32,6 +32,13 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
 
     const [processingAction, setProcessingAction] = useState(false);
 
+    // Get privacy settings from experience
+    const privacySettings = experience.privacySettings || {};
+    const allowResonates = privacySettings.allowResonates !== false; // Default to true if not specified
+    const allowSaves = privacySettings.allowSaves !== false; // Default to true if not specified
+    const allowComments = privacySettings.allowComments !== false; // Default to true if not specified
+    const allowForks = privacySettings.allowForks !== false; // Default to true if not specified
+
     useEffect(() => {
         const userStatus = getUserInteractionStatus(experience, user);
         setInteractions({
@@ -188,35 +195,42 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
 
     return (
         <div className="experience-interactions">
-            <button
-                className={`interaction-button ${interactions.resonated ? 'active resonated' : ''}`}
-                onClick={handleResonateToggle}
-                disabled={processingAction}
-                title={user ? (interactions.resonated ? 'Remove resonate' : 'Resonate') : 'Log in to resonate'}
-            >
-                {interactions.resonated ? <FaHeart /> : <FaRegHeart />}
-                <span className="interaction-count">{interactions.resonatesAmount}</span>
-            </button>
+            {allowResonates && (
+                <button
+                    className={`interaction-button ${interactions.resonated ? 'active resonated' : ''}`}
+                    onClick={handleResonateToggle}
+                    disabled={processingAction}
+                    title={user ? (interactions.resonated ? 'Remove resonate' : 'Resonate') : 'Log in to resonate'}
+                >
+                    {interactions.resonated ? <FaHeart /> : <FaRegHeart />}
+                    <span className="interaction-count">{interactions.resonatesAmount}</span>
+                </button>
+            )}
 
-            <button
-                className={`interaction-button ${interactions.saved ? 'active' : ''}`}
-                onClick={handleSaveToggle}
-                disabled={processingAction}
-                title={user ? (interactions.saved ? 'Unsave' : 'Save') : 'Log in to save'}
-            >
-                {interactions.saved ? <FaBookmark /> : <FaRegBookmark />}
-                <span className="interaction-count">{interactions.saveAmount}</span>
-            </button>
+            {allowSaves && (
+                <button
+                    className={`interaction-button ${interactions.saved ? 'active' : ''}`}
+                    onClick={handleSaveToggle}
+                    disabled={processingAction}
+                    title={user ? (interactions.saved ? 'Unsave' : 'Save') : 'Log in to save'}
+                >
+                    {interactions.saved ? <FaBookmark /> : <FaRegBookmark />}
+                    <span className="interaction-count">{interactions.saveAmount}</span>
+                </button>
+            )}
 
-            <button
-                className="interaction-button"
-                onClick={handleComment}
-                title={user ? 'Comment' : 'Log in to comment'}
-            >
-                <FaCommentAlt />
-                <span className="interaction-count">{interactions.commentAmount}</span>
-            </button>
+            {allowComments && (
+                <button
+                    className="interaction-button"
+                    onClick={handleComment}
+                    title={user ? 'Comment' : 'Log in to comment'}
+                >
+                    <FaCommentAlt />
+                    <span className="interaction-count">{interactions.commentAmount}</span>
+                </button>
+            )}
 
+            {/* Share button is always visible */}
             <button
                 className="interaction-button"
                 onClick={handleShare}
@@ -225,13 +239,15 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
                 <FaShare />
             </button>
 
-            <button
-                className="interaction-button"
-                onClick={handleFork}
-                title={user ? 'Fork' : 'Log in to fork'}
-            >
-                <FaCodeFork />
-            </button>
+            {allowForks && (
+                <button
+                    className="interaction-button"
+                    onClick={handleFork}
+                    title={user ? 'Fork' : 'Log in to fork'}
+                >
+                    <FaCodeFork />
+                </button>
+            )}
         </div>
     );
 };
