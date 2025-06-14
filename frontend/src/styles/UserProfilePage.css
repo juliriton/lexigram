@@ -157,97 +157,95 @@
     }
 }
 
+/* --- SECCIÓN EDIT PROFILE MEJORADA --- */
 .profile-edit {
     margin-top: 30px;
-    background-color: #fafafa;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #ffffff, #f0f4ff);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.4s ease-in-out;
 }
 
 .edit-section {
-    margin-bottom: 30px;
+    margin-top: 40px;
+    text-align: center;
+}
+.edit-section-2{
+    margin-top: 15px;
+    margin-bottom: 15px;
+    text-align: center;
 }
 
 .edit-section h3 {
-    font-size: 1.5rem;
-    color: #333;
-    margin-bottom: 10px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
 }
 
-textarea {
+.edit-section textarea {
     width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    padding: 14px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
     resize: vertical;
-    min-height: 120px;
+    min-height: 130px;
     background-color: #fff;
+    transition: border-color 0.3s ease;
 }
 
-textarea:focus {
+.edit-section textarea:focus {
     border-color: #6e8efb;
     outline: none;
-    box-shadow: 0 0 5px rgba(110, 142, 251, 0.5);
+    box-shadow: 0 0 8px rgba(110, 142, 251, 0.3);
 }
 
-button.btn-primary {
-    background-color: #003aff;
-    color: white;
-    padding: 12px 20px;
-    border: none;
+.edit-section input[type="file"] {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 10px 12px;
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 14px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
 }
 
-button.btn-primary:hover {
-    background-color: #003eff;
-}
-
-.edit-section {
-    margin-bottom: 40px;
-}
-
-.edit-section h3 {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 15px;
-}
-
-textarea {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    margin-bottom: 20px;
+.edit-section input[type="file"]:hover {
+    background-color: #eef2ff;
+    border-color: #6e8efb;
 }
 
 button.btn-primary {
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    color: white;
     padding: 12px 30px;
-    background-color: #6e8efb;
-    color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     font-size: 16px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background 0.3s ease, transform 0.2s ease;
 }
 
 button.btn-primary:hover {
-    background-color: #4e70d1;
+    background: linear-gradient(135deg, #5a76e5, #945ed8);
+    transform: translateY(-1px);
 }
 
-input[type="file"] {
-    display: block;
-    margin-bottom: 20px;
-}
-
-input[type="file"]:hover {
-    cursor: pointer;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .upload-section {

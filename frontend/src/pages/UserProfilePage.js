@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaHome, FaArrowLeft, FaUser, FaUsers, FaBookmark, FaTimes } from 'react-icons/fa';
+import { FaHome, FaArrowLeft, FaUser, FaUsers, FaBookmark, FaTimes, FaUserEdit, FaImage } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import '../styles/UserProfilePage.css';
 import ExperienceCard from '../components/ExperienceCard';
@@ -808,7 +808,7 @@ New: "${bioToUpdate}"`);
             {activeTab === 'edit' && (
                 <div className="profile-content profile-edit">
                     <div className="edit-section">
-                        <h3>Update Biography</h3>
+                        <h3><FaUserEdit style={{ marginRight: '8px' }}/> Update Biography</h3>
                         <textarea
                             value={newBio}
                             onChange={(e) => setNewBio(e.target.value)}
@@ -819,13 +819,15 @@ New: "${bioToUpdate}"`);
                     </div>
 
                     <div className="edit-section">
-                        <h3>Change Profile Picture</h3>
+                        <h3><FaImage style={{ marginRight: '8px' }}/> Change Profile Picture</h3>
                         <input
                             type="file"
                             id="profile-picture-input"
                             accept="image/jpeg"
                             onChange={handleFileChange}
                         />
+                    </div>
+                    <div className="edit-section-2">
                         <button className="btn-primary" onClick={handlePictureUpload}>Upload Picture</button>
                     </div>
                 </div>
