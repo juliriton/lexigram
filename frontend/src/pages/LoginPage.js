@@ -38,7 +38,7 @@ const LoginPage = ({ setUser }) => {
     return (
         <div className="login-wrapper">
             <div className="login-container">
-                <h2>Welcome Back 👋</h2>
+                <h2>Welcome Back</h2>
                 <form onSubmit={handleLogin}>
                     <input
                         type="text"

@@ -62,7 +62,7 @@ const SignUpPage = () => {
     return (
         <div className="login-wrapper">
             <div className="login-container">
-                <h2>Create Your Account 📝</h2>
+                <h2>Create Your Account </h2>
                 {error && <div className="error-message"><p>{error}</p></div>}
                 <form onSubmit={handleSignUp}>
                     <input
