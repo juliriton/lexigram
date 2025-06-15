@@ -3,6 +3,7 @@ import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-ico
 import { FaStar } from 'react-icons/fa6';
 import {useLocation, useNavigate} from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
+import CommentModal from './CommentModal';
 import ExperienceInteractions from './ExperienceInteractions';
 import PostPopupModal from '../components/PostPopUpModal';
 import '../styles/ExperienceCard.css';
@@ -44,6 +45,7 @@ const ExperienceCard = ({
     const [updatedPost, setUpdatedPost] = useState(post);
     const [showFullRefl, setShowFullRefl] = useState(false);
     const [showAllTags, setShowAllTags] = useState(false);
+    const [showCommentsModal, setShowCommentsModal] = useState(false);
 
     // Cálculos para el texto
     const quoteFontSize = useMemo(() => {
@@ -379,6 +381,7 @@ const ExperienceCard = ({
                         experience={updatedPost}
                         baseApiUrl={baseApiUrl}
                         onActionComplete={handleExperienceInteractionComplete}
+                        onCommentClick={() => setShowCommentsModal(true)}
                     />
 
                     <div className="actions">
@@ -415,6 +418,18 @@ const ExperienceCard = ({
                     )}
 
                     {renderPostStats()}
+
+                    {allowComments && (
+                        <CommentModal
+                            isOpen={showCommentsModal}
+                            onClose={() => setShowCommentsModal(false)}
+                            experience={updatedPost}
+                            user={user}
+                            baseApiUrl={baseApiUrl}
+                            formatDate={formatDate}
+                            onActionComplete={handleExperienceInteractionComplete}
+                        />
+                    )}
                 </div>
             </div>
 

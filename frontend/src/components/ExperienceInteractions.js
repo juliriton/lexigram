@@ -3,7 +3,7 @@ import { FaBookmark, FaRegBookmark, FaCommentAlt, FaShare, FaHeart, FaRegHeart }
 import '../styles/ExperienceInteractions.css';
 import { FaCodeFork } from "react-icons/fa6";
 
-const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete }) => {
+const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete, onCommentClick }) => {
 
     const getUserInteractionStatus = (experience, user) => {
         if (!user || !user.uuid) {
@@ -143,8 +143,11 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
             window.location.href = '/login';
             return;
         }
-        console.log('Comment on experience:', experience.uuid);
+        if (typeof onCommentClick === 'function') {
+            onCommentClick();
+        }
     };
+
 
     const handleShare = async () => {
         try {

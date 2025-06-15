@@ -32,7 +32,7 @@ public class Comment {
   private Experience experience;
 
   @ManyToOne
-  @JoinColumn(name = "parent_comment_id", nullable = false)
+  @JoinColumn(name = "parent_comment_id")
   private Comment parentComment;
 
   @OneToMany(mappedBy = "parentComment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

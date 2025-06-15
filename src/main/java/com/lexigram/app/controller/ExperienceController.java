@@ -59,23 +59,23 @@ public class ExperienceController {
 
   }
 
-  @PostMapping("experience/{uuid}/comment")
-  public ResponseEntity<ExperienceDTO> commentExperience(HttpSession session,
-                                                         @PathVariable UUID uuid,
-                                                         @RequestBody PostCommentDTO comment) {
-    Long id = (Long) session.getAttribute("user");
-    if (id == null) return ResponseEntity.status(401).build();
-
-    Optional<ExperienceDTO> optionalExperienceDTO = experienceService.commentExperience(id, uuid, comment);
-
-    if (optionalExperienceDTO.isPresent()) {
-      ExperienceDTO experienceDTO = optionalExperienceDTO.get();
-      return ResponseEntity.ok(experienceDTO);
-    }
-
-    return ResponseEntity.status(401).build();
-
-  }
+//  @PostMapping("experience/{uuid}/comment")
+//  public ResponseEntity<ExperienceDTO> commentExperience(HttpSession session,
+//                                                         @PathVariable UUID uuid,
+//                                                         @RequestBody PostCommentDTO comment) {
+//    Long id = (Long) session.getAttribute("user");
+//    if (id == null) return ResponseEntity.status(401).build();
+//
+//    Optional<ExperienceDTO> optionalExperienceDTO = experienceService.commentExperience(id, uuid, comment);
+//
+//    if (optionalExperienceDTO.isPresent()) {
+//      ExperienceDTO experienceDTO = optionalExperienceDTO.get();
+//      return ResponseEntity.ok(experienceDTO);
+//    }
+//
+//    return ResponseEntity.status(401).build();
+//
+//  }
 
   @DeleteMapping("experience/{expUuid}/comment/{comUuid}")
   public ResponseEntity<ExperienceDTO> deleteExperienceComment(HttpSession session,
