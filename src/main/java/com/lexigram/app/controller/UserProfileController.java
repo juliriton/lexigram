@@ -280,7 +280,7 @@ public class UserProfileController {
         : ResponseEntity.status(403).body("Unauthorized or notification not found.");
   }
 
-  @PostMapping("/notifications/delete}")
+  @PostMapping("/notifications/delete")
   public ResponseEntity<String> deleteAllNotifications(HttpSession session) {
     Long id = (Long) session.getAttribute("user");
 
@@ -304,7 +304,7 @@ public class UserProfileController {
         : ResponseEntity.status(403).body("Unauthorized or notification not found.");
   }
 
-  @PostMapping("/notifications/acknowledge}")
+  @PostMapping("/notifications/acknowledge")
   public ResponseEntity<String> acknowledgeAllNotifications(HttpSession session) {
     Long id = (Long) session.getAttribute("user");
 

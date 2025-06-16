@@ -360,6 +360,9 @@ public class ExperienceService {
 
     Resonate resonate = new Resonate(user, experience);
 
+    Notification notification = notificationService.resonateExperienceNotification(user, experience);
+    notificationRepository.save(notification);
+
     resonateRepository.save(resonate);
     experience.addResonate(resonate);
     experienceRepository.save(experience);
@@ -482,9 +485,6 @@ public class ExperienceService {
     if (saveOptional.isPresent()) {
       throw new UnsupportedOperationException();
     }
-
-    Notification notification = notificationService.resonateExperienceNotification(user, experience);
-    notificationRepository.save(notification);
 
     Save save = new Save(user, experience);
     saveRepository.save(save);

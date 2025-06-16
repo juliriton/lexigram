@@ -7,6 +7,7 @@ import SignUpPage from './pages/SignUpPage';
 import SettingsPage from './pages/SettingsPage';
 import PostCreationPage from './pages/PostCreationPage';
 import RelationshipProfilePage from './pages/RelationshipProfilePage';
+import NotificationsPage from "./pages/NotificationsPage";
 
 import './App.css';
 
@@ -23,6 +24,7 @@ function App() {
                 <Route path="/post/create" element={<PostCreationPage user={user} />} />
                 <Route path="/settings" element={<SettingsPage user={user} />} />
                 <Route path="/profile/:userId" element={<RelationshipProfilePage user={user} />} />
+                <Route path="/notifications" element={<NotificationsPage user={user} /> } />
             </Routes>
         </Router>
     );

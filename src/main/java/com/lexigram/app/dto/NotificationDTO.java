@@ -1,7 +1,6 @@
 package com.lexigram.app.dto;
 
 import com.lexigram.app.types.NotificationType;
-
 import java.util.UUID;
 
 public class NotificationDTO {

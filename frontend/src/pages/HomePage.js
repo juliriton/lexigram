@@ -9,7 +9,7 @@ import {
     FaPhotoVideo,
     FaQuestion,
     FaBorderAll,
-    FaSearch
+    FaSearch, FaEnvelope
 } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
@@ -216,6 +216,7 @@ const HomePage = ({ user, setUser }) => {
 
     const goToProfile = () => { navigate(user ? '/profile' : '/login'); setSidebarOpen(false); };
     const goToSettings = () => { navigate(user ? '/settings' : '/login'); setSidebarOpen(false); };
+    const goToNotifications = () => { navigate(user ? '/notifications' : '/login'); setSidebarOpen(false); };
     const goToLogin = () => { navigate('/login'); setSidebarOpen(false); };
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -303,20 +304,23 @@ const HomePage = ({ user, setUser }) => {
                             </div>
                             <div className="sidebar-menu-items">
                                 <div className="menu-item" onClick={goToProfile}>
-                                    <FaUserCircle size={20} /> <span>Profile</span>
+                                    <FaUserCircle size={20}/> <span>Profile</span>
                                 </div>
                                 <div className="menu-item" onClick={goToSettings}>
-                                    <FaCog size={20} /> <span>Settings</span>
+                                    <FaCog size={20}/> <span>Settings</span>
+                                </div>
+                                <div className="menu-item" onClick={goToNotifications}>
+                                    <FaEnvelope size={20}/> <span>Notifications</span>
                                 </div>
                                 <div className="menu-item" onClick={handleLogout}>
-                                    <FaSignOutAlt size={20} /> <span>Log out</span>
+                                    <FaSignOutAlt size={20}/> <span>Log out</span>
                                 </div>
                             </div>
                         </>
                     ) : (
                         <div className="sidebar-menu-items">
                             <div className="menu-item" onClick={goToLogin}>
-                                <FaUserCircle size={20} /> <span>Log In</span>
+                            <FaUserCircle size={20} /> <span>Log In</span>
                             </div>
                         </div>
                     )}
