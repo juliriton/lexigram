@@ -16,6 +16,7 @@ public class Experience {
   protected void onCreate() {
     this.creationDate = System.currentTimeMillis();
     this.uuid = UUID.randomUUID();
+    this.mentions = new HashSet<>();
   }
 
   @Id
@@ -99,10 +100,7 @@ public class Experience {
   )
   private Set<User> mentions;
 
-  public Experience() {
-    this.uuid = UUID.randomUUID();
-    this.mentions = new HashSet<>();
-  }
+  public Experience() {}
 
   public Experience(User user,
                      Set<User> mentions,

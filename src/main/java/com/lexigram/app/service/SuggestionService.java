@@ -2,6 +2,7 @@ package com.lexigram.app.service;
 
 import com.lexigram.app.dto.*;
 import com.lexigram.app.exception.UserNotFoundException;
+import com.lexigram.app.model.Notification;
 import com.lexigram.app.model.Save;
 import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.Tag;
@@ -29,6 +30,8 @@ public class SuggestionService {
   private final ExperienceService experienceService;
   private final ExperienceRepository experienceRepository;
   private final SuggestionPrivacySettingsRepository suggestionPrivacySettingsRepository;
+  private final NotificationService notificationService;
+  private final NotificationRepository notificationRepository;
   private SuggestionRepository suggestionRepository;
   private TagRepository tagRepository;
   private SaveRepository saveRepository;
@@ -41,7 +44,7 @@ public class SuggestionService {
                            ExperienceService experienceService,
                            ExperienceRepository experienceRepository,
                            SaveRepository saveRepository,
-                           ResonateRepository resonateRepository, SuggestionPrivacySettingsRepository suggestionPrivacySettingsRepository) {
+                           ResonateRepository resonateRepository, SuggestionPrivacySettingsRepository suggestionPrivacySettingsRepository, NotificationService notificationService, NotificationRepository notificationRepository) {
     this.suggestionRepository = suggestionRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
@@ -50,6 +53,8 @@ public class SuggestionService {
     this.saveRepository = saveRepository;
     this.resonateRepository = resonateRepository;
     this.suggestionPrivacySettingsRepository = suggestionPrivacySettingsRepository;
+    this.notificationService = notificationService;
+    this.notificationRepository = notificationRepository;
   }
 
   public SuggestionDTO createSuggestion(Long id, PostSuggestionDTO postSuggestionDTO) {
@@ -206,6 +211,9 @@ public class SuggestionService {
     }
 
     Resonate resonate = new Resonate(user, suggestion);
+
+    Notification notification = notificationService.resonateSuggestionNotification(user, suggestion);
+    notificationRepository.save(notification);
 
     suggestion.addResonate(resonate);
     resonateRepository.save(resonate);

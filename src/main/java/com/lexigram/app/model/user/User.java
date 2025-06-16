@@ -1,15 +1,14 @@
 package com.lexigram.app.model.user;
 
 import com.lexigram.app.model.Comment;
+import com.lexigram.app.model.Notification;
 import com.lexigram.app.model.Save;
 import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;
 import jakarta.persistence.*;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -72,6 +71,12 @@ public class User {
 
   @ManyToMany(mappedBy = "following")
   private Set<User> followers = new HashSet<>();
+
+  @OneToMany(mappedBy = "recipient", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Notification> receivedNotifications = new ArrayList<>();
+
+  @OneToMany(mappedBy = "actor", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Notification> triggeredNotifications = new ArrayList<>();
 
   private Long followingAmount;
 

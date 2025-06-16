@@ -2,6 +2,7 @@ package com.lexigram.app.controller;
 
 import com.lexigram.app.dto.*;
 import com.lexigram.app.service.ExperienceService;
+import com.lexigram.app.service.NotificationService;
 import com.lexigram.app.service.SuggestionService;
 import com.lexigram.app.service.UserProfileService;
 import jakarta.servlet.http.HttpSession;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -26,6 +28,8 @@ public class UserProfileController {
 
   private final ExperienceService experienceService;
   private final SuggestionService suggestionService;
+  private final NotificationService notificationService;
+
   @Value("${lexigram.upload.dir}")
   private String uploadDir;
   private final UserProfileService userProfileService;
@@ -33,10 +37,12 @@ public class UserProfileController {
   @Autowired
   public UserProfileController(UserProfileService userProfileService,
                                ExperienceService experienceService,
-                               SuggestionService suggestionService) {
+                               SuggestionService suggestionService,
+                               NotificationService notificationService) {
     this.userProfileService = userProfileService;
     this.experienceService = experienceService;
     this.suggestionService = suggestionService;
+    this.notificationService = notificationService;
   }
 
   @GetMapping
@@ -250,6 +256,64 @@ public class UserProfileController {
     if (id == null) return ResponseEntity.status(401).build();
 
     return ResponseEntity.ok(experienceService.getSavedExperiences(id));
+  }
+
+  @GetMapping("/notifications")
+  public ResponseEntity<Collection<NotificationDTO>> getAllNotificationsForUser(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Collection<NotificationDTO> notificationDTOS = notificationService.getAllNotificationsByUserId(id);
+    return ResponseEntity.ok(notificationDTOS);
+  }
+
+  @PostMapping("/notifications/delete/{uuid}")
+  public ResponseEntity<String> deleteNotification(HttpSession session, @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+
+    if (id == null) return ResponseEntity.status(401).build();
+
+    boolean deleted = notificationService.deleteNotificationByUuid(id, uuid);
+    return deleted
+        ? ResponseEntity.ok("Notification deleted.")
+        : ResponseEntity.status(403).body("Unauthorized or notification not found.");
+  }
+
+  @PostMapping("/notifications/delete}")
+  public ResponseEntity<String> deleteAllNotifications(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+
+    if (id == null) return ResponseEntity.status(401).build();
+
+    boolean deleted = notificationService.deleteAllNotifications(id);
+    return deleted
+        ? ResponseEntity.ok("All notifications deleted.")
+        : ResponseEntity.status(403).body("Unauthorized or notification not found.");
+  }
+
+  @PostMapping("/notifications/acknowledge/{uuid}")
+  public ResponseEntity<String> acknowledgeNotification(HttpSession session, @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+
+    if (id == null) return ResponseEntity.status(401).build();
+
+    boolean acknowledged = notificationService.acknowledgeNotificationByUuid(id, uuid);
+    return acknowledged
+        ? ResponseEntity.ok("Notification acknowledged.")
+        : ResponseEntity.status(403).body("Unauthorized or notification not found.");
+  }
+
+  @PostMapping("/notifications/acknowledge}")
+  public ResponseEntity<String> acknowledgeAllNotifications(HttpSession session) {
+    Long id = (Long) session.getAttribute("user");
+
+    if (id == null) return ResponseEntity.status(401).build();
+
+    boolean acknowledged = notificationService.acknowledgeAllNotifications(id);
+    return acknowledged
+        ? ResponseEntity.ok("All notifications acknowledged.")
+        : ResponseEntity.status(403).body("Unauthorized or notification not found.");
   }
 
 }

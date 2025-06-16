@@ -6,6 +6,7 @@ import com.lexigram.app.dto.PostCommentDTO;
 import com.lexigram.app.dto.ReplyCommentDTO;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.model.Comment;
+import com.lexigram.app.model.Notification;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.user.User;
@@ -34,16 +35,18 @@ public class CommentService {
   private final ExperienceRepository experienceRepository;
   private final ResonateRepository resonateRepository;
   private final CommentRepository commentRepository;
+  private final NotificationService notificationService;
 
   @Autowired
   public CommentService(CommentRepository commentRepository,
                         UserRepository userRepository,
                         ExperienceRepository experienceRepository,
-                        ResonateRepository resonateRepository) {
+                        ResonateRepository resonateRepository, NotificationService notificationService) {
     this.commentRepository = commentRepository;
     this.userRepository = userRepository;
     this.experienceRepository = experienceRepository;
     this.resonateRepository = resonateRepository;
+    this.notificationService = notificationService;
   }
 
   public Optional<CommentDTO> replyToComment(Long id, UUID uuid, ReplyCommentDTO dto) {
@@ -301,6 +304,8 @@ public class CommentService {
       experience.addComment(savedComment);
       Experience savedExperience = experienceRepository.save(experience);
       System.out.println("Experience updated. New comment count: " + savedExperience.getCommentAmount());
+
+      Notification notification = notificationService.commentExperienceNotification(user, experience);
 
       // Retornar la experiencia completa actualizada
       return new ExperienceDTO(savedExperience);

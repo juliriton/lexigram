@@ -5,14 +5,12 @@ import com.lexigram.app.exception.EmailAlreadyUsedException;
 import com.lexigram.app.exception.UserNotFoundException;
 import com.lexigram.app.exception.UsernameAlreadyUsedException;
 import com.lexigram.app.exception.WrongPasswordException;
+import com.lexigram.app.model.Notification;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.user.User;
 import com.lexigram.app.model.user.UserPrivacySettings;
 import com.lexigram.app.model.user.UserProfile;
-import com.lexigram.app.repository.ExperienceRepository;
-import com.lexigram.app.repository.UserPrivacySettingsRepository;
-import com.lexigram.app.repository.UserProfileRepository;
-import com.lexigram.app.repository.UserRepository;
+import com.lexigram.app.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,18 +25,22 @@ public class UserService {
   private final UserProfileRepository userProfileRepository;
   private final ExperienceRepository experienceRepository;
   private final PasswordEncoder passwordEncoder;
+  private final NotificationService notificationService;
+  private final NotificationRepository notificationRepository;
 
   @Autowired
   public UserService(UserRepository userRepository,
                      UserPrivacySettingsRepository userPrivacySettingsRepository,
                      UserProfileRepository userProfileRepository,
                      ExperienceRepository experienceRepository,
-                     PasswordEncoder passwordEncoder) {
+                     PasswordEncoder passwordEncoder, NotificationService notificationService, NotificationRepository notificationRepository) {
     this.userRepository = userRepository;
     this.userPrivacySettingsRepository = userPrivacySettingsRepository;
     this.userProfileRepository = userProfileRepository;
     this.experienceRepository = experienceRepository;
     this.passwordEncoder = passwordEncoder;
+    this.notificationService = notificationService;
+    this.notificationRepository = notificationRepository;
   }
 
   public List<UserDTO> findAllUsers() {
@@ -221,6 +223,10 @@ public class UserService {
       UserProfile toFollowProfile = userProfileRepository.findById(toFollow.getId()).get();
       user.addFollowing(toFollow);
       toFollow.addFollower(user);
+
+      Notification notification = notificationService.createFollowNotification(user, toFollow);
+      notificationRepository.save(notification);
+
       userRepository.save(user);
       userRepository.save(toFollow);
       return Optional.of(new ConnectionDTO(toFollow.getUuid(),

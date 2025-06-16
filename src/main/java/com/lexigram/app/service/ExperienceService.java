@@ -24,6 +24,8 @@ import java.util.*;
 public class ExperienceService {
 
   private final SuggestionRepository suggestionRepository;
+  private final NotificationRepository notificationRepository;
+  private final NotificationService notificationService;
   @Value("${lexigram.upload.dir}")
   private String uploadDir;
 
@@ -44,7 +46,7 @@ public class ExperienceService {
                            ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository,
                            ResonateRepository resonateRepository,
                            CommentRepository commentRepository,
-                           SaveRepository saveRepository, SuggestionRepository suggestionRepository) {
+                           SaveRepository saveRepository, SuggestionRepository suggestionRepository, NotificationRepository notificationRepository, NotificationService notificationService) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
@@ -54,6 +56,8 @@ public class ExperienceService {
     this.commentRepository = commentRepository;
     this.saveRepository = saveRepository;
     this.suggestionRepository = suggestionRepository;
+    this.notificationRepository = notificationRepository;
+    this.notificationService = notificationService;
   }
 
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
@@ -93,11 +97,14 @@ public class ExperienceService {
     Boolean isReply = postExperienceDTO.getIsReply();
 
     experience = new Experience(user, mentions, tags, quote, reflection, isOrigin, isReply);
-
     experience = experienceRepository.save(experience);
-
     experience.setOrigin(experience);
     experience = experienceRepository.save(experience);
+
+    for (User mention : mentions) {
+      Notification notification = notificationService.mentionExperienceNotification(user, experience, mention);
+      notificationRepository.save(notification);
+    }
 
     PostExperienceStyleDTO styleDTO = postExperienceDTO.getStyle();
     PostExperiencePrivacySettingsDTO privacySettingsDTO = postExperienceDTO.getPrivacySettings();
@@ -475,6 +482,9 @@ public class ExperienceService {
     if (saveOptional.isPresent()) {
       throw new UnsupportedOperationException();
     }
+
+    Notification notification = notificationService.resonateExperienceNotification(user, experience);
+    notificationRepository.save(notification);
 
     Save save = new Save(user, experience);
     saveRepository.save(save);
