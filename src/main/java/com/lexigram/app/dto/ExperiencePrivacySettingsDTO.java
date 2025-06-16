@@ -7,6 +7,7 @@ public class ExperiencePrivacySettingsDTO {
   private boolean allowComments;
   private boolean allowForks;
   private boolean allowResonates;
+  private boolean allowSaves;
 
   public ExperiencePrivacySettingsDTO() {}
 
@@ -14,6 +15,7 @@ public class ExperiencePrivacySettingsDTO {
     this.allowComments = experiencePrivacySettings.areCommentsAllowed();
     this.allowForks = experiencePrivacySettings.areForksAllowed();
     this.allowResonates = experiencePrivacySettings.areResonatesAllowed();
+    this.allowSaves = experiencePrivacySettings.areSavesAllowed();
   }
 
   public boolean getAllowComments(){
@@ -27,5 +29,7 @@ public class ExperiencePrivacySettingsDTO {
   public boolean getAllowResonates(){
     return allowResonates;
   }
+
+  public boolean getAllowSaves() { return allowSaves; }
 
 }

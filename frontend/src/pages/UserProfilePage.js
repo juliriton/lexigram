@@ -369,17 +369,14 @@ New: "${bioToUpdate}"`);
             post.uuid === updatedSuggestion.uuid ? {
                 ...post,
                 ...updatedSuggestion,
-                type: 'Suggestion' // Asegurar que mantenga el tipo
+                type: 'Suggestion'
             } : post
         ));
 
-        // Limpiar la selección
         setSelectedPostForEdit(null);
 
-        // Mostrar mensaje de éxito
         setUpdateMessage(message || "Suggestion updated successfully!");
 
-        // Limpiar el mensaje después de 3 segundos
         setTimeout(() => {
             setUpdateMessage('');
         }, 3000);
@@ -787,7 +784,11 @@ New: "${bioToUpdate}"`);
 
             {activeTab === 'saved' && (
                 <div className="profile-content profile-saved">
-                    <SavedContent user={user} baseApiUrl={baseApiUrl} />
+                    <SavedContent
+                        key="saved-content"
+                        user={user}
+                        baseApiUrl={baseApiUrl}
+                    />
                 </div>
             )}
 

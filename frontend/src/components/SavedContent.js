@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaBookmark } from 'react-icons/fa';
 import ExperienceCard from './ExperienceCard';
 import SuggestionCard from './SuggestionCard';
@@ -13,38 +13,47 @@ const SavedContent = ({ user, baseApiUrl }) => {
     const [showMentions, setShowMentions] = useState({});
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchSavedContent = async () => {
-            try {
-                setLoading(true);
-                const [experiencesRes, suggestionsRes] = await Promise.all([
-                    fetch(`${baseApiUrl}/api/auth/me/profile/saved/experiences`, {
-                        credentials: 'include',
-                    }),
-                    fetch(`${baseApiUrl}/api/auth/me/profile/saved/suggestions`, {
-                        credentials: 'include',
-                    })
-                ]);
+    const fetchSavedContent = useCallback(async () => {
+        try {
+            setLoading(true);
+            const [experiencesRes, suggestionsRes] = await Promise.all([
+                fetch(`${baseApiUrl}/api/auth/me/profile/saved/experiences`, {
+                    credentials: 'include',
+                }),
+                fetch(`${baseApiUrl}/api/auth/me/profile/saved/suggestions`, {
+                    credentials: 'include',
+                })
+            ]);
 
-                if (!experiencesRes.ok || !suggestionsRes.ok) {
-                    throw new Error('Failed to fetch saved content');
-                }
-
-                const experiences = await experiencesRes.json();
-                const suggestions = await suggestionsRes.json();
-
-                setSavedExperiences(experiences);
-                setSavedSuggestions(suggestions);
-            } catch (err) {
-                console.error('Error fetching saved content:', err);
-                setError(err.message);
-            } finally {
-                setLoading(false);
+            if (!experiencesRes.ok || !suggestionsRes.ok) {
+                throw new Error('Failed to fetch saved content');
             }
-        };
 
-        fetchSavedContent();
+            const experiences = await experiencesRes.json();
+            const suggestions = await suggestionsRes.json();
+
+            setSavedExperiences(experiences);
+            setSavedSuggestions(suggestions);
+        } catch (err) {
+            console.error('Error fetching saved content:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     }, [baseApiUrl]);
+
+    useEffect(() => {
+        fetchSavedContent();
+    }, [fetchSavedContent]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setSavedExperiences(prev => [...prev]);
+            setSavedSuggestions(prev => [...prev]);
+        }, 100);
+
+        return () => clearTimeout(timeoutId);
+    }, [activeTab]);
 
     const toggleQuote = (postId) => {
         setHiddenQuotes(prev => ({
@@ -59,33 +68,35 @@ const SavedContent = ({ user, baseApiUrl }) => {
         if (!Array.isArray(tags)) return null;
         return tags.map((tag, i) => (
             <span key={i} className="tag-badge">
-        #{typeof tag === 'object' ? tag.name : tag}
-      </span>
+                #{typeof tag === 'object' ? tag.name : tag}
+            </span>
         ));
     };
 
-    const handleExperienceActionComplete = (updatedExperience) => {
-        if (updatedExperience.saved === false) {
-            setSavedExperiences(prev =>
-                prev.filter(exp => exp.uuid !== updatedExperience.uuid)
-            );
-        } else {
-            setSavedExperiences(prev =>
-                prev.map(exp => exp.uuid === updatedExperience.uuid ? updatedExperience : exp)
-            );
-        }
-    };
+    const handleExperienceActionComplete = useCallback((updatedExperience) => {
+        setSavedExperiences(prev => {
+            if (updatedExperience.saved === false) {
+                const newExperiences = prev.filter(exp => exp.uuid !== updatedExperience.uuid);
+                return newExperiences;
+            } else {
+                return prev.map(exp => exp.uuid === updatedExperience.uuid ? updatedExperience : exp);
+            }
+        });
+    }, []);
 
-    const handleSuggestionActionComplete = (updatedSuggestion) => {
-        if (updatedSuggestion.saved === false) {
-            setSavedSuggestions(prev =>
-                prev.filter(sug => sug.uuid !== updatedSuggestion.uuid)
-            );
-        } else {
-            setSavedSuggestions(prev =>
-                prev.map(sug => sug.uuid === updatedSuggestion.uuid ? updatedSuggestion : sug)
-            );
-        }
+    const handleSuggestionActionComplete = useCallback((updatedSuggestion) => {
+        setSavedSuggestions(prev => {
+            if (updatedSuggestion.saved === false) {
+                const newSuggestions = prev.filter(sug => sug.uuid !== updatedSuggestion.uuid);
+                return newSuggestions;
+            } else {
+                return prev.map(sug => sug.uuid === updatedSuggestion.uuid ? updatedSuggestion : sug);
+            }
+        });
+    }, []);
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
     };
 
     if (loading) {
@@ -116,13 +127,13 @@ const SavedContent = ({ user, baseApiUrl }) => {
                     <div className="saved-content-tabs">
                         <button
                             className={`tab-button ${activeTab === 'experiences' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('experiences')}
+                            onClick={() => handleTabChange('experiences')}
                         >
                             Experiences ({savedExperiences.length})
                         </button>
                         <button
                             className={`tab-button ${activeTab === 'suggestions' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('suggestions')}
+                            onClick={() => handleTabChange('suggestions')}
                         >
                             Suggestions ({savedSuggestions.length})
                         </button>

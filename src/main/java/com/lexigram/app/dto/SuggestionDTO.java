@@ -25,6 +25,7 @@ public class SuggestionDTO {
   private final Set<UUID> repliedBy;
   private final Set<UUID> replies;
   private final long replyAmount;
+  private final SuggestionPrivacySettingsDTO suggestionPrivacySettingsDTO;
 
   public SuggestionDTO(Suggestion suggestion) {
     this.uuid = suggestion.getUuid();
@@ -44,6 +45,7 @@ public class SuggestionDTO {
     this.creationDate = suggestion.getCreationDate();
     this.resonatesAmount = suggestion.getResonatesAmount();
     this.replyAmount = suggestion.getExperienceAmount();
+    this.suggestionPrivacySettingsDTO = new SuggestionPrivacySettingsDTO(suggestion.getPrivacySettings());
   }
 
   private static UserDTO buildUser(Suggestion suggestion) {
@@ -141,6 +143,10 @@ public class SuggestionDTO {
 
   public Set<UUID> getResonatedBy() {
     return resonatedBy;
+  }
+
+  public SuggestionPrivacySettingsDTO getPrivacySettingsDTO() {
+    return suggestionPrivacySettingsDTO;
   }
 
 }
