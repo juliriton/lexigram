@@ -30,6 +30,8 @@ public class SecurityConfig {
                 "/api/auth/signup",
                 "/api/auth/login",
                 "/api/auth/me/**",
+                "/api/experience/*/comments/**",
+                "/api/experience/*/comments",
                 "/images/**"
             ).permitAll()
             .anyRequest().authenticated()

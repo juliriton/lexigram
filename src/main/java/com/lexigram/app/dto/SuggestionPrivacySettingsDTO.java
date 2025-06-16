@@ -1,27 +1,21 @@
 package com.lexigram.app.dto;
 
-import com.lexigram.app.model.suggestion.SuggestionPrivacySettings;
-import jakarta.validation.constraints.NotNull;
-
 public class SuggestionPrivacySettingsDTO {
 
-  @NotNull
-  private boolean allowResonates;
+  private final boolean allowResonates;
+  private final boolean allowSaves;
 
-  @NotNull
-  private boolean allowSaves;
-
-  public SuggestionPrivacySettingsDTO() {}
-
-  public SuggestionPrivacySettingsDTO(SuggestionPrivacySettings suggestionPrivacySettings) {
-    this.allowResonates = suggestionPrivacySettings.areResonatesAllowed();
-    this.allowSaves = suggestionPrivacySettings.areSavesAllowed();
+  public SuggestionPrivacySettingsDTO(boolean allowResonates, boolean allowSaves) {
+    this.allowResonates = allowResonates;
+    this.allowSaves = allowSaves;
   }
 
-  public boolean getAllowResonates(){
+  public boolean getAllowResonates() {
     return allowResonates;
   }
 
-  public boolean getAllowSaves() { return allowSaves; }
+  public boolean getAllowSaves() {
+    return allowSaves;
+  }
 
 }

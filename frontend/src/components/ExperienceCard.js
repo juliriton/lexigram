@@ -3,6 +3,7 @@ import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-ico
 import { FaStar } from 'react-icons/fa6';
 import {useLocation, useNavigate} from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
+import CommentModal from './CommentModal';
 import ExperienceInteractions from './ExperienceInteractions';
 import PostPopupModal from '../components/PostPopUpModal';
 import '../styles/ExperienceCard.css';
@@ -29,6 +30,13 @@ const ExperienceCard = ({
     const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
     const isVideo = url => url && /\.(mp4|webm|ogg)$/i.test(url);
 
+    // Get privacy settings from experience
+    const privacySettings = post.privacySettings || {};
+    const allowResonates = privacySettings.allowResonates !== false;
+    const allowSaves = privacySettings.allowSaves !== false;
+    const allowComments = privacySettings.allowComments !== false;
+    const allowForks = privacySettings.allowForks !== false;
+
     // Estados para la UI
     const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
     const [isPopupModalOpen, setPopupModalOpen] = useState(false);
@@ -37,6 +45,7 @@ const ExperienceCard = ({
     const [updatedPost, setUpdatedPost] = useState(post);
     const [showFullRefl, setShowFullRefl] = useState(false);
     const [showAllTags, setShowAllTags] = useState(false);
+    const [showCommentsModal, setShowCommentsModal] = useState(false);
 
     // Cálculos para el texto
     const quoteFontSize = useMemo(() => {
@@ -159,6 +168,49 @@ const ExperienceCard = ({
                 </div>
             </div>
         );
+    };
+
+    // Function to render stats based on privacy settings
+    const renderPostStats = () => {
+        const stats = [];
+
+        if (allowResonates) {
+            stats.push(
+                <div key="resonates" className="stat-item">
+                    <span className="stat-label">Resonates:</span>
+                    <span className="stat-value">{updatedPost.resonatesAmount || 0}</span>
+                </div>
+            );
+        }
+
+        if (allowComments) {
+            stats.push(
+                <div key="comments" className="stat-item">
+                    <span className="stat-label">Comments:</span>
+                    <span className="stat-value">{updatedPost.commentAmount || 0}</span>
+                </div>
+            );
+        }
+
+        if (allowSaves) {
+            stats.push(
+                <div key="saves" className="stat-item">
+                    <span className="stat-label">Saved:</span>
+                    <span className="stat-value">{updatedPost.saveAmount || 0}</span>
+                </div>
+            );
+        }
+
+        if (allowForks) {
+            stats.push(
+                <div key="branches" className="stat-item">
+                    <span className="stat-label">Branches:</span>
+                    <span className="stat-value">{updatedPost.branchAmount || 0}</span>
+                </div>
+            );
+        }
+
+
     };
 
     return (
@@ -329,6 +381,7 @@ const ExperienceCard = ({
                         experience={updatedPost}
                         baseApiUrl={baseApiUrl}
                         onActionComplete={handleExperienceInteractionComplete}
+                        onCommentClick={() => setShowCommentsModal(true)}
                     />
 
                     <div className="actions">
@@ -364,24 +417,19 @@ const ExperienceCard = ({
                         </div>
                     )}
 
-                    <div className="post-stats">
-                        <div className="stat-item">
-                            <span className="stat-label">Resonates:</span>
-                            <span className="stat-value">{updatedPost.resonatesAmount || 0}</span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-label">Comments:</span>
-                            <span className="stat-value">{updatedPost.commentAmount || 0}</span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-label">Saved:</span>
-                            <span className="stat-value">{updatedPost.saveAmount || 0}</span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-label">Branches:</span>
-                            <span className="stat-value">{updatedPost.branchAmount || 0}</span>
-                        </div>
-                    </div>
+                    {renderPostStats()}
+
+                    {allowComments && (
+                        <CommentModal
+                            isOpen={showCommentsModal}
+                            onClose={() => setShowCommentsModal(false)}
+                            experience={updatedPost}
+                            user={user}
+                            baseApiUrl={baseApiUrl}
+                            formatDate={formatDate}
+                            onActionComplete={handleExperienceInteractionComplete}
+                        />
+                    )}
                 </div>
             </div>
 

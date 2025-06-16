@@ -363,15 +363,15 @@ const HomePage = ({ user, setUser }) => {
 
                 <div className="btn-group mb-3 ms-2">
                     <button
-                        className={`btn btn-outline-secondary ${postFilter === 'all' ? 'active' : ''}`}
+                        className={`btn btn-outline-primary ${postFilter === 'all' ? 'active' : ''}`}
                         onClick={() => setPostFilter('all')}
                     > <FaBorderAll size={25} /> </button>
                     <button
-                        className={`btn btn-outline-secondary ${postFilter === 'experiences' ? 'active' : ''}`}
+                        className={`btn btn-outline-primary ${postFilter === 'experiences' ? 'active' : ''}`}
                         onClick={() => setPostFilter('experiences')}
                     > <FaPhotoVideo size={25} /></button>
                     <button
-                        className={`btn btn-outline-secondary ${postFilter === 'suggestions' ? 'active' : ''}`}
+                        className={`btn btn-outline-primary ${postFilter === 'suggestions' ? 'active' : ''}`}
                         onClick={() => setPostFilter('suggestions')}
                     > <FaQuestion size={25} /></button>
                 </div>

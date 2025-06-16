@@ -96,6 +96,12 @@ public class SuggestionService {
 
       Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
       for (Suggestion suggestion : userSuggestions) {
+        // Cargar explícitamente las privacySettings si es necesario
+        if (suggestion.getPrivacySettings() == null) {
+          SuggestionPrivacySettings settings = suggestionPrivacySettingsRepository
+              .findBySuggestionId(suggestion.getId()).orElse(null);
+          suggestion.setPrivacySettings(settings);
+        }
         publicSuggestions.add(new SuggestionDTO(suggestion));
       }
     }
@@ -112,6 +118,12 @@ public class SuggestionService {
 
       Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
       for (Suggestion suggestion : userSuggestions) {
+        // Cargar explícitamente las privacySettings si es necesario
+        if (suggestion.getPrivacySettings() == null) {
+          SuggestionPrivacySettings settings = suggestionPrivacySettingsRepository
+              .findBySuggestionId(suggestion.getId()).orElse(null);
+          suggestion.setPrivacySettings(settings);
+        }
         publicSuggestions.add(new SuggestionDTO(suggestion));
       }
     }
@@ -120,7 +132,6 @@ public class SuggestionService {
   }
 
   public Set<SuggestionDTO> getAllFollowingSuggestions(Long id) {
-
     User user = userRepository.findById(id).get();
 
     Set<SuggestionDTO> followingSuggestions = new HashSet<>();
@@ -128,12 +139,17 @@ public class SuggestionService {
       Long userId = u.getId();
       Set<Suggestion> userSuggestions = suggestionRepository.getSuggestionsByUserId(userId);
       for (Suggestion suggestion : userSuggestions) {
+        // Cargar explícitamente las privacySettings si es necesario
+        if (suggestion.getPrivacySettings() == null) {
+          SuggestionPrivacySettings settings = suggestionPrivacySettingsRepository
+              .findBySuggestionId(suggestion.getId()).orElse(null);
+          suggestion.setPrivacySettings(settings);
+        }
         followingSuggestions.add(new SuggestionDTO(suggestion));
       }
     }
     return followingSuggestions;
   }
-
   public boolean deleteSuggestion(UUID suggestionUuid, Long userId) {
     Optional<Suggestion> suggestion = suggestionRepository.findByUuid(suggestionUuid);
     if (suggestion.isEmpty()){

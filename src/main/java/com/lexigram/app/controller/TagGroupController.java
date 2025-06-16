@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
-@RequestMapping("/api/auth/me/tags")
+@RequestMapping("/api/auth/me/tags/groups")
 public class TagGroupController {
 
   private final TagService tagService;
@@ -23,32 +23,32 @@ public class TagGroupController {
     return ResponseEntity.ok(tagService.addToFeed());
   }
 
-  @GetMapping
+  @GetMapping("/created")
   public ResponseEntity<PostsDTO> getAllUserTagGroups() {
     return ResponseEntity.ok(tagService.addToFeed());
   }
 
-  @GetMapping
+  @GetMapping("/recent")
   public ResponseEntity<PostsDTO> getRecentUserTagGroups() {
     return ResponseEntity.ok(tagService.addToFeed());
   }
 
-  @GetMapping
+  @GetMapping("{groupId}")
   public ResponseEntity<PostsDTO> getTagGroup() {
     return ResponseEntity.ok(tagService.addToFeed());
   }
 
-  @GetMapping
+  @GetMapping("/trending")
   public ResponseEntity<PostsDTO> getTrendingTagGroups() {
     return ResponseEntity.ok(tagService.addToFeed());
   }
 
-  @PostMapping
+  @PostMapping("/create")
   public ResponseEntity<PostsDTO> createTagGroup() {
     return ResponseEntity.ok(tagService.addToFeed());
   }
 
-  @DeleteMapping
+  @DeleteMapping("/created/delete/{groupId}")
   public ResponseEntity<PostsDTO> deleteTagGroup() {
     return ResponseEntity.ok(tagService.addToFeed());
   }

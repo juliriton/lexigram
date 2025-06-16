@@ -22,6 +22,11 @@ const SuggestionCard = ({
     const headerParts = post.header ? post.header.split('...') : ['', ''];
     const promptText = headerParts[0] || "Tell me about";
 
+    // Get privacy settings from suggestion
+    const privacySettings = post.privacySettings || {};
+    const allowResonates = privacySettings.allowResonates !== false;
+    const allowSaves = privacySettings.allowSaves !== false;
+
     const [isExpanded, setIsExpanded] = React.useState(false);
     const [showAllTags, setShowAllTags] = React.useState(false);
 
@@ -56,6 +61,37 @@ const SuggestionCard = ({
         if (onActionComplete) {
             onActionComplete(updatedSuggestion);
         }
+    };
+
+    // Function to render suggestion stats based on privacy settings
+    const renderSuggestionStats = () => {
+        const stats = [];
+
+        if (allowResonates) {
+            stats.push(
+                <div key="resonates" className="stat-item">
+                    <span className="stat-label">Resonates:</span>
+                    <span className="stat-value">{post.resonatesAmount || 0}</span>
+                </div>
+            );
+        }
+
+        if (allowSaves) {
+            stats.push(
+                <div key="saves" className="stat-item">
+                    <span className="stat-label">Saved:</span>
+                    <span className="stat-value">{post.savesAmount || 0}</span>
+                </div>
+            );
+        }
+
+        // Reply stats are always shown as they're always enabled for suggestions
+        stats.push(
+            <div key="replies" className="stat-item">
+                <span className="stat-label">Replies:</span>
+                <span className="stat-value">{post.replyAmount || 0}</span>
+            </div>
+        );
     };
 
     return (
@@ -139,15 +175,11 @@ const SuggestionCard = ({
                     onActionComplete={handleSuggestionInteractionComplete}
                 />
 
+                {/* Render stats based on privacy settings */}
+                {renderSuggestionStats()}
+
                 {isOwner && (
                     <div className="actions">
-                        <button
-                            className="btn btn-sm btn-outline-primary me-2"
-                            onClick={onEdit}
-                            aria-label="Edit Suggestion"
-                        >
-                            <FaEdit /> Edit
-                        </button>
                         <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={onDelete}

@@ -8,6 +8,9 @@ public class ConnectionProfileDTO {
   private boolean isFollowing;
   private Long followingAmount;
   private Long followerAmount;
+  private boolean isPrivate;
+  private boolean canViewPosts;
+
 
   public ConnectionProfileDTO() {}
 
@@ -16,13 +19,18 @@ public class ConnectionProfileDTO {
                               String profilePictureUrl,
                               boolean isFollowing,
                               Long followingAmount,
-                              Long followerAmount) {
+                              Long followerAmount,
+                              boolean isPrivate,
+                              boolean canViewPosts)
+  {
     this.username = username;
     this.biography = biography;
     this.profilePictureUrl = profilePictureUrl;
     this.isFollowing = isFollowing;
     this.followingAmount = followingAmount;
     this.followerAmount = followerAmount;
+    this.isPrivate = isPrivate;
+    this.canViewPosts = canViewPosts;
   }
 
   public String getUsername() {
@@ -48,5 +56,9 @@ public class ConnectionProfileDTO {
   public Long getFollowerAmount() {
     return followerAmount;
   }
+
+  public boolean getIsPrivate() { return isPrivate; }
+
+  public boolean getCanViewPosts() { return canViewPosts; }
 
 }

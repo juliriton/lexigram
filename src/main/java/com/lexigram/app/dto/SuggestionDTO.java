@@ -25,7 +25,7 @@ public class SuggestionDTO {
   private final Set<UUID> repliedBy;
   private final Set<UUID> replies;
   private final long replyAmount;
-  private final SuggestionPrivacySettingsDTO suggestionPrivacySettingsDTO;
+  private final SuggestionPrivacySettingsDTO privacySettings; // AÑADIDO
 
   public SuggestionDTO(Suggestion suggestion) {
     this.uuid = suggestion.getUuid();
@@ -45,7 +45,7 @@ public class SuggestionDTO {
     this.creationDate = suggestion.getCreationDate();
     this.resonatesAmount = suggestion.getResonatesAmount();
     this.replyAmount = suggestion.getExperienceAmount();
-    this.suggestionPrivacySettingsDTO = new SuggestionPrivacySettingsDTO(suggestion.getPrivacySettings());
+    this.privacySettings = buildPrivacySettings(suggestion); // AÑADIDO
   }
 
   private static UserDTO buildUser(Suggestion suggestion) {
@@ -87,6 +87,18 @@ public class SuggestionDTO {
       saves.add(save.getUser().getUuid());
     }
     return saves;
+  }
+
+  // MÉTODO AÑADIDO
+  private static SuggestionPrivacySettingsDTO buildPrivacySettings(Suggestion suggestion) {
+    if (suggestion.getPrivacySettings() != null) {
+      return new SuggestionPrivacySettingsDTO(
+          suggestion.getPrivacySettings().areResonatesAllowed(),
+          suggestion.getPrivacySettings().areSavesAllowed()
+      );
+    }
+    // Valores por defecto si no hay privacySettings
+    return new SuggestionPrivacySettingsDTO(true, true);
   }
 
   public UUID getUuid() {
@@ -145,8 +157,9 @@ public class SuggestionDTO {
     return resonatedBy;
   }
 
-  public SuggestionPrivacySettingsDTO getPrivacySettingsDTO() {
-    return suggestionPrivacySettingsDTO;
+  // GETTER AÑADIDO
+  public SuggestionPrivacySettingsDTO getPrivacySettings() {
+    return privacySettings;
   }
 
 }

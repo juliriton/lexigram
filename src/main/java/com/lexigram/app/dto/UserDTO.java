@@ -1,5 +1,6 @@
 package com.lexigram.app.dto;
 
+import com.lexigram.app.model.user.User;
 import java.util.UUID;
 
 public class UserDTO {
@@ -17,9 +18,21 @@ public class UserDTO {
     this.email = email;
   }
 
-  public Long getId() { return this.id; }
+  // Constructor que recibe un objeto User
+  public UserDTO(User user) {
+    this.id = user.getId();
+    this.uuid = user.getUuid();
+    this.username = user.getUsername();
+    this.email = user.getEmail();
+  }
 
-  public UUID getUuid() { return this.uuid; }
+  public Long getId() {
+    return this.id;
+  }
+
+  public UUID getUuid() {
+    return this.uuid;
+  }
 
   public String getUsername() {
     return this.username;
@@ -28,5 +41,4 @@ public class UserDTO {
   public String getEmail() {
     return this.email;
   }
-
 }

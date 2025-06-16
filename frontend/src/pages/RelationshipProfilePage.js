@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {FaUserCircle, FaUserPlus, FaUserMinus, FaHome, FaArrowLeft} from 'react-icons/fa';
+import { FaUserCircle, FaUserPlus, FaUserMinus, FaHome, FaArrowLeft } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
 import '../styles/RelationshipProfilePage.css';
@@ -13,6 +13,7 @@ const RelationshipProfile = ({ user }) => {
     const [profilePicture, setProfilePicture] = useState(null);
     const [userPosts, setUserPosts] = useState({ experiences: [], suggestions: [] });
     const [isFollowing, setIsFollowing] = useState(false);
+    const [canViewPosts, setCanViewPosts] = useState(true);
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
     const [activeTab, setActiveTab] = useState('posts');
@@ -36,9 +37,6 @@ const RelationshipProfile = ({ user }) => {
 
     const fetchProfileData = useCallback(async () => {
         try {
-
-
-
             const userRes = await fetch(`${baseApiUrl}/api/auth/me/users/${userId}/profile`, {
                 credentials: 'include'
             });
@@ -49,8 +47,8 @@ const RelationshipProfile = ({ user }) => {
 
             const userData = await userRes.json();
             setProfileUser(userData);
-
             setIsFollowing(userData.isFollowing);
+            setCanViewPosts(userData.canViewPosts !== false);
 
             setProfilePicture(
                 userData.profilePictureUrl
@@ -60,13 +58,15 @@ const RelationshipProfile = ({ user }) => {
                     : defaultProfilePicture
             );
 
-            const postsRes = await fetch(`${baseApiUrl}/api/auth/me/users/${userId}/profile/posts`, {
-                credentials: 'include'
-            });
+            if (userData.canViewPosts !== false) {
+                const postsRes = await fetch(`${baseApiUrl}/api/auth/me/users/${userId}/profile/posts`, {
+                    credentials: 'include'
+                });
 
-            if (postsRes.ok) {
-                const postsData = await postsRes.json();
-                setUserPosts(postsData);
+                if (postsRes.ok) {
+                    const postsData = await postsRes.json();
+                    setUserPosts(postsData);
+                }
             }
         } catch (err) {
             console.error('Error fetching profile data:', err);
@@ -153,15 +153,15 @@ const RelationshipProfile = ({ user }) => {
     const filterPosts = () => {
         if (!userPosts) return [];
 
-        switch(postFilter) {
+        switch (postFilter) {
             case 'experiences':
                 return userPosts.experiences || [];
             case 'suggestions':
                 return userPosts.suggestions || [];
             default:
                 return [
-                    ...(userPosts.experiences || []).map(post => ({...post, type: 'Experience'})),
-                    ...(userPosts.suggestions || []).map(post => ({...post, type: 'Suggestion'}))
+                    ...(userPosts.experiences || []).map(post => ({ ...post, type: 'Experience' })),
+                    ...(userPosts.suggestions || []).map(post => ({ ...post, type: 'Suggestion' }))
                 ];
         }
     };
@@ -176,6 +176,7 @@ const RelationshipProfile = ({ user }) => {
     }
 
     const filteredPosts = filterPosts();
+
 
     return (
         <div className="relationship-container">
@@ -252,87 +253,88 @@ const RelationshipProfile = ({ user }) => {
 
             {activeTab === 'posts' && (
                 <div className="relationship-content">
-                    <div className="relationship-post-filter">
-                        <select
-                            value={postFilter}
-                            onChange={(e) => setPostFilter(e.target.value)}
-                        >
-                            <option value="all">All Posts</option>
-                            <option value="suggestions">Suggestions</option>
-                            <option value="experiences">Experiences</option>
-                        </select>
-                    </div>
+                    {canViewPosts ? (
+                        <>
+                            <div className="relationship-post-filter">
+                                <select
+                                    value={postFilter}
+                                    onChange={(e) => setPostFilter(e.target.value)}
+                                >
+                                    <option value="all">All Posts</option>
+                                    <option value="suggestions">Suggestions</option>
+                                    <option value="experiences">Experiences</option>
+                                </select>
+                            </div>
 
-                    {filteredPosts.length === 0 ? (
-                        <div className="relationship-no-posts">
-                            <p>No posts found.</p>
-                        </div>
+                            {filteredPosts.length === 0 ? (
+                                <div className="relationship-no-posts">
+                                    <p>No posts found.</p>
+                                </div>
+                            ) : (
+                                <div className="relationship-posts-grid">
+                                    {filteredPosts.map(post => {
+                                        const isExperience = post.type === 'Experience';
+                                        const postId = post.uuid || post.id;
+
+                                        if (isExperience) {
+                                            return (
+                                                <ExperienceCard
+                                                    key={postId}
+                                                    user={user}
+                                                    post={post}
+                                                    username={profileUser.username}
+                                                    baseApiUrl={baseApiUrl}
+                                                    hiddenQuotes={hiddenQuotes}
+                                                    toggleQuote={() => toggleQuote(postId)}
+                                                    showMentions={showMentions}
+                                                    setShowMentions={setShowMentions}
+                                                    renderMentions={(mentions, id) => (
+                                                        showMentions[id] && (
+                                                            <div className="relationship-post-mentions">
+                                                                <h6>Mentions:</h6>
+                                                                <div className="relationship-mentions-list">
+                                                                    {mentions.map((mention, i) => (
+                                                                        <span
+                                                                            key={i}
+                                                                            className="relationship-mention clickable"
+                                                                            onClick={() => handleMentionClick(mention.uuid)}
+                                                                            style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
+                                                                        >
+                                                                            @{mention.username}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    )}
+                                                    renderTags={renderTags}
+                                                    formatDate={formatDate}
+                                                    isOwner={user?.uuid === profileUser.uuid}
+                                                />
+                                            );
+                                        }
+
+                                        return (
+                                            <SuggestionCard
+                                                key={postId}
+                                                user={user}
+                                                post={post}
+                                                baseApiUrl={baseApiUrl}
+                                                username={profileUser.username}
+                                                renderTags={renderTags}
+                                                formatDate={formatDate}
+                                                isOwner={user?.uuid === profileUser.uuid}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </>
                     ) : (
-                        <div className="relationship-posts-grid">
-                            {filteredPosts.map(post => {
-                                const isExperience = post.type === 'Experience';
-                                const postId = post.uuid || post.id;
-
-                                if (isExperience) {
-                                    return (
-                                        <ExperienceCard
-                                            key={postId}
-                                            user={user}
-                                            post={post}
-                                            username={profileUser.username}
-                                            baseApiUrl={baseApiUrl}
-                                            hiddenQuotes={hiddenQuotes}
-                                            toggleQuote={() => toggleQuote(postId)}
-                                            showMentions={showMentions}
-                                            setShowMentions={setShowMentions}
-                                            renderMentions={(mentions, id) => (
-                                                showMentions[id] && (
-                                                    <div className="relationship-post-mentions">
-                                                        <h6>Mentions:</h6>
-                                                        <div className="relationship-mentions-list">
-                                                            {mentions.map((mention, i) => (
-                                                                <span
-                                                                    key={i}
-                                                                    className="relationship-mention clickable"
-                                                                    onClick={() => handleMentionClick(mention.uuid)}
-                                                                    style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
-                                                                >
-                                                                    @{mention.username}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )
-                                            )}
-                                            renderTags={renderTags}
-                                            formatDate={formatDate}
-                                            isOwner={user?.uuid === profileUser.uuid}
-                                        />
-                                    );
-                                }
-
-                                return (
-                                    <SuggestionCard
-                                        key={postId}
-                                        user={user}
-                                        post={post}
-                                        baseApiUrl={baseApiUrl}
-                                        username={profileUser.username}
-                                        renderTags={renderTags}
-                                        formatDate={formatDate}
-                                        isOwner={user?.uuid === profileUser.uuid}
-                                    />
-                                );
-                            })}
+                        <div className="relationship-no-posts">
+                            <p>This account is private. Follow to see their posts.</p>
                         </div>
                     )}
-                </div>
-            )}
-
-            {activeTab === 'about' && (
-                <div className="relationship-content">
-                    <h3 className="relationship-content-title">About {profileUser?.username}</h3>
-                    <p>{profileUser?.biography || 'This user has not added any biographical information yet.'}</p>
                 </div>
             )}
 

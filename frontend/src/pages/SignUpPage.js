@@ -17,10 +17,7 @@ const SignUpPage = () => {
         }
 
         if (/[A-Z]/.test(username)) {
-            setError('Username must be between 3 and 25 characters, ' +
-                'must be lowercase, ' +
-                'can only contain letters, ' +
-                'numbers, and underscores ');
+            setError('Username must be lowercase only');
             return false;
         }
 
@@ -34,10 +31,7 @@ const SignUpPage = () => {
 
     const handleSignUp = async (e) => {
         e.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
+        if (!validateForm()) return;
 
         setLoading(true);
         setError('');
@@ -53,33 +47,24 @@ const SignUpPage = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                if (data.message) {
-                    setError(data.message);
-                } else if (response.status === 409) {
-                    setError('Username or email already in use');
-                } else {
-                    setError('An error has occurred creating your account');
-                }
+                setError(data.message || 'Username or email already in use');
                 setLoading(false);
                 return;
             }
 
             navigate('/');
         } catch (err) {
-            setError('Error');
+            setError('An error occurred');
             setLoading(false);
         }
     };
 
     return (
-        <div className="login-container">
-            <h2>Lexigram</h2>
-            {error && (
-                <div className="error-message">
-                    <p>{error}</p>
-                </div>
-            )}
-            <form onSubmit={handleSignUp}>
+        <div className="login-wrapper">
+            <div className="login-container">
+                <h2>Create Your Account </h2>
+                {error && <div className="error-message"><p>{error}</p></div>}
+                <form onSubmit={handleSignUp}>
                     <input
                         type="email"
                         placeholder="Email"
@@ -101,18 +86,14 @@ const SignUpPage = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-                <button
-                    type="submit"
-                    className="boton-elegante"
-                    disabled={loading}
-                >
-                    {loading ? 'Processing...' : 'Sign-Up'}
-                </button>
-            </form>
-
-            <p className="mt-3">
-                Already have an account? <Link to="/login">Login here</Link>
-            </p>
+                    <button type="submit" className="boton-elegante" disabled={loading}>
+                        {loading ? 'Processing...' : 'Sign-Up'}
+                    </button>
+                </form>
+                <p>
+                    Already have an account? <Link to="/login">Login</Link>
+                </p>
+            </div>
         </div>
     );
 };
