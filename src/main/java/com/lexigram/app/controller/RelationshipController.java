@@ -70,7 +70,7 @@ public class RelationshipController {
     return ResponseEntity.status(401).build();
   }
 
-  @GetMapping("/users/{username}")
+  @GetMapping("/users/username/{username}")
   public ResponseEntity<ConnectionProfileDTO> getRelationshipProfileByUsername(HttpSession session, @PathVariable String username) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();

@@ -71,7 +71,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         }
 
         // Fetch the user by username
-        fetch(`${baseApiUrl}/api/auth/me/users/${encodeURIComponent(username)}`, {
+        fetch(`${baseApiUrl}/api/auth/me/users/username/${encodeURIComponent(username)}`, {
             credentials: 'include'
         })
             .then(res => {
