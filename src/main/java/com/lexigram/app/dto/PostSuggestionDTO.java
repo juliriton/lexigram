@@ -10,7 +10,7 @@ import java.util.Set;
 public class PostSuggestionDTO {
 
   @NotEmpty
-  @Size(min = 1)
+  @Size(min = 1, max = 20)
   private Set<String> tags;
 
   @NotEmpty

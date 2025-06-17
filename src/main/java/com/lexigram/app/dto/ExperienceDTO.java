@@ -119,7 +119,7 @@ public class ExperienceDTO {
   private static Set<TagDTO> buildTagDTOs(Experience experience) {
     Set<TagDTO> tagDTO = new HashSet<>();
     for (Tag tag : experience.getTags()) {
-      tagDTO.add(new TagDTO(tag.getName(), tag.isInFeed()));
+      tagDTO.add(new TagDTO(tag.getUuid(), tag.getName()));
     }
     return tagDTO;
   }

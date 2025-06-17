@@ -1,12 +1,16 @@
 package com.lexigram.app.controller;
 
-import com.lexigram.app.dto.PostsDTO;
+import com.lexigram.app.dto.TagDTO;
 import com.lexigram.app.service.TagService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
@@ -20,20 +24,75 @@ public class TagController {
     this.tagService = tagService;
   }
 
-  public ResponseEntity<PostsDTO> createTag() {
-    return ResponseEntity.ok(tagService.addToFeed());
+  @GetMapping("/all")
+  public ResponseEntity<List<TagDTO>> getAllTags(HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+    Optional<List<TagDTO>> tags = tagService.getAllTags(userId);
+
+    if (tags.isPresent()) {
+      return ResponseEntity.ok(tags.get());
+    }
+
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
   }
 
-  public ResponseEntity<PostsDTO> addTagToFeed() {
-    return ResponseEntity.ok(tagService.addToFeed());
+  @GetMapping("/{uuid}")
+  public ResponseEntity<TagDTO> getTagByUuid(@PathVariable UUID uuid, HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+    return tagService.getTagByUuid(userId, uuid)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
   }
 
-  public ResponseEntity<PostsDTO> addTagToGroup() {
-    return ResponseEntity.ok(tagService.addToFeed());
+  @GetMapping("/feed")
+  public ResponseEntity<Set<TagDTO>> getFeedTags(HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+    return tagService.getAllFeedTags(userId)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
   }
 
-  public ResponseEntity<PostsDTO> removeTagFromGroup() {
-    return ResponseEntity.ok(tagService.addToFeed());
+  @PostMapping("/feed/add/{uuid}")
+  public ResponseEntity<Void> addTagToFeed(@PathVariable UUID uuid, HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+    boolean added = tagService.addTagToFeedByUuid(userId, uuid);
+    return added ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+  }
+
+  @PostMapping("/feed/remove/{uuid}")
+  public ResponseEntity<Void> removeTagFromFeed(@PathVariable UUID uuid, HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+    boolean removed = tagService.removeTagFromFeedByUuid(userId, uuid);
+    return removed ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+  }
+
+  @PostMapping("/feed/add-all")
+  public ResponseEntity<Void> addAllTagsToFeed(HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+    boolean success = tagService.addAllTagsToFeed(userId);
+    return success ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+  }
+
+  @PostMapping("/feed/clear")
+  public ResponseEntity<Void> removeAllTagsFromFeed(HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+    boolean success = tagService.removeAllTagsFromFeed(userId);
+    return success ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
   }
 
 }
+

@@ -1,11 +1,13 @@
 package com.lexigram.app.service;
 
 import com.lexigram.app.dto.*;
+import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.user.User;
 import com.lexigram.app.repository.ExperienceRepository;
 import com.lexigram.app.repository.SuggestionRepository;
+import com.lexigram.app.repository.TagRepository;
 import com.lexigram.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,18 +22,21 @@ public class FeedService {
   private final SuggestionService suggestionService;
   private final ExperienceRepository experienceRepository;
   private final SuggestionRepository suggestionRepository;
+  private final TagRepository tagRepository;
 
   @Autowired
   public FeedService(UserRepository userRepository,
                      ExperienceService experienceService,
                      SuggestionService suggestionService,
                      ExperienceRepository experienceRepository,
-                     SuggestionRepository suggestionRepository) {
+                     SuggestionRepository suggestionRepository,
+                     TagRepository tagRepository) {
     this.userRepository = userRepository;
     this.suggestionService = suggestionService;
     this.experienceService = experienceService;
     this.experienceRepository = experienceRepository;
     this.suggestionRepository = suggestionRepository;
+    this.tagRepository = tagRepository;
   }
 
   public Optional<PostsDTO> getAllPostsExcludingUser(Long id){
@@ -83,9 +88,9 @@ public class FeedService {
       }
     }
 
-    Set<ExperienceDTO> experienceDTOS = new HashSet<>();
+    Set<ExperienceDTO> experienceDTOs = new HashSet<>();
     for (Experience e : uniqueExperiences.values()) {
-      experienceDTOS.add(new ExperienceDTO(e));
+      experienceDTOs.add(new ExperienceDTO(e));
     }
 
     Set<Suggestion> suggestionsByBody = suggestionRepository.findByBodyStartingWithIgnoreCase(object);
@@ -108,9 +113,9 @@ public class FeedService {
       }
     }
 
-    Set<SuggestionDTO> suggestionDTOS = new HashSet<>();
+    Set<SuggestionDTO> suggestionDTOs = new HashSet<>();
     for (Suggestion s : uniqueSuggestions.values()) {
-      suggestionDTOS.add(new SuggestionDTO(s));
+      suggestionDTOs.add(new SuggestionDTO(s));
     }
 
     Set<User> users = userRepository.findByUsernameStartingWith(object);
@@ -120,7 +125,14 @@ public class FeedService {
       connectionDTOs.add(new ConnectionDTO(u.getUuid(), u.getUsername(), u.getEmail(), u.getUserProfile().getProfilePictureUrl()));
     }
 
-    return new SearchDTO(experienceDTOS, connectionDTOs, suggestionDTOS);
+    Set<Tag> tags = tagRepository.findByNameStartingWith(object);
+    Set<TagDTO> tagDTOs = new HashSet<>();
+
+    for (Tag tag : tags) {
+      tagDTOs.add(new TagDTO(tag.getUuid(), tag.getName()));
+    }
+
+    return new SearchDTO(experienceDTOs, connectionDTOs, suggestionDTOs, tagDTOs);
   }
 
   private boolean isPostVisibleToUser(User postOwner, Long searcherId) {

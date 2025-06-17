@@ -7,11 +7,16 @@ public class SearchDTO {
   private Set<ConnectionDTO> connections;
   private Set<ExperienceDTO> experiences;
   private Set<SuggestionDTO> suggestions;
+  private Set<TagDTO> tags;
 
-  public SearchDTO(Set<ExperienceDTO> experiences, Set<ConnectionDTO> connections, Set<SuggestionDTO> suggestions) {
+  public SearchDTO(Set<ExperienceDTO> experiences,
+                   Set<ConnectionDTO> connections,
+                   Set<SuggestionDTO> suggestions,
+                   Set<TagDTO> tags) {
     this.experiences = experiences;
     this.connections = connections;
     this.suggestions = suggestions;
+    this.tags = tags;
   }
 
   public Set<ConnectionDTO> getConnections() {
@@ -24,6 +29,10 @@ public class SearchDTO {
 
   public Set<SuggestionDTO> getSuggestions() {
     return suggestions;
+  }
+
+  public Set<TagDTO> getTags() {
+    return tags;
   }
 
 }

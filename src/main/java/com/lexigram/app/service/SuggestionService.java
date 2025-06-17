@@ -44,7 +44,10 @@ public class SuggestionService {
                            ExperienceService experienceService,
                            ExperienceRepository experienceRepository,
                            SaveRepository saveRepository,
-                           ResonateRepository resonateRepository, SuggestionPrivacySettingsRepository suggestionPrivacySettingsRepository, NotificationService notificationService, NotificationRepository notificationRepository) {
+                           ResonateRepository resonateRepository,
+                           SuggestionPrivacySettingsRepository suggestionPrivacySettingsRepository,
+                           NotificationService notificationService,
+                           NotificationRepository notificationRepository) {
     this.suggestionRepository = suggestionRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
@@ -155,6 +158,7 @@ public class SuggestionService {
     }
     return followingSuggestions;
   }
+
   public boolean deleteSuggestion(UUID suggestionUuid, Long userId) {
     Optional<Suggestion> suggestion = suggestionRepository.findByUuid(suggestionUuid);
     if (suggestion.isEmpty()){

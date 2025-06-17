@@ -1,23 +1,25 @@
 package com.lexigram.app.dto;
 
+import java.util.UUID;
+
 public class TagDTO {
 
-  private boolean isInFeed;
+  private UUID uuid;
   private String name;
 
   public TagDTO() {}
 
-  public TagDTO(String name, boolean isInFeed) {
+  public TagDTO(UUID uuid, String name) {
+    this.uuid = uuid;
     this.name = name;
-    this.isInFeed = isInFeed;
   }
 
   public String getName() {
     return name;
   }
 
-  public boolean isInFeed(){
-    return isInFeed;
+  public UUID getUuid() {
+    return uuid;
   }
 
 }

@@ -9,7 +9,7 @@ import {
     FaPhotoVideo,
     FaQuestion,
     FaBorderAll,
-    FaSearch, FaEnvelope
+    FaSearch, FaEnvelope, FaTags
 } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
@@ -217,6 +217,7 @@ const HomePage = ({ user, setUser }) => {
     const goToProfile = () => { navigate(user ? '/profile' : '/login'); setSidebarOpen(false); };
     const goToSettings = () => { navigate(user ? '/settings' : '/login'); setSidebarOpen(false); };
     const goToNotifications = () => { navigate(user ? '/notifications' : '/login'); setSidebarOpen(false); };
+    const goToTags = () => { navigate(user ? '/tags' : '/login'); setSidebarOpen(false); };
     const goToLogin = () => { navigate('/login'); setSidebarOpen(false); };
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -311,6 +312,9 @@ const HomePage = ({ user, setUser }) => {
                                 </div>
                                 <div className="menu-item" onClick={goToNotifications}>
                                     <FaEnvelope size={20}/> <span>Notifications</span>
+                                </div>
+                                <div className="menu-item" onClick={goToTags}>
+                                    <FaTags size={20}/> <span>Tags</span>
                                 </div>
                                 <div className="menu-item" onClick={handleLogout}>
                                     <FaSignOutAlt size={20}/> <span>Log out</span>

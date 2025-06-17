@@ -6,16 +6,22 @@ import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity(name = "tags")
 public class Tag {
+
+  @PrePersist
+  public void onCreate() {
+    uuid = UUID.randomUUID();
+  }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @Column(nullable = false)
-  private boolean isInFeed = false;
+  private UUID uuid;
 
   @Column(unique = true, nullable = false)
   private String name;
@@ -36,8 +42,8 @@ public class Tag {
     return name;
   }
 
-  public boolean isInFeed(){
-    return isInFeed;
+  public UUID getUuid() {
+    return uuid;
   }
 
 }

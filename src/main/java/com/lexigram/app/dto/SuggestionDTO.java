@@ -38,7 +38,7 @@ public class SuggestionDTO {
     this.replies = buildReplies(suggestion);
     Set<TagDTO> tagDTO = new HashSet<>();
     for (Tag tag : suggestion.getTags()) {
-      tagDTO.add(new TagDTO(tag.getName(), tag.isInFeed()));
+      tagDTO.add(new TagDTO(tag.getUuid(), tag.getName()));
     }
     this.tags = tagDTO;
     this.header = suggestion.getHeader();

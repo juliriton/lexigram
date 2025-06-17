@@ -77,5 +77,6 @@ public class PostExperienceDTO {
   public Boolean getIsReply() {
     return isReply;
   }
+
 }
 

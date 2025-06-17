@@ -46,7 +46,10 @@ public class ExperienceService {
                            ExperiencePrivacySettingsRepository experiencePrivacySettingsRepository,
                            ResonateRepository resonateRepository,
                            CommentRepository commentRepository,
-                           SaveRepository saveRepository, SuggestionRepository suggestionRepository, NotificationRepository notificationRepository, NotificationService notificationService) {
+                           SaveRepository saveRepository,
+                           SuggestionRepository suggestionRepository,
+                           NotificationRepository notificationRepository,
+                           NotificationService notificationService) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
