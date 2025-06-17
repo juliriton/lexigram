@@ -122,19 +122,54 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
 
     const handleShare = async () => {
         try {
-            const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/share`;
-            const res = await fetch(endpoint, {
-                method: 'GET',
-                credentials: 'include',
-            });
+            if (user) {
+                // If user is logged in, get the share link from the API
+                const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/share`;
+                const res = await fetch(endpoint, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
 
-            if (res.ok) {
-                const shareLink = await res.text();
-                navigator.clipboard.writeText(shareLink);
-                console.log('Share link copied:', shareLink);
+                if (res.ok) {
+                    const shareLink = await res.text();
+                    await copyToClipboard(shareLink);
+                } else {
+                    // Fallback to manual URL construction
+                    const shareUrl = `${window.location.origin}/suggestion/${suggestion.uuid}`;
+                    await copyToClipboard(shareUrl);
+                }
+            } else {
+                // If not logged in, construct URL manually
+                const shareUrl = `${window.location.origin}/suggestion/${suggestion.uuid}`;
+                await copyToClipboard(shareUrl);
             }
         } catch (err) {
-            console.error('Error getting share link:', err);
+            console.error('Error sharing:', err);
+            // Fallback to manual URL construction
+            const shareUrl = `${window.location.origin}/suggestion/${suggestion.uuid}`;
+            await copyToClipboard(shareUrl);
+        }
+    };
+
+    const copyToClipboard = async (url) => {
+        try {
+            // Try to use Web Share API if available
+            if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                await navigator.share({
+                });
+            } else {
+                // Fallback to clipboard
+                await navigator.clipboard.writeText(url);
+            }
+        } catch (err) {
+            console.error('Error copying to clipboard:', err);
+            // Final fallback - create a temporary input
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
         }
     };
 
