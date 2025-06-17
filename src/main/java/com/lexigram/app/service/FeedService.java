@@ -227,8 +227,8 @@ public class FeedService {
   }
 
   public PostsDTO getAllDiscoverPosts(Long id) {
-    Set<ExperienceDTO> experiences = experienceService.getAllPublicExperiences();
-    Set<SuggestionDTO> suggestions = suggestionService.getAllPublicSuggestions();
+    Set<ExperienceDTO> experiences = experienceService.getAllExperiencesExcludingUser(id);
+    Set<SuggestionDTO> suggestions = suggestionService.getAllSuggestionsExcludingUser(id);
 
     Set<TagDTO> userTags = tagService.getAllFeedTags(id).orElse(new HashSet<>());
 
