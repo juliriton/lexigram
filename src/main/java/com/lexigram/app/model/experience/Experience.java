@@ -279,4 +279,7 @@ public class Experience {
     return origin;
   }
 
+  public void setSuggestion(Suggestion suggestion) {
+    this.suggestion = suggestion;
+  }
 }

@@ -17,8 +17,7 @@ public class PostExperienceDTO {
 
   @NotEmpty
   @NotNull
-  @Size(min = 1, message = "Experiences should have at least 1 tag.")
-  @Size(max = 20, message = "Experiences should have at least 1 tag.")
+  @Size(min = 1, max = 20, message = "Experiences should have between 1 and 20 tags.")
   private Set<String> tags;
 
   @NotNull

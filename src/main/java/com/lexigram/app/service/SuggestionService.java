@@ -343,6 +343,9 @@ public class SuggestionService {
     Experience reply = experienceRepository.findByUuid(replyDTO.getUuid()).get();
 
     suggestion.addReply(reply);
+    reply.setSuggestion(suggestion);
+
+    experienceRepository.save(reply);
     suggestionRepository.save(suggestion);
     userRepository.save(user);
 

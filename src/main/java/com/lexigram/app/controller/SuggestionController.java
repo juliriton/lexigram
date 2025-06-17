@@ -27,7 +27,7 @@ public class SuggestionController {
     this.suggestionService = suggestionService;
   }
 
-  @PostMapping("suggestion/{uuid}/resonate")
+  @PostMapping("/suggestion/{uuid}/resonate")
   public ResponseEntity<SuggestionDTO> resonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -42,7 +42,7 @@ public class SuggestionController {
     return ResponseEntity.status(401).build();
   }
 
-  @DeleteMapping("suggestion/{uuid}/un-resonate")
+  @DeleteMapping("/suggestion/{uuid}/un-resonate")
   public ResponseEntity<SuggestionDTO> unResonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -58,10 +58,10 @@ public class SuggestionController {
 
   }
 
-  @PostMapping(value = "suggestion/{uuid}/reply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(value = "/suggestion/{uuid}/reply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<SuggestionDTO> replySuggestion(HttpSession session,
                                                        @PathVariable UUID uuid,
-                                                       @RequestBody PostExperienceDTO experienceDTO,
+                                                       @RequestPart("post") PostExperienceDTO experienceDTO,
                                                        @RequestPart(value = "file", required = true) MultipartFile file) throws IOException {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -74,10 +74,9 @@ public class SuggestionController {
     }
 
     return ResponseEntity.status(401).build();
-
   }
 
-  @PostMapping("suggestion/{uuid}/save")
+  @PostMapping("/suggestion/{uuid}/save")
   public ResponseEntity<SuggestionDTO> saveSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -92,7 +91,7 @@ public class SuggestionController {
     return ResponseEntity.status(401).build();
   }
 
-  @DeleteMapping("suggestion/{uuid}/un-save")
+  @DeleteMapping("/suggestion/{uuid}/un-save")
   public ResponseEntity<SuggestionDTO> unSaveSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -108,7 +107,7 @@ public class SuggestionController {
 
   }
 
-  @GetMapping("suggestion/{uuid}/share")
+  @GetMapping("/suggestion/{uuid}/share")
   public ResponseEntity<String> getSuggestionLink(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
@@ -119,7 +118,7 @@ public class SuggestionController {
 
   }
 
-  @GetMapping("suggestion/{uuid}/replies")
+  @GetMapping("/suggestion/{uuid}/replies")
   public ResponseEntity<Set<ExperienceDTO>> getSuggestionReplies(HttpSession session,
                                                                  @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");

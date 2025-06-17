@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { FaBookmark, FaRegBookmark, FaReply, FaShare, FaHeart, FaRegHeart } from 'react-icons/fa';
 import '../styles/SuggestionInteractions.css';
+import {useNavigate} from "react-router-dom";
 
 const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete }) => {
+    const navigate = useNavigate();
+
     const [interactions, setInteractions] = useState({
         saved: false,
         saveAmount: 0,
@@ -111,10 +114,10 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
 
     const handleReply = () => {
         if (!user) {
-            window.location.href = '/login';
+            navigate('/login');
             return;
         }
-        console.log('Reply to suggestion:', suggestion.uuid);
+        navigate(`/suggestion/${suggestion.uuid}/reply`);
     };
 
     const handleShare = async () => {
