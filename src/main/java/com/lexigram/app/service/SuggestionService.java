@@ -395,4 +395,21 @@ public class SuggestionService {
     return replies;
   }
 
+  public Optional<SuggestionDTO> getSuggestionFromUuid(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
+    if (suggestionOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Suggestion suggestion = suggestionOptional.get();
+
+    return Optional.of(new SuggestionDTO(suggestion));
+  }
 }

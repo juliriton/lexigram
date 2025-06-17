@@ -27,6 +27,22 @@ public class SuggestionController {
     this.suggestionService = suggestionService;
   }
 
+  @GetMapping("/suggestionr/{uuid}")
+  public ResponseEntity<SuggestionDTO> getSuggestion(HttpSession session,
+                                                     @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<SuggestionDTO> optionalSuggestionDTO = suggestionService.getSuggestionFromUuid(id, uuid);
+
+    if (optionalSuggestionDTO.isPresent()) {
+      SuggestionDTO suggestionDTO = optionalSuggestionDTO.get();
+      return ResponseEntity.ok(suggestionDTO);
+    }
+
+    return ResponseEntity.status(401).build();
+  }
+
   @PostMapping("/suggestion/{uuid}/resonate")
   public ResponseEntity<SuggestionDTO> resonateSuggestion(HttpSession session, @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
