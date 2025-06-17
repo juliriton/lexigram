@@ -11,8 +11,8 @@ import NotificationsPage from "./pages/NotificationsPage";
 import TagPage from "./pages/TagPage";
 import ForkExperiencePage from "./pages/ForkExperiencePage";
 import ReplySuggestionPage from "./pages/ReplySuggestionPage";
+import PostViewPage from "./pages/PostViewPage";
 import './App.css';
-
 
 function App() {
     const [user, setUser] = useState(null);
@@ -25,6 +25,8 @@ function App() {
                 <Route path="/login" element={<LoginPage setUser={setUser} />} />
                 <Route path="/signup" element={<SignUpPage setUser={setUser} />} />
                 <Route path="/post/create" element={<PostCreationPage user={user} />} />
+                <Route path="/experience/:uuid" element={<PostViewPage user={user} setUser={setUser} />} />
+                <Route path="/suggestion/:uuid" element={<PostViewPage user={user} setUser={setUser} />} />
                 <Route path="/settings" element={<SettingsPage user={user} />} />
                 <Route path="/profile/:userId" element={<RelationshipProfilePage user={user} />} />
                 <Route path="/notifications" element={<NotificationsPage user={user} /> } />

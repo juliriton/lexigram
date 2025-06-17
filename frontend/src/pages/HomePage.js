@@ -29,7 +29,6 @@ const HomePage = ({ user, setUser }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState(null);
     const [searching, setSearching] = useState(false);
-
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
@@ -160,6 +159,7 @@ const HomePage = ({ user, setUser }) => {
                     )}
                     renderTags={renderTags}
                     formatDate={formatDate}
+                    disablePopup={false}
                     isOwner={user && exp.user && user.uuid === exp.user.uuid}
                 />
             );

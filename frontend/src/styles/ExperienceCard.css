@@ -420,3 +420,92 @@
 .edit-quote-btn:hover {
     background-color: #3a7bc8;
 }
+
+/* Experience Popup Styles */
+.experience-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.experience-popup-content {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.popup-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 10000;
+    transition: background-color 0.2s;
+}
+
+.popup-close-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.popup-experience-container {
+    padding: 0;
+}
+
+.popup-experience-container .experience-card {
+    border: none;
+    border-radius: 12px;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* Loading spinner for popup */
+.loading-spinner {
+    color: white;
+    font-size: 18px;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Responsive design for popup */
+@media (max-width: 768px) {
+    .experience-popup-overlay {
+        padding: 10px;
+    }
+
+    .experience-popup-content {
+        max-height: 95vh;
+        border-radius: 8px;
+    }
+
+    .popup-close-btn {
+        top: 10px;
+        right: 10px;
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+}

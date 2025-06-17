@@ -1,308 +1,226 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaShare, FaHeart, FaComment, FaBookmark, FaCodeBranch, FaPhotoVideo, FaQuestion } from 'react-icons/fa';
-import { FaStar } from 'react-icons/fa6';
-import ExperienceInteractions from './ExperienceInteractions';
-import SuggestionInteractions from './SuggestionInteractions';
-import '../styles/PostPopUpModal.css';
+import { FaTimes, FaSpinner } from 'react-icons/fa';
+import ExperienceCard from './ExperienceCard';
+import SuggestionCard from './SuggestionCard';
 
 const PostPopupModal = ({
                             isOpen,
                             onClose,
-                            post,
-                            postType, // experience o suggestion
+                            postUuid,
                             user,
                             baseApiUrl,
-                            formatDate,
-                            onActionComplete
+                            formatDate
                         }) => {
-    const [showFullContent, setShowFullContent] = useState(false);
-    const [showAllTags, setShowAllTags] = useState(false);
-    const [updatedPost, setUpdatedPost] = useState(post);
-    const [copySuccess, setCopySuccess] = useState(false);
+    const [post, setPost] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [hiddenQuotes, setHiddenQuotes] = useState({});
+    const [showMentions, setShowMentions] = useState({});
 
     useEffect(() => {
-        setUpdatedPost(post);
-    }, [post]);
-
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
+        if (isOpen && postUuid) {
+            fetchPost();
         }
+    }, [isOpen, postUuid]);
 
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, [isOpen]);
-
-    const handleBackdropClick = (e) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
-    };
-
-    const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    };
-
-    const handleActionComplete = (updatedData) => {
-        setUpdatedPost(updatedData);
-        if (onActionComplete) {
-            onActionComplete(updatedData);
-        }
-    };
-
-    const handleShare = async () => {
-        const shareUrl = postType === 'experience'
-            ? `${window.location.origin}/experience/${post.uuid}`
-            : `${window.location.origin}/suggestion/${post.uuid}`;
+    const fetchPost = async () => {
+        setLoading(true);
+        setError(null);
 
         try {
-            await navigator.clipboard.writeText(shareUrl);
-            setCopySuccess(true);
-            setTimeout(() => setCopySuccess(false), 2000);
+            // Try authenticated endpoint first if user is logged in
+            let endpoint = `${baseApiUrl}/api/auth/me/experience/${postUuid}`;
+            let options = {};
+
+            if (user) {
+                options.credentials = 'include';
+            }
+
+            const response = await fetch(endpoint, options);
+
+            if (response.ok) {
+                const postData = await response.json();
+                setPost(postData);
+            } else if (response.status === 404) {
+                setError('Post not found');
+            } else {
+                setError('Failed to load post');
+            }
         } catch (err) {
-            console.error('Failed to copy link:', err);
-            // Fallback for older browsers
-            const textArea = document.createElement('textarea');
-            textArea.value = shareUrl;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            setCopySuccess(true);
-            setTimeout(() => setCopySuccess(false), 2000);
+            console.error('Error fetching post:', err);
+            setError('Failed to load post');
+        } finally {
+            setLoading(false);
         }
     };
 
-    if (!isOpen || !post) return null;
+    const handleMentionClick = (mentionUuid) => {
+        // Close modal and navigate
+        onClose();
+        if (!user) {
+            window.location.href = '/login';
+            return;
+        }
+        window.location.href = `/profile/${mentionUuid}`;
+    };
 
-    const mediaUrl = post.style?.backgroundMediaUrl || post.imageUrl;
-    const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
-    const isVideo = (url) => url && /\.(mp4|webm|ogg)$/i.test(url);
+    const renderTags = (tags) => (
+        Array.isArray(tags) && tags.map((tag, i) => (
+            <span key={i} className="tag-badge">
+                {typeof tag === 'object' ? tag.name : tag}
+            </span>
+        ))
+    );
 
-    const mainContent = postType === 'experience'
-        ? (post.reflection || post.content || '')
-        : (post.body || '');
+    const handleActionComplete = (updatedPost) => {
+        setPost(updatedPost);
+    };
 
-    const title = postType === 'experience'
-        ? (post.title || post.quote || '')
-        : (post.header || '');
-
-    const contentPreviewLen = 200;
-    const needsContentTruncate = mainContent.length > contentPreviewLen;
-    const contentPreview = mainContent.slice(0, contentPreviewLen) + (needsContentTruncate ? '…' : '');
-
-    const allTags = (updatedPost.tags || []).slice(0, 20);
-    const visibleTags = showAllTags ? allTags : allTags.slice(0, 10);
+    if (!isOpen) return null;
 
     return (
-        <div
-            className="post-popup-overlay"
-            onClick={handleBackdropClick}
-            onKeyDown={handleKeyDown}
-            tabIndex={-1}
-        >
-            <div className="post-popup-modal">
-                <div className="popup-header">
-                    <div className="popup-badges">
-                        {postType === 'experience' ? (
-                            <>
-                                <span className="badge exp-badge">
-                                    <FaPhotoVideo /> Experience
-                                </span>
-                                {updatedPost.origin && (
-                                    <span className="badge orig-badge">
-                                        <FaStar /> Origin
-                                    </span>
-                                )}
-                            </>
-                        ) : (
-                            <span className="badge suggestion-badge">
-                                <FaQuestion /> Suggestion
-                            </span>
-                        )}
-                    </div>
+        <div className="modal-overlay" onClick={onClose} style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+        }}>
+            <div
+                className="post-popup-content"
+                onClick={e => e.stopPropagation()}
+                style={{
+                    backgroundColor: 'white',
+                    borderRadius: '12px',
+                    maxWidth: '600px',
+                    width: '100%',
+                    maxHeight: '90vh',
+                    overflow: 'auto',
+                    position: 'relative',
+                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+                }}
+            >
+                <button
+                    className="modal-close-btn"
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute',
+                        top: '15px',
+                        right: '15px',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '24px',
+                        cursor: 'pointer',
+                        zIndex: 1001,
+                        color: '#666',
+                        padding: '5px'
+                    }}
+                >
+                    <FaTimes />
+                </button>
 
-                    <div className="popup-actions">
-                        <button
-                            className="share-btn"
-                            onClick={handleShare}
-                            title="Share post"
-                        >
-                            <FaShare />
-                        </button>
-                        <button
-                            className="close-btn"
-                            onClick={onClose}
-                            title="Close"
-                        >
-                            <FaTimes />
-                        </button>
-                    </div>
-                </div>
-
-                {copySuccess && (
-                    <div className="copy-success-message">
-                        ✓ Link copied to clipboard!
+                {loading && (
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '60px 20px',
+                        color: '#666'
+                    }}>
+                        <FaSpinner className="fa-spin" size={30} />
+                        <p style={{ marginTop: '15px' }}>Loading post...</p>
                     </div>
                 )}
 
-                <div className="popup-content">
-                    {fullMediaUrl && (
-                        <div className="popup-media-container">
-                            {isVideo(mediaUrl) ? (
-                                <video
-                                    src={fullMediaUrl}
-                                    className="popup-media"
-                                    controls
-                                    autoPlay
-                                    muted
-                                    loop
-                                />
-                            ) : (
-                                <img
-                                    src={fullMediaUrl}
-                                    alt={title}
-                                    className="popup-media"
-                                />
-                            )}
-
-                            {postType === 'experience' && title && (
-                                <div
-                                    className="popup-quote-overlay"
-                                    style={{
-                                        left: `${updatedPost.style?.textPositionX || 50}%`,
-                                        top: `${updatedPost.style?.textPositionY || 50}%`,
-                                        transform: 'translate(-50%, -50%)'
-                                    }}
-                                >
-                                    <div
-                                        className="popup-quote-text"
-                                        style={{
-                                            fontSize: `${Math.min(Math.max(updatedPost.style?.fontSize || 24, 16), 32)}px`,
-                                            fontFamily: updatedPost.style?.fontFamily || 'inherit',
-                                            color: updatedPost.style?.fontColor || '#fff'
-                                        }}
-                                    >
-                                        "{title}"
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="popup-text-content">
-                        {title && (
-                            <h2 className="popup-title">
-                                {postType === 'suggestion' && title.includes('...')
-                                    ? title.split('...')[0] + '...'
-                                    : title
-                                }
-                            </h2>
-                        )}
-
-                        {mainContent && (
-                            <div className="popup-main-content">
-                                <p>{showFullContent ? mainContent : contentPreview}</p>
-                                {needsContentTruncate && (
-                                    <button
-                                        className="show-more-btn"
-                                        onClick={() => setShowFullContent(!showFullContent)}
-                                    >
-                                        {showFullContent ? 'Show Less' : 'Show More'}
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
-                        <div className="popup-meta">
-                            <span className="popup-username">
-                                @{post.user?.username || 'Usuario'}
-                            </span>
-                            {post.creationDate && (
-                                <span className="popup-date">
-                                    {formatDate(post.creationDate)}
-                                </span>
-                            )}
-                        </div>
-
-                        {allTags.length > 0 && (
-                            <div className="popup-tags">
-                                <div className="tags-container">
-                                    {visibleTags.map((tag, index) => (
-                                        <span key={index} className="popup-tag">
-                                            #{tag.name || tag}
-                                        </span>
-                                    ))}
-                                </div>
-                                {allTags.length > 10 && (
-                                    <button
-                                        className="show-more-tags-btn"
-                                        onClick={() => setShowAllTags(!showAllTags)}
-                                    >
-                                        {showAllTags ? 'Show Less' : `+${allTags.length - 10} more tags`}
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
-                        {updatedPost.mentions && updatedPost.mentions.length > 0 && (
-                            <div className="popup-mentions">
-                                <h6>Mentions:</h6>
-                                <div className="mentions-list">
-                                    {updatedPost.mentions.map((mention, index) => (
-                                        <span key={index} className="popup-mention">
-                                            @{mention.username}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="popup-stats">
-                            <div className="stat-item">
-                                <FaHeart className="stat-icon" />
-                                <span>{updatedPost.resonatesAmount || 0}</span>
-                            </div>
-                            <div className="stat-item">
-                                <FaComment className="stat-icon" />
-                                <span>{updatedPost.commentAmount || 0}</span>
-                            </div>
-                            <div className="stat-item">
-                                <FaBookmark className="stat-icon" />
-                                <span>{updatedPost.saveAmount || 0}</span>
-                            </div>
-                            {postType === 'experience' && (
-                                <div className="stat-item">
-                                    <FaCodeBranch className="stat-icon" />
-                                    <span>{updatedPost.branchAmount || 0}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="popup-interactions">
-                            {postType === 'experience' ? (
-                                <ExperienceInteractions
-                                    user={user}
-                                    experience={updatedPost}
-                                    baseApiUrl={baseApiUrl}
-                                    onActionComplete={handleActionComplete}
-                                />
-                            ) : (
-                                <SuggestionInteractions
-                                    user={user}
-                                    suggestion={updatedPost}
-                                    baseApiUrl={baseApiUrl}
-                                    onActionComplete={handleActionComplete}
-                                />
-                            )}
-                        </div>
+                {error && (
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '60px 20px',
+                        color: '#dc3545'
+                    }}>
+                        <p>{error}</p>
+                        <button
+                            onClick={fetchPost}
+                            style={{
+                                marginTop: '15px',
+                                padding: '8px 16px',
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Try Again
+                        </button>
                     </div>
-                </div>
+                )}
+
+                {post && !loading && !error && (
+                    <div style={{ padding: '20px' }}>
+                        {post.type === 'Experience' ? (
+                            <ExperienceCard
+                                user={user}
+                                post={post}
+                                baseApiUrl={baseApiUrl}
+                                username={post.user?.username || 'User'}
+                                hiddenQuotes={hiddenQuotes}
+                                toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
+                                showMentions={showMentions}
+                                setShowMentions={setShowMentions}
+                                renderMentions={(mentions, id) => (
+                                    showMentions[id] && (
+                                        <div className="post-mentions">
+                                            <h6>Mentions:</h6>
+                                            <div className="mentions-list">
+                                                {mentions.map((mention, i) => (
+                                                    <span
+                                                        key={i}
+                                                        className="mention clickable"
+                                                        onClick={() => handleMentionClick(mention.uuid)}
+                                                        style={{
+                                                            cursor: 'pointer',
+                                                            color: '#0d6efd',
+                                                            textDecoration: 'underline'
+                                                        }}
+                                                    >
+                                                        @{mention.username}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+                                renderTags={renderTags}
+                                formatDate={formatDate}
+                                disablePopup={true}
+                                isOwner={user && post.user && user.uuid === post.user.uuid}
+                                onActionComplete={handleActionComplete}
+                            />
+                        ) : (
+                            <SuggestionCard
+                                user={user}
+                                post={post}
+                                baseApiUrl={baseApiUrl}
+                                username={post.user?.username || 'User'}
+                                renderTags={renderTags}
+                                formatDate={formatDate}
+                                isOwner={user && post.user && user.uuid === post.user.uuid}
+                                onActionComplete={handleActionComplete}
+                            />
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

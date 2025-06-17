@@ -5,7 +5,6 @@ import {useLocation, useNavigate} from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
 import CommentModal from './CommentModal';
 import ExperienceInteractions from './ExperienceInteractions';
-import PostPopupModal from '../components/PostPopUpModal';
 import '../styles/ExperienceCard.css';
 
 const ExperienceCard = ({
@@ -35,14 +34,10 @@ const ExperienceCard = ({
 
     // Get privacy settings from experience
     const privacySettings = post.privacySettings || {};
-    const allowResonates = privacySettings.allowResonates !== false;
-    const allowSaves = privacySettings.allowSaves !== false;
     const allowComments = privacySettings.allowComments !== false;
-    const allowForks = privacySettings.allowForks !== false;
 
     // Estados para la UI
     const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
-    const [isPopupModalOpen, setPopupModalOpen] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [updatedPost, setUpdatedPost] = useState(post);
@@ -112,16 +107,6 @@ const ExperienceCard = ({
         }
     };
 
-    const handleCardClick = (e) => {
-        if (e.target.closest('button') ||
-            e.target.closest('.options-dropdown') ||
-            e.target.closest('.experience-interactions') ||
-            e.target.closest('.clickable')) {
-            return;
-        }
-        setPopupModalOpen(true);
-    };
-
     const navigateToUserProfile = () => {
         const targetUuid = post.user.uuid;
         if (!user) {
@@ -156,13 +141,6 @@ const ExperienceCard = ({
         setUpdatedPost(updatedExperience);
     };
 
-    const handlePopupActionComplete = (updatedExperience) => {
-        setUpdatedPost(updatedExperience);
-        if (onActionComplete) {
-            onActionComplete(updatedExperience);
-        }
-    };
-
     const renderMentions = (mentions) => {
         if (!Array.isArray(mentions) || mentions.length === 0) {
             return null;
@@ -185,16 +163,9 @@ const ExperienceCard = ({
         );
     };
 
-    // Function to render stats based on privacy settings
-    const renderPostStats = () => {
-        const stats = [];
-
-    };
-
     return (
         <>
             <div className="experience-card"
-                 onClick={disablePopup ? undefined : handleCardClick}
                  style={{ cursor: disablePopup ? 'default' : 'pointer' }}>
                 {/* Modal de edición interno - solo se muestra si no hay onEdit del padre */}
                 {showEditModal && !onEdit && (
@@ -404,8 +375,6 @@ const ExperienceCard = ({
                         </div>
                     )}
 
-                    {renderPostStats()}
-
                     {allowComments && (
                         <CommentModal
                             isOpen={showCommentsModal}
@@ -440,17 +409,6 @@ const ExperienceCard = ({
                     </div>
                 </div>
             )}
-
-            <PostPopupModal
-                isOpen={isPopupModalOpen}
-                onClose={() => setPopupModalOpen(false)}
-                post={updatedPost}
-                postType="experience"
-                user={user}
-                baseApiUrl={baseApiUrl}
-                formatDate={formatDate}
-                onActionComplete={handlePopupActionComplete}
-            />
         </>
     );
 };

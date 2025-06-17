@@ -154,19 +154,57 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
 
     const handleShare = async () => {
         try {
-            const endpoint = `${baseApiUrl}/api/auth/me/experience/${experience.uuid}/share`;
-            const res = await fetch(endpoint, {
-                method: 'GET',
-                credentials: 'include',
-            });
+            if (user) {
+                // If user is logged in, get the share link from the API
+                const endpoint = `${baseApiUrl}/api/auth/me/experience/${experience.uuid}/share`;
+                const res = await fetch(endpoint, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
 
-            if (res.ok) {
-                const shareLink = await res.text();
-                navigator.clipboard.writeText(shareLink);
-                console.log('Share link copied:', shareLink);
+                if (res.ok) {
+                    const shareLink = await res.text();
+                    await copyToClipboard(shareLink);
+                } else {
+                    // Fallback to manual URL construction
+                    const shareUrl = `${window.location.origin}/experience/${experience.uuid}`;
+                    await copyToClipboard(shareUrl);
+                }
+            } else {
+                // If not logged in, construct URL manually
+                const shareUrl = `${window.location.origin}/experience/${experience.uuid}`;
+                await copyToClipboard(shareUrl);
             }
         } catch (err) {
-            console.error('Error getting share link:', err);
+            console.error('Error sharing:', err);
+            // Fallback to manual URL construction
+            const shareUrl = `${window.location.origin}/experience/${experience.uuid}`;
+            await copyToClipboard(shareUrl);
+        }
+    };
+
+    const copyToClipboard = async (url) => {
+        try {
+            // Try to use Web Share API if available
+            if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                await navigator.share({
+                    title: experience.title || 'Check out this experience',
+                    text: experience.reflection || experience.content || '',
+                    url: url
+                });
+            } else {
+                // Fallback to clipboard
+                await navigator.clipboard.writeText(url);
+            }
+        } catch (err) {
+            console.error('Error copying to clipboard:', err);
+            // Final fallback - create a temporary input
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
         }
     };
 
@@ -175,87 +213,67 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
             navigate('/login');
             return;
         }
-
         navigate(`/fork/${experience.uuid}`);
     };
 
-    const handleBranches = async () => {
-        if (!user) {
-            window.location.href = '/login';
-            return;
-        }
-        try {
-            const endpoint = `${baseApiUrl}/api/auth/me/experience/${experience.uuid}/branches`;
-            const res = await fetch(endpoint, {
-                method: 'GET',
-                credentials: 'include',
-            });
-
-            if (res.ok) {
-                const branches = await res.json();
-                console.log('Experience branches:', branches);
-            }
-        } catch (err) {
-            console.error('Error getting branches:', err);
-        }
-    };
-
     return (
-        <div className="experience-interactions">
-            {allowResonates && (
-                <button
-                    className={`interaction-button ${interactions.resonated ? 'active resonated' : ''}`}
-                    onClick={handleResonateToggle}
-                    disabled={processingAction}
-                    title={user ? (interactions.resonated ? 'Remove resonate' : 'Resonate') : 'Log in to resonate'}
-                >
-                    {interactions.resonated ? <FaHeart /> : <FaRegHeart />}
-                    <span className="interaction-count">{interactions.resonatesAmount}</span>
-                </button>
-            )}
+        <>
+            <div className="experience-interactions">
+                {allowResonates && (
+                    <button
+                        className={`interaction-button ${interactions.resonated ? 'active resonated' : ''}`}
+                        onClick={handleResonateToggle}
+                        disabled={processingAction}
+                        title={user ? (interactions.resonated ? 'Remove resonate' : 'Resonate') : 'Log in to resonate'}
+                    >
+                        {interactions.resonated ? <FaHeart /> : <FaRegHeart />}
+                        <span className="interaction-count">{interactions.resonatesAmount}</span>
+                    </button>
+                )}
 
-            {allowSaves && (
-                <button
-                    className={`interaction-button ${interactions.saved ? 'active' : ''}`}
-                    onClick={handleSaveToggle}
-                    disabled={processingAction}
-                    title={user ? (interactions.saved ? 'Unsave' : 'Save') : 'Log in to save'}
-                >
-                    {interactions.saved ? <FaBookmark /> : <FaRegBookmark />}
-                    <span className="interaction-count">{interactions.saveAmount}</span>
-                </button>
-            )}
+                {allowSaves && (
+                    <button
+                        className={`interaction-button ${interactions.saved ? 'active' : ''}`}
+                        onClick={handleSaveToggle}
+                        disabled={processingAction}
+                        title={user ? (interactions.saved ? 'Unsave' : 'Save') : 'Log in to save'}
+                    >
+                        {interactions.saved ? <FaBookmark /> : <FaRegBookmark />}
+                        <span className="interaction-count">{interactions.saveAmount}</span>
+                    </button>
+                )}
 
-            {allowComments && (
-                <button
-                    className="interaction-button"
-                    onClick={handleComment}
-                    title={user ? 'Comment' : 'Log in to comment'}
-                >
-                    <FaCommentAlt />
-                    <span className="interaction-count">{interactions.commentAmount}</span>
-                </button>
-            )}
+                {allowComments && (
+                    <button
+                        className="interaction-button"
+                        onClick={handleComment}
+                        title={user ? 'Comment' : 'Log in to comment'}
+                    >
+                        <FaCommentAlt />
+                        <span className="interaction-count">{interactions.commentAmount}</span>
+                    </button>
+                )}
 
-            {/* Share button is always visible */}
-            <button
-                className="interaction-button"
-                onClick={handleShare}
-                title="Share"
-            >
-                <FaShare />
-            </button>
-
-            {allowForks && (
+                {/* Share button is always visible */}
                 <button
                     className="interaction-button"
-                    onClick={handleFork}
-                    title={user ? 'Fork' : 'Log in to fork'}
+                    onClick={handleShare}
+                    title="Share"
                 >
-                    <FaCodeFork />
+                    <FaShare />
                 </button>
-            )}
-        </div>
+
+                {allowForks && (
+                    <button
+                        className="interaction-button"
+                        onClick={handleFork}
+                        title={user ? 'Fork' : 'Log in to fork'}
+                    >
+                        <FaCodeFork />
+                    </button>
+                )}
+            </div>
+        </>
     );
 };
 

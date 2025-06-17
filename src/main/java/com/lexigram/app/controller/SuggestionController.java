@@ -27,7 +27,7 @@ public class SuggestionController {
     this.suggestionService = suggestionService;
   }
 
-  @GetMapping("/suggestionr/{uuid}")
+  @GetMapping("/suggestion/{uuid}")
   public ResponseEntity<SuggestionDTO> getSuggestion(HttpSession session,
                                                      @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
