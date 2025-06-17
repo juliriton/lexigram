@@ -71,7 +71,7 @@
 }
 
 .add-all-btn {
-    background: linear-gradient(135deg, #28a745, #36ca3c);
+    background: linear-gradient(135deg, #28a745, #20c997);
     color: white;
     box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
 }
@@ -209,7 +209,7 @@
 /* Nombre del tag con mejor contraste */
 .tag-page .tag-name {
     font-size: 15px;
-    color: #eceff3;
+    color: #f0f3f6;
     font-weight: 600;
     line-height: 1.4;
     text-shadow: none;
