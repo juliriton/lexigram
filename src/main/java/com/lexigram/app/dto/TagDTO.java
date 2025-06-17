@@ -22,4 +22,17 @@ public class TagDTO {
     return uuid;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof TagDTO)) return false;
+    TagDTO other = (TagDTO) o;
+    return uuid != null && uuid.equals(other.getUuid());
+  }
+
+  @Override
+  public int hashCode() {
+    return uuid != null ? uuid.hashCode() : 0;
+  }
+
 }

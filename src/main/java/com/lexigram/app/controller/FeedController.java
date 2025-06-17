@@ -31,7 +31,7 @@ public class FeedController {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    Optional<PostsDTO> posts = feedService.getAllPostsExcludingUser(id);
+    Optional<PostsDTO> posts = feedService.getAllPostsExcludingUserWithUserTags(id);
 
     if (posts.isPresent()) {
       return ResponseEntity.ok(posts.get());
@@ -55,38 +55,12 @@ public class FeedController {
     return ResponseEntity.ok(feedService.getSearchObject(object, id));
   }
 
-//  @PutMapping("/me/feed/tags/clear}")
-//  public ResponseEntity<?> clearFeedTags(HttpSession session) {
-//    Long id = (Long) session.getAttribute("user");
-//    if (id == null) return ResponseEntity.status(401).build();
-//
-//    return ResponseEntity.ok();
-//  }
-//
-//  @GetMapping("/me/feed/tags/random}")
-//  public ResponseEntity<?> getRandomFeedTags(HttpSession session) {
-//    Long id = (Long) session.getAttribute("user");
-//    if (id == null) return ResponseEntity.status(401).build();
-//
-//    return ResponseEntity.ok();
-//  }
-//
-//  @PutMapping("/me/feed/tags/random}")
-//  public ResponseEntity<?> addTagGroupToFeed(HttpSession session) {
-//    Long id = (Long) session.getAttribute("user");
-//    if (id == null) return ResponseEntity.status(401).build();
-//
-//    return ResponseEntity.ok();
-//  }
-
-  /*
   @GetMapping("/me/feed/discover")
-  public ResponseEntity<UserPostsDTO> getUserDiscoverFeed(HttpSession session) {
+  public ResponseEntity<PostsDTO> getUserDiscoverFeed(HttpSession session) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
     return ResponseEntity.ok(feedService.getAllDiscoverPosts(id));
   }
-   */
 
 }

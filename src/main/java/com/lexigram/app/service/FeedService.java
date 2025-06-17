@@ -5,10 +5,8 @@ import com.lexigram.app.model.Tag;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.user.User;
-import com.lexigram.app.repository.ExperienceRepository;
-import com.lexigram.app.repository.SuggestionRepository;
-import com.lexigram.app.repository.TagRepository;
-import com.lexigram.app.repository.UserRepository;
+import com.lexigram.app.model.user.UserProfile;
+import com.lexigram.app.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +21,8 @@ public class FeedService {
   private final ExperienceRepository experienceRepository;
   private final SuggestionRepository suggestionRepository;
   private final TagRepository tagRepository;
+  private final UserProfileRepository userProfileRepository;
+  private final TagService tagService;
 
   @Autowired
   public FeedService(UserRepository userRepository,
@@ -30,32 +30,107 @@ public class FeedService {
                      SuggestionService suggestionService,
                      ExperienceRepository experienceRepository,
                      SuggestionRepository suggestionRepository,
-                     TagRepository tagRepository) {
+                     TagRepository tagRepository, UserProfileRepository userProfileRepository,
+                     TagService tagService) {
     this.userRepository = userRepository;
     this.suggestionService = suggestionService;
     this.experienceService = experienceService;
     this.experienceRepository = experienceRepository;
     this.suggestionRepository = suggestionRepository;
     this.tagRepository = tagRepository;
+    this.userProfileRepository = userProfileRepository;
+    this.tagService = tagService;
   }
 
-  public Optional<PostsDTO> getAllPostsExcludingUser(Long id){
+  public Optional<PostsDTO> getAllPostsExcludingUserWithUserTags(Long id) {
     Optional<User> userOptional = userRepository.findById(id);
 
     if (userOptional.isEmpty()) {
       return Optional.empty();
     }
 
+    Optional<UserProfile> profileOpt = userProfileRepository.findByUserId(id);
+    if (profileOpt.isEmpty()) {
+      return Optional.empty();
+    }
+
     Set<ExperienceDTO> experiences = experienceService.getAllExperiencesExcludingUser(id);
     Set<SuggestionDTO> suggestions = suggestionService.getAllSuggestionsExcludingUser(id);
-    return Optional.of(new PostsDTO(experiences, suggestions));
+
+    Set<TagDTO> userTags = tagService.getAllFeedTags(id).orElse(new HashSet<>());
+
+    Set<ExperienceDTO> filteredExperiences = new HashSet<>();
+    for (ExperienceDTO experience : experiences) {
+      Set<TagDTO> tags = experience.getTags();
+      boolean hasMatchingTag = false;
+      for (TagDTO tag : tags) {
+        if (userTags.contains(tag)) {
+          hasMatchingTag = true;
+          break;
+        }
+      }
+      if (hasMatchingTag) {
+        filteredExperiences.add(experience);
+      }
+    }
+
+    Set<SuggestionDTO> filteredSuggestions = new HashSet<>();
+    for (SuggestionDTO suggestion : suggestions) {
+      Set<TagDTO> tags = suggestion.getTags();
+      boolean hasMatchingTag = false;
+      for (TagDTO tag : tags) {
+        if (userTags.contains(tag)) {
+          hasMatchingTag = true;
+          break;
+        }
+      }
+      if (hasMatchingTag) {
+        filteredSuggestions.add(suggestion);
+      }
+    }
+
+    return Optional.of(new PostsDTO(filteredExperiences, filteredSuggestions));
   }
 
+
+
   public PostsDTO getAllFollowingPosts(Long id){
+
     Set<ExperienceDTO> experiences = experienceService.getAllFollowingExperiences(id);
     Set<SuggestionDTO> suggestions = suggestionService.getAllFollowingSuggestions(id);
+    Set<TagDTO> userTags = tagService.getAllFeedTags(id).orElse(new HashSet<>());
 
-    return new PostsDTO(experiences, suggestions);
+    Set<ExperienceDTO> filteredExperiences = new HashSet<>();
+    for (ExperienceDTO experience : experiences) {
+      Set<TagDTO> tags = experience.getTags();
+      boolean hasMatchingTag = false;
+      for (TagDTO tag : tags) {
+        if (userTags.contains(tag)) {
+          hasMatchingTag = true;
+          break;
+        }
+      }
+      if (hasMatchingTag) {
+        filteredExperiences.add(experience);
+      }
+    }
+
+    Set<SuggestionDTO> filteredSuggestions = new HashSet<>();
+    for (SuggestionDTO suggestion : suggestions) {
+      Set<TagDTO> tags = suggestion.getTags();
+      boolean hasMatchingTag = false;
+      for (TagDTO tag : tags) {
+        if (userTags.contains(tag)) {
+          hasMatchingTag = true;
+          break;
+        }
+      }
+      if (hasMatchingTag) {
+        filteredSuggestions.add(suggestion);
+      }
+    }
+
+    return new PostsDTO(filteredExperiences, filteredSuggestions);
   }
 
   public PostsDTO getAllPublicPosts() {
@@ -151,11 +226,45 @@ public class FeedService {
     return false;
   }
 
-  /*
-  public Set<UserPostsDTO> getAllDiscoverPosts(Long id){
-    Set<Experience> experiences = experienceService.getAllDiscoverExperiences(id);
-    Set<Suggestion> suggestions = suggestionService.getAllDiscoverSuggestions(id);
+  public PostsDTO getAllDiscoverPosts(Long id) {
+    Set<ExperienceDTO> experiences = experienceService.getAllPublicExperiences();
+    Set<SuggestionDTO> suggestions = suggestionService.getAllPublicSuggestions();
+
+    Set<TagDTO> userTags = tagService.getAllFeedTags(id).orElse(new HashSet<>());
+
+    Set<ExperienceDTO> filteredExperiences = new HashSet<>();
+    for (ExperienceDTO experience : experiences) {
+      Set<TagDTO> tags = experience.getTags();
+      boolean allTagsNotInUserTags = true;
+      for (TagDTO tag : tags) {
+        if (userTags.contains(tag)) {
+          allTagsNotInUserTags = false;
+          break;
+        }
+      }
+      if (allTagsNotInUserTags) {
+        filteredExperiences.add(experience);
+      }
+    }
+
+    Set<SuggestionDTO> filteredSuggestions = new HashSet<>();
+    for (SuggestionDTO suggestion : suggestions) {
+      Set<TagDTO> tags = suggestion.getTags();
+      boolean allTagsNotInUserTags = true;
+      for (TagDTO tag : tags) {
+        if (userTags.contains(tag)) {
+          allTagsNotInUserTags = false;
+          break;
+        }
+      }
+      if (allTagsNotInUserTags) {
+        filteredSuggestions.add(suggestion);
+      }
+    }
+
+    return new PostsDTO(filteredExperiences, filteredSuggestions);
   }
-   */
+
+
 }
 
