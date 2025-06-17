@@ -117,11 +117,73 @@
 }
 
 .tag {
-    background: #2C3E50;
-    color: #fff;
+    background: #2C3E50 !important;
+    color: #ffffff !important;
     padding: 4px 10px;
     border-radius: 20px;
-    font-size: .75rem;
+    font-size: 0.75rem;
+    border: none !important;
+    text-decoration: none !important;
+    display: inline-block;
+    font-weight: 500;
+    line-height: 1.2;
+    transition: all 0.2s ease;
+}
+
+.tag:hover {
+    background: #34495E !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Variaciones de colores para diferentes tipos de tags */
+.tag.primary {
+    background: #3498DB !important;
+    color: #ffffff !important;
+}
+
+.tag.success {
+    background: #27AE60 !important;
+    color: #ffffff !important;
+}
+
+.tag.warning {
+    background: #F39C12 !important;
+    color: #ffffff !important;
+}
+
+.tag.danger {
+    background: #E74C3C !important;
+    color: #ffffff !important;
+}
+
+.tag.info {
+    background: #17A2B8 !important;
+    color: #ffffff !important;
+}
+
+.tag.dark {
+    background: #2C3E50 !important;
+    color: #ffffff !important;
+}
+
+/* Estilo alternativo con gradiente */
+.tag.gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #ffffff !important;
+}
+
+/* Versión con borde para fondos claros */
+.tag.outlined {
+    background: transparent !important;
+    color: #2C3E50 !important;
+    border: 2px solid #2C3E50 !important;
+}
+
+.tag.outlined:hover {
+    background: #2C3E50 !important;
+    color: #ffffff !important;
 }
 
 .actions {
