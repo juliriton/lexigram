@@ -177,7 +177,11 @@ const HomePage = ({ user, setUser }) => {
                     fetchProfilePicture();
 
                     let feedUrl = `${baseApiUrl}/api/auth/me/feed`;
-                    if (feedType === 'following') feedUrl += '/following';
+                    if (feedType === 'following') {
+                        feedUrl += '/following';
+                    } else if (feedType === 'discover') {
+                        feedUrl += '/discover';
+                    }
 
                     const feedRes = await fetch(feedUrl, { credentials: 'include' });
                     if (feedRes.ok) {
@@ -361,11 +365,18 @@ const HomePage = ({ user, setUser }) => {
                         <button
                             className={`btn btn-outline-primary ${feedType === 'my' ? 'active' : ''}`}
                             onClick={() => setFeedType('my')}
-                        >My feed</button>
+                        >My feed
+                        </button>
                         <button
                             className={`btn btn-outline-primary ${feedType === 'following' ? 'active' : ''}`}
                             onClick={() => setFeedType('following')}
-                        >Following</button>
+                        >Following
+                        </button>
+                        <button
+                            className={`btn btn-outline-primary ${feedType === 'discover' ? 'active' : ''}`}
+                            onClick={() => setFeedType('discover')}
+                        >Discover
+                        </button>
                     </div>
                 )}
 
