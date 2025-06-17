@@ -23,7 +23,6 @@ const UserProfilePage = ({ user }) => {
     const [usingDefaultImage, setUsingDefaultImage] = useState(false);
     const [attemptedLoad, setAttemptedLoad] = useState(false);
     const [hiddenQuotes, setHiddenQuotes] = useState({});
-    const [selectedPostForEdit, setSelectedPostForEdit] = useState(null);
     const [showMentions, setShowMentions] = useState({});
     const [activeTab, setActiveTab] = useState('posts');
     const [updateMessage, setUpdateMessage] = useState('');
@@ -373,8 +372,6 @@ New: "${bioToUpdate}"`);
             } : post
         ));
 
-        setSelectedPostForEdit(null);
-
         setUpdateMessage(message || "Suggestion updated successfully!");
 
         setTimeout(() => {
@@ -391,9 +388,6 @@ New: "${bioToUpdate}"`);
                 type: 'Experience' // Asegurar que mantenga el tipo
             } : post
         ));
-
-        // Limpiar la selección
-        setSelectedPostForEdit(null);
 
         // Mostrar mensaje de éxito
         setUpdateMessage(message || "Experience updated successfully!");
@@ -472,15 +466,10 @@ New: "${bioToUpdate}"`);
     const renderPost = (post) => {
         const isExperience = post.type === 'Experience';
         const postId = post.uuid || post.id;
-        const isSelected = selectedPostForEdit?.uuid === post.uuid;
 
         if (isExperience) {
             return (
-                <div
-                    key={postId}
-                    className={`post-wrapper ${isSelected ? 'selected' : ''}`}
-                    onClick={() => setSelectedPostForEdit(post)}
-                >
+                <div key={postId} className="post-wrapper">
                     <ExperienceCard
                         user={user}
                         post={post}
@@ -494,22 +483,18 @@ New: "${bioToUpdate}"`);
                         renderTags={renderTags}
                         formatDate={formatDate}
                         onDelete={() => confirmDelete(post, 'Experience')}
-                        onEdit={null} // Eliminar la función de edición
+                        onEdit={() => handleEditExperience(post)}
                         isOwner={true}
                         disableInteractions={true}
-                        showEditOption={false} // Nueva prop para ocultar opción de editar
+                        showEditOption={true}
+                        disablePopup={true} // ← Agregar esta línea
                     />
-                    {isSelected && <div className="selection-indicator">Click "Edit Selected Post" to modify</div>}
                 </div>
             );
         }
 
         return (
-            <div
-                key={postId}
-                className={`post-wrapper ${isSelected ? 'selected' : ''}`}
-                onClick={() => setSelectedPostForEdit(post)}
-            >
+            <div key={postId} className="post-wrapper">
                 <SuggestionCard
                     user={user}
                     post={post}
@@ -523,12 +508,11 @@ New: "${bioToUpdate}"`);
                     renderTags={renderTags}
                     formatDate={formatDate}
                     onDelete={() => confirmDelete(post, 'Suggestion')}
-                    onEdit={null} // Deshabilitar edición interna
+                    onEdit={() => handleEditSuggestion(post)} // Pasar la función de edición directamente
                     isOwner={true}
                     disableInteractions={true}
-                    disableInternalEdit={true} // Nueva prop
+                    disableInternalEdit={false} // Habilitar edición
                 />
-                {isSelected && <div className="selection-indicator">Click "Edit Selected Post" to modify</div>}
             </div>
         );
     };
@@ -739,32 +723,6 @@ New: "${bioToUpdate}"`);
                                 <option value="suggestions">Suggestions</option>
                                 <option value="experiences">Experiences</option>
                             </select>
-
-                            {selectedPostForEdit && (
-                                <div className="edit-post-controls">
-                <span className="selected-post-info">
-                    Selected: {selectedPostForEdit.title || 'Untitled'}
-                </span>
-                                    <button
-                                        className="btn-edit-selected"
-                                        onClick={() => {
-                                            if (selectedPostForEdit.type === 'Experience') {
-                                                handleEditExperience(selectedPostForEdit);
-                                            } else {
-                                                handleEditSuggestion(selectedPostForEdit);
-                                            }
-                                        }}
-                                    >
-                                        Edit Selected Post
-                                    </button>
-                                    <button
-                                        className="btn-cancel-selection"
-                                        onClick={() => setSelectedPostForEdit(null)}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     </div>
 
