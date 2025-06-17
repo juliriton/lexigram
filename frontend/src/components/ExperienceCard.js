@@ -19,7 +19,10 @@ const ExperienceCard = ({
                             setShowMentions,
                             formatDate,
                             onDelete,
+                            onEdit,
                             isOwner,
+                            showEditOption = false,
+                            disablePopup = false,
                             onActionComplete
                         }) => {
     const navigate = useNavigate();
@@ -84,17 +87,29 @@ const ExperienceCard = ({
     const handleEdit = (e) => {
         e.stopPropagation();
         setShowOptions(false);
-        setShowEditModal(true);
+
+        // Si hay una función onEdit del padre, usarla; si no, usar la lógica interna
+        if (onEdit && typeof onEdit === 'function') {
+            onEdit(updatedPost);
+        } else {
+            setShowEditModal(true);
+        }
     };
 
     const handleDelete = (e) => {
         e.stopPropagation();
         setShowOptions(false);
-        onDelete();
+        if (onDelete && typeof onDelete === 'function') {
+            onDelete();
+        }
     };
 
     const handlePostUpdate = (updatedExperience) => {
         setUpdatedPost(updatedExperience);
+        // Si hay callback del padre, llamarlo también
+        if (onActionComplete) {
+            onActionComplete(updatedExperience);
+        }
     };
 
     const handleCardClick = (e) => {
@@ -174,49 +189,15 @@ const ExperienceCard = ({
     const renderPostStats = () => {
         const stats = [];
 
-        if (allowResonates) {
-            stats.push(
-                <div key="resonates" className="stat-item">
-                    <span className="stat-label">Resonates:</span>
-                    <span className="stat-value">{updatedPost.resonatesAmount || 0}</span>
-                </div>
-            );
-        }
-
-        if (allowComments) {
-            stats.push(
-                <div key="comments" className="stat-item">
-                    <span className="stat-label">Comments:</span>
-                    <span className="stat-value">{updatedPost.commentAmount || 0}</span>
-                </div>
-            );
-        }
-
-        if (allowSaves) {
-            stats.push(
-                <div key="saves" className="stat-item">
-                    <span className="stat-label">Saved:</span>
-                    <span className="stat-value">{updatedPost.saveAmount || 0}</span>
-                </div>
-            );
-        }
-
-        if (allowForks) {
-            stats.push(
-                <div key="branches" className="stat-item">
-                    <span className="stat-label">Branches:</span>
-                    <span className="stat-value">{updatedPost.branchAmount || 0}</span>
-                </div>
-            );
-        }
-
-
     };
 
     return (
         <>
-            <div className="experience-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
-                {showEditModal && (
+            <div className="experience-card"
+                 onClick={disablePopup ? undefined : handleCardClick}
+                 style={{ cursor: disablePopup ? 'default' : 'pointer' }}>
+                {/* Modal de edición interno - solo se muestra si no hay onEdit del padre */}
+                {showEditModal && !onEdit && (
                     <EditExperienceModal
                         experience={updatedPost}
                         onClose={() => setShowEditModal(false)}
@@ -300,6 +281,12 @@ const ExperienceCard = ({
 
                                 {showOptions && (
                                     <div className="options-dropdown">
+                                        {/* Solo mostrar botón de editar si showEditOption es true O si hay onEdit */}
+                                        {(showEditOption || onEdit) && (
+                                            <button onClick={handleEdit} className="option-item edit">
+                                                <FaEdit size={14} /> <span>Edit</span>
+                                            </button>
+                                        )}
                                         <button onClick={handleDelete} className="option-item delete">
                                             <FaTrash size={14} /> <span>Delete</span>
                                         </button>
