@@ -4,7 +4,9 @@ import com.lexigram.app.dto.ForkExperienceDTO;
 import com.lexigram.app.dto.PostCommentDTO;
 import com.lexigram.app.service.ExperienceService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +28,23 @@ public class ExperienceController {
     this.experienceService = experienceService;
   }
 
-  @PostMapping("experience/{uuid}/resonate")
+  @GetMapping("/experience/{uuid}")
+  public ResponseEntity<ExperienceDTO> getExperience(HttpSession session,
+                                                          @PathVariable UUID uuid) {
+    Long id = (Long) session.getAttribute("user");
+    if (id == null) return ResponseEntity.status(401).build();
+
+    Optional<ExperienceDTO> optionalExperienceDTO = experienceService.getExperienceFromUuid(id, uuid);
+
+    if (optionalExperienceDTO.isPresent()) {
+      ExperienceDTO experienceDTO = optionalExperienceDTO.get();
+      return ResponseEntity.ok(experienceDTO);
+    }
+
+    return ResponseEntity.status(401).build();
+  }
+
+  @PostMapping("/experience/{uuid}/resonate")
   public ResponseEntity<ExperienceDTO> resonateExperience(HttpSession session,
                                                           @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
@@ -42,7 +60,7 @@ public class ExperienceController {
     return ResponseEntity.status(401).build();
   }
 
-  @DeleteMapping("experience/{uuid}/un-resonate")
+  @DeleteMapping("/experience/{uuid}/un-resonate")
   public ResponseEntity<ExperienceDTO> unResonateExperience(HttpSession session,
                                                             @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
@@ -77,7 +95,7 @@ public class ExperienceController {
 //
 //  }
 
-  @DeleteMapping("experience/{expUuid}/comment/{comUuid}")
+  @DeleteMapping("/experience/{expUuid}/comment/{comUuid}")
   public ResponseEntity<ExperienceDTO> deleteExperienceComment(HttpSession session,
                                                                @PathVariable UUID expUuid,
                                                                @PathVariable UUID comUuid) {
@@ -95,7 +113,7 @@ public class ExperienceController {
 
   }
 
-  @PostMapping("experience/{uuid}/save")
+  @PostMapping("/experience/{uuid}/save")
   public ResponseEntity<ExperienceDTO> saveExperience(HttpSession session,
                                                       @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
@@ -111,7 +129,7 @@ public class ExperienceController {
     return ResponseEntity.status(401).build();
   }
 
-  @DeleteMapping("experience/{uuid}/un-save")
+  @DeleteMapping("/experience/{uuid}/un-save")
   public ResponseEntity<ExperienceDTO> unSaveExperience(HttpSession session,
                                                         @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
@@ -128,26 +146,24 @@ public class ExperienceController {
 
   }
 
-  @PostMapping(value = "experience/{uuid}/fork", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(value = "/experience/{uuid}/fork", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<ExperienceDTO> forkExperience(HttpSession session,
                                                       @PathVariable UUID uuid,
-                                                      @RequestBody ForkExperienceDTO fork,
+                                                      @RequestPart("fork") ForkExperienceDTO fork,
                                                       @RequestPart(value = "file", required = true) MultipartFile file) throws IOException {
     Long id = (Long) session.getAttribute("user");
-    if (id == null) return ResponseEntity.status(401).build();
+    if (id == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
     Optional<ExperienceDTO> optionalExperienceDTO = experienceService.forkExperience(id, uuid, fork, file);
 
-    if (optionalExperienceDTO.isPresent()) {
-      ExperienceDTO experienceDTO = optionalExperienceDTO.get();
-      return ResponseEntity.ok(experienceDTO);
-    }
-
-    return ResponseEntity.status(401).build();
-
+    return optionalExperienceDTO
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }
 
-  @GetMapping("experience/{uuid}/share")
+  @GetMapping("/experience/{uuid}/share")
   public ResponseEntity<String> getExperienceLink(HttpSession session,
                                                   @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
@@ -159,7 +175,7 @@ public class ExperienceController {
 
   }
 
-  @GetMapping("experience/{uuid}/branches")
+  @GetMapping("/experience/{uuid}/branches")
   public ResponseEntity<Set<ExperienceDTO>> getExperienceBranches(HttpSession session,
                                                   @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");

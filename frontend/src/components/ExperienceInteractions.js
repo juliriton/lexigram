@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { FaBookmark, FaRegBookmark, FaCommentAlt, FaShare, FaHeart, FaRegHeart } from 'react-icons/fa';
 import '../styles/ExperienceInteractions.css';
 import { FaCodeFork } from "react-icons/fa6";
+import { useNavigate } from 'react-router-dom';
 
 const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete, onCommentClick }) => {
+
+    const navigate = useNavigate();
 
     const getUserInteractionStatus = (experience, user) => {
         if (!user || !user.uuid) {
@@ -169,10 +172,11 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
 
     const handleFork = () => {
         if (!user) {
-            window.location.href = '/login';
+            navigate('/login');
             return;
         }
-        console.log('Fork experience:', experience.uuid);
+
+        navigate(`/fork/${experience.uuid}`);
     };
 
     const handleBranches = async () => {

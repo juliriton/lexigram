@@ -10,6 +10,7 @@ import RelationshipProfilePage from './pages/RelationshipProfilePage';
 import NotificationsPage from "./pages/NotificationsPage";
 import TagPage from "./pages/TagPage";
 import './App.css';
+import ForkExperiencePage from "./pages/ForkExperiencePage";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -26,6 +27,7 @@ function App() {
                 <Route path="/profile/:userId" element={<RelationshipProfilePage user={user} />} />
                 <Route path="/notifications" element={<NotificationsPage user={user} /> } />
                 <Route path="/tags" element={<TagPage user={user} /> } />
+                <Route path="/fork/:uuid" element={<ForkExperiencePage user={user} />} />
             </Routes>
         </Router>
     );

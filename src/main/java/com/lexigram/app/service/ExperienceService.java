@@ -595,6 +595,8 @@ public class ExperienceService {
     Experience fork = new Experience(user, mentions, tags, quote, reflection, isOrigin, isReply);
     fork.setOrigin(experience);
 
+    fork = experienceRepository.save(fork);
+
     if (file != null && !file.isEmpty()) {
       String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
       File destination = new File(uploadDir + File.separator + fileName);
@@ -627,6 +629,7 @@ public class ExperienceService {
     fork.setPrivacySettings(privacy);
 
     fork = experienceRepository.save(fork);
+
     experience.addBranch(fork);
     experienceRepository.save(experience);
 
@@ -634,7 +637,7 @@ public class ExperienceService {
   }
 
   public String getExperienceLink(UUID uuid) {
-    return "https://lexigram.app/experience/" + uuid.toString();
+    return "http://localhost:3000/experience/" + uuid.toString();
   }
 
   public Set<ExperienceDTO> getSavedExperiences(Long id) {
@@ -673,6 +676,24 @@ public class ExperienceService {
     }
 
     return branches;
+  }
+
+  public Optional<ExperienceDTO> getExperienceFromUuid(Long id, UUID uuid) {
+    Optional<User> userOptional = userRepository.findById(id);
+
+    if (userOptional.isEmpty()) {
+      throw new UserNotFoundException();
+    }
+
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
+    if (experienceOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Experience experience = experienceOptional.get();
+
+    return Optional.of(new ExperienceDTO(experience));
   }
 
 }
