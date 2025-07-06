@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaTimes, FaUpload, FaPalette, FaCodeBranch } from 'react-icons/fa';
+import Sidebar from '../components/SideBar';
 import '../styles/PostCreationPage.css';
 
-const ForkExperiencePage = ({ user }) => {
+const ForkExperiencePage = ({ user, setUser }) => {
     const navigate = useNavigate();
     const { uuid } = useParams();
 
@@ -22,20 +23,49 @@ const ForkExperiencePage = ({ user }) => {
     const [reflectionError, setReflectionError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [fileName, setFileName] = useState('');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
+    const baseApiUrl = 'http://localhost:8080';
+    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
     // Fork-specific state
     const [originalExperience, setOriginalExperience] = useState(null);
     const [loadingOriginal, setLoadingOriginal] = useState(false);
 
-    const baseApiUrl = 'http://localhost:8080';
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+    const handleImageError = () => setProfilePicture(defaultProfilePicture);
 
     useEffect(() => {
+        const fetchProfilePicture = async () => {
+            try {
+                const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                    credentials: 'include',
+                });
+
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    setProfilePicture(
+                        profileData.profilePictureUrl
+                            ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                            : defaultProfilePicture
+                    );
+                } else {
+                    setProfilePicture(defaultProfilePicture);
+                }
+            } catch (err) {
+                console.error('Error fetching profile picture:', err);
+                setProfilePicture(defaultProfilePicture);
+            }
+        };
+
         const checkAuth = async () => {
             try {
                 const res = await fetch(`${baseApiUrl}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
+                else fetchProfilePicture();
             } catch {
                 navigate('/login');
             }
@@ -70,7 +100,7 @@ const ForkExperiencePage = ({ user }) => {
 
         checkAuth();
         loadOriginalExperience();
-    }, [navigate, uuid]);
+    }, [navigate, uuid, baseApiUrl, defaultProfilePicture]);
 
     const handleCancel = () => {
         const container = document.querySelector('.post-creation-container');
@@ -191,10 +221,33 @@ const ForkExperiencePage = ({ user }) => {
 
     if (loadingOriginal) {
         return (
-            <div className="post-creation-container">
-                <div className="container-content">
-                    <div style={{ textAlign: 'center', padding: '2rem' }}>
-                        <p>Loading original experience...</p>
+            <div className="post-creation-page">
+                <label className="burger" htmlFor="burger">
+                    <input
+                        type="checkbox"
+                        id="burger"
+                        checked={sidebarOpen}
+                        onChange={toggleSidebar}
+                    />
+                    <span></span><span></span><span></span>
+                </label>
+
+                <Sidebar
+                    user={user}
+                    setUser={setUser}
+                    profilePicture={profilePicture}
+                    handleImageError={handleImageError}
+                    sidebarOpen={sidebarOpen}
+                    toggleSidebar={toggleSidebar}
+                    baseApiUrl={baseApiUrl}
+                    defaultProfilePicture={defaultProfilePicture}
+                />
+
+                <div className={`post-creation-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
+                    <div className="container-content">
+                        <div style={{ textAlign: 'center', padding: '2rem' }}>
+                            <p>Loading original experience...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -203,13 +256,36 @@ const ForkExperiencePage = ({ user }) => {
 
     if (!originalExperience) {
         return (
-            <div className="post-creation-container">
-                <div className="container-content">
-                    <div style={{ textAlign: 'center', padding: '2rem' }}>
-                        <p>Experience not found.</p>
-                        <button onClick={() => navigate('/')} className="submit-btn">
-                            Go Home
-                        </button>
+            <div className="post-creation-page">
+                <label className="burger" htmlFor="burger">
+                    <input
+                        type="checkbox"
+                        id="burger"
+                        checked={sidebarOpen}
+                        onChange={toggleSidebar}
+                    />
+                    <span></span><span></span><span></span>
+                </label>
+
+                <Sidebar
+                    user={user}
+                    setUser={setUser}
+                    profilePicture={profilePicture}
+                    handleImageError={handleImageError}
+                    sidebarOpen={sidebarOpen}
+                    toggleSidebar={toggleSidebar}
+                    baseApiUrl={baseApiUrl}
+                    defaultProfilePicture={defaultProfilePicture}
+                />
+
+                <div className={`post-creation-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
+                    <div className="container-content">
+                        <div style={{ textAlign: 'center', padding: '2rem' }}>
+                            <p>Experience not found.</p>
+                            <button onClick={() => navigate('/')} className="submit-btn">
+                                Go Home
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -217,199 +293,222 @@ const ForkExperiencePage = ({ user }) => {
     }
 
     return (
-        <div className="post-creation-container">
-            <div className="container-content">
-                <h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FaCodeBranch />
-                        <span>Fork Experience</span>
-                    </div>
-                </h2>
+        <div className="post-creation-page">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
 
-                <div style={{
-                    background: 'var(--secondary-color)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '1rem',
-                    marginBottom: '1rem'
-                }}>
-                    <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-secondary)' }}>
-                        Original Quote:
-                    </h4>
-                    <p style={{
-                        margin: 0,
-                        fontStyle: 'italic',
-                        color: 'var(--text-primary)',
-                        fontSize: '1.1rem'
-                    }}>
-                        "{originalExperience.quote}"
-                    </p>
-                    <p style={{
-                        margin: '0.5rem 0 0 0',
-                        fontSize: '0.875rem',
-                        color: 'var(--text-secondary)'
-                    }}>
-                        by @{originalExperience.user?.username}
-                    </p>
-                </div>
-
-                <form onSubmit={handleForkSubmit} className="form-section">
-                    <div className="input-group">
-            <textarea
-                placeholder={REFLECTION_MIN_CHARS > 0 ?
-                    `Your reflection on this experience (min ${REFLECTION_MIN_CHARS} characters)` :
-                    "Your reflection on this experience"
-                }
-                value={reflection}
-                onChange={handleReflectionChange}
-                required
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={baseApiUrl}
+                defaultProfilePicture={defaultProfilePicture}
             />
-                        {reflectionError && <div className="error-text">{reflectionError}</div>}
-                    </div>
 
-                    <input
-                        type="text"
-                        placeholder="Tags (comma separated)"
-                        value={tags}
-                        onChange={e=>setTags(e.target.value)}
-                    />
-
-                    <input
-                        type="text"
-                        placeholder="Mentions (e.g. @user1, @user2)"
-                        value={mentions}
-                        onChange={e=>setMentions(e.target.value)}
-                    />
-
-                    <div className="style-controls">
-                        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                            <FaPalette />
-                            <span style={{fontWeight: '600', color: 'var(--text-primary)'}}>Style Options</span>
+            <div className={`post-creation-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
+                <div className="container-content">
+                    <h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <FaCodeBranch />
+                            <span>Fork Experience</span>
                         </div>
+                    </h2>
 
-                        <select
-                            value={fontFamily}
-                            onChange={e=>setFontFamily(e.target.value)}
-                        >
-                            <option value="Arial">Arial</option>
-                            <option value="Times New Roman">Times New Roman</option>
-                            <option value="Georgia">Georgia</option>
-                            <option value="Helvetica">Helvetica</option>
-                        </select>
-
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
-                            <input
-                                type="number"
-                                value={fontSize}
-                                min={8}
-                                max={30}
-                                onChange={handleFontSizeChange}
-                            />
-                            {fontSizeError && (
-                                <div className="error-text" style={{marginTop: '0.25rem'}}>{fontSizeError}</div>
-                            )}
-                        </div>
-
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center'}}>
-                            <label style={{fontSize: '0.875rem', fontWeight: '500'}}>Text Color</label>
-                            <input
-                                type="color"
-                                value={fontColor}
-                                onChange={e=>setFontColor(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div style={{position: 'relative'}}>
-                        <input
-                            type="file"
-                            accept="image/jpeg,video/mp4,video/webm,image/gif"
-                            onChange={handleFileChange}
-                            style={{
-                                position: 'absolute',
-                                opacity: 0,
-                                width: '100%',
-                                height: '100%',
-                                cursor: 'pointer'
-                            }}
-                        />
-                        <div style={{
-                            padding: '2rem',
-                            border: '2px dashed var(--border-color)',
-                            borderRadius: 'var(--radius-lg)',
-                            textAlign: 'center',
-                            background: 'linear-gradient(135deg, var(--secondary-color), #e2e8f0)',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '0.5rem'
+                    <div style={{
+                        background: 'var(--secondary-color)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: '1rem',
+                        marginBottom: '1rem'
+                    }}>
+                        <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-secondary)' }}>
+                            Original Quote:
+                        </h4>
+                        <p style={{
+                            margin: 0,
+                            fontStyle: 'italic',
+                            color: 'var(--text-primary)',
+                            fontSize: '1.1rem'
                         }}>
-                            <FaUpload size={24} style={{color: 'var(--primary-color)'}} />
-                            <span style={{fontWeight: '500', color: 'var(--text-primary)'}}>
-                {fileName || 'Click to upload media'}
-              </span>
-                            <span style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
-                JPEG, MP4, WebM, GIF supported
-              </span>
+                            "{originalExperience.quote}"
+                        </p>
+                        <p style={{
+                            margin: '0.5rem 0 0 0',
+                            fontSize: '0.875rem',
+                            color: 'var(--text-secondary)'
+                        }}>
+                            by @{originalExperience.user?.username}
+                        </p>
+                    </div>
+
+                    <form onSubmit={handleForkSubmit} className="form-section">
+                        <div className="input-group">
+                            <textarea
+                                placeholder={REFLECTION_MIN_CHARS > 0 ?
+                                    `Your reflection on this experience (min ${REFLECTION_MIN_CHARS} characters)` :
+                                    "Your reflection on this experience"
+                                }
+                                value={reflection}
+                                onChange={handleReflectionChange}
+                                required
+                            />
+                            {reflectionError && <div className="error-text">{reflectionError}</div>}
                         </div>
-                    </div>
 
-                    <div className="checkbox-group">
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={allowComments}
-                                onChange={() => setAllowComments(c => !c)}
-                            />
-                            Comments
-                        </label>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={allowResonates}
-                                onChange={() => setAllowResonates(r => !r)}
-                            />
-                            Resonates
-                        </label>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={allowForks}
-                                onChange={() => setAllowForks(f => !f)}
-                            />
-                            Forks
-                        </label>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={allowSaves}
-                                onChange={() => setAllowSaves(f => !f)}
-                            />
-                            Saves
-                        </label>
-                    </div>
+                        <input
+                            type="text"
+                            placeholder="Tags (comma separated)"
+                            value={tags}
+                            onChange={e=>setTags(e.target.value)}
+                        />
 
-                    <div className="form-buttons">
-                        <button
-                            type="submit"
-                            className={`submit-btn ${isSubmitting ? 'loading' : ''}`}
-                            disabled={!!reflectionError || isSubmitting}
-                        >
-                            {isSubmitting ? 'Creating Fork...' : 'Create Fork'}
-                        </button>
-                        <button
-                            type="button"
-                            className="cancel-btn"
-                            onClick={handleCancel}
-                            disabled={isSubmitting}
-                        >
-                            <FaTimes />
-                            Cancel
-                        </button>
-                    </div>
-                </form>
+                        <input
+                            type="text"
+                            placeholder="Mentions (e.g. @user1, @user2)"
+                            value={mentions}
+                            onChange={e=>setMentions(e.target.value)}
+                        />
+
+                        <div className="style-controls">
+                            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                <FaPalette />
+                                <span style={{fontWeight: '600', color: 'var(--text-primary)'}}>Style Options</span>
+                            </div>
+
+                            <select
+                                value={fontFamily}
+                                onChange={e=>setFontFamily(e.target.value)}
+                            >
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Helvetica">Helvetica</option>
+                            </select>
+
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                                <input
+                                    type="number"
+                                    value={fontSize}
+                                    min={8}
+                                    max={30}
+                                    onChange={handleFontSizeChange}
+                                />
+                                {fontSizeError && (
+                                    <div className="error-text" style={{marginTop: '0.25rem'}}>{fontSizeError}</div>
+                                )}
+                            </div>
+
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center'}}>
+                                <label style={{fontSize: '0.875rem', fontWeight: '500'}}>Text Color</label>
+                                <input
+                                    type="color"
+                                    value={fontColor}
+                                    onChange={e=>setFontColor(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div style={{position: 'relative'}}>
+                            <input
+                                type="file"
+                                accept="image/jpeg,video/mp4,video/webm,image/gif"
+                                onChange={handleFileChange}
+                                style={{
+                                    position: 'absolute',
+                                    opacity: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    cursor: 'pointer'
+                                }}
+                            />
+                            <div style={{
+                                padding: '2rem',
+                                border: '2px dashed var(--border-color)',
+                                borderRadius: 'var(--radius-lg)',
+                                textAlign: 'center',
+                                background: 'linear-gradient(135deg, var(--secondary-color), #e2e8f0)',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}>
+                                <FaUpload size={24} style={{color: 'var(--primary-color)'}} />
+                                <span style={{fontWeight: '500', color: 'var(--text-primary)'}}>
+                                    {fileName || 'Click to upload media'}
+                                </span>
+                                <span style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                    JPEG, MP4, WebM, GIF supported
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="checkbox-group">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowComments}
+                                    onChange={() => setAllowComments(c => !c)}
+                                />
+                                Comments
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowResonates}
+                                    onChange={() => setAllowResonates(r => !r)}
+                                />
+                                Resonates
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowForks}
+                                    onChange={() => setAllowForks(f => !f)}
+                                />
+                                Forks
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowSaves}
+                                    onChange={() => setAllowSaves(f => !f)}
+                                />
+                                Saves
+                            </label>
+                        </div>
+
+                        <div className="form-buttons">
+                            <button
+                                type="submit"
+                                className={`submit-btn ${isSubmitting ? 'loading' : ''}`}
+                                disabled={!!reflectionError || isSubmitting}
+                            >
+                                {isSubmitting ? 'Creating Fork...' : 'Create Fork'}
+                            </button>
+                            <button
+                                type="button"
+                                className="cancel-btn"
+                                onClick={handleCancel}
+                                disabled={isSubmitting}
+                            >
+                                <FaTimes />
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );

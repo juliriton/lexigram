@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaUserPlus, FaUserMinus, FaHome, FaArrowLeft } from 'react-icons/fa';
+import {
+    FaUserCircle,
+    FaUserPlus,
+    FaUserMinus,
+    FaArrowLeft,
+} from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
+import Sidebar from '../components/SideBar';
 import '../styles/RelationshipProfilePage.css';
 
-const RelationshipProfile = ({ user }) => {
+const RelationshipProfile = ({ user, setUser }) => {
     const { userId } = useParams();
     const navigate = useNavigate();
     const [profileUser, setProfileUser] = useState(null);
@@ -18,22 +24,51 @@ const RelationshipProfile = ({ user }) => {
     const [showMentions, setShowMentions] = useState({});
     const [activeTab, setActiveTab] = useState('posts');
     const [postFilter, setPostFilter] = useState('all');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [userProfilePicture, setUserProfilePicture] = useState(null);
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+    const handleImageError = () => {
+        setProfilePicture(defaultProfilePicture);
+        setUserProfilePicture(defaultProfilePicture);
+    };
+
     useEffect(() => {
+        const fetchUserProfilePicture = async () => {
+            try {
+                const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                    credentials: 'include',
+                });
+
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    const picUrl = profileData.profilePictureUrl
+                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        : defaultProfilePicture;
+                    setUserProfilePicture(picUrl);
+                }
+            } catch (err) {
+                console.error('Error fetching user profile picture:', err);
+                setUserProfilePicture(defaultProfilePicture);
+            }
+        };
+
         const checkAuth = async () => {
             try {
                 const res = await fetch(`${baseApiUrl}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
+                else fetchUserProfilePicture();
             } catch {
                 navigate('/login');
             }
         };
         checkAuth();
-    }, [navigate]);
+    }, [navigate, baseApiUrl, defaultProfilePicture]);
 
     const fetchProfileData = useCallback(async () => {
         try {
@@ -50,13 +85,12 @@ const RelationshipProfile = ({ user }) => {
             setIsFollowing(userData.isFollowing);
             setCanViewPosts(userData.canViewPosts !== false);
 
-            setProfilePicture(
-                userData.profilePictureUrl
-                    ? userData.profilePictureUrl.startsWith('http')
-                        ? userData.profilePictureUrl
-                        : `${baseApiUrl}${userData.profilePictureUrl}`
-                    : defaultProfilePicture
-            );
+            const profilePicUrl = userData.profilePictureUrl
+                ? userData.profilePictureUrl.startsWith('http')
+                    ? userData.profilePictureUrl
+                    : `${baseApiUrl}${userData.profilePictureUrl}`
+                : defaultProfilePicture;
+            setProfilePicture(profilePicUrl);
 
             if (userData.canViewPosts !== false) {
                 const postsRes = await fetch(`${baseApiUrl}/api/auth/me/users/${userId}/profile/posts`, {
@@ -84,7 +118,6 @@ const RelationshipProfile = ({ user }) => {
             navigate('/login');
             return;
         }
-
         navigate(`/profile/${mentionUuid}`);
     };
 
@@ -105,8 +138,6 @@ const RelationshipProfile = ({ user }) => {
 
             if (response.ok) {
                 fetchProfileData();
-            } else {
-                console.error('Failed to follow user:', await response.text());
             }
         } catch (err) {
             console.error('Error following user:', err);
@@ -125,8 +156,6 @@ const RelationshipProfile = ({ user }) => {
 
             if (response.ok) {
                 fetchProfileData();
-            } else {
-                console.error('Failed to unfollow user:', await response.text());
             }
         } catch (err) {
             console.error('Error unfollowing user:', err);
@@ -177,179 +206,191 @@ const RelationshipProfile = ({ user }) => {
 
     const filteredPosts = filterPosts();
 
-
     return (
-        <div className="relationship-container">
+        <div className="relationship-profile-page">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
 
-            <div className="relationship-header">
-                <div className="relationship-cover">
-                    <div className="relationship-avatar-container">
-                        {profilePicture ? (
-                            <img
-                                src={profilePicture}
-                                alt="Profile"
-                                className="relationship-avatar"
-                                onError={() => setProfilePicture(defaultProfilePicture)}
-                            />
-                        ) : (
-                            <FaUserCircle className="relationship-default-icon"/>
-                        )}
-                        <div className="relationship-username">@{profileUser?.username}</div>
-                    </div>
-                </div>
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={userProfilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={baseApiUrl}
+                defaultProfilePicture={defaultProfilePicture}
+            />
 
-                <div className="relationship-bio">
-                    <p>{profileUser?.biography || 'No bio provided'}</p>
-                </div>
-
-                <div className="relationship-stats">
-                    <div className="relationship-stat">
-                        <span className="relationship-stat-value">
-                            {(userPosts.experiences?.length || 0) + (userPosts.suggestions?.length || 0)}
-                        </span>
-                        <span className="relationship-stat-label">Posts</span>
-                    </div>
-                    <div className="relationship-stat">
-                        <span
-                            className="relationship-stat-value">{profileUser?.followerAmount || 0}</span>
-                        <span className="relationship-stat-label">Followers</span>
-                    </div>
-                    <div className="relationship-stat">
-                        <span
-                            className="relationship-stat-value">{profileUser?.followingAmount || 0}</span>
-                        <span className="relationship-stat-label">Following</span>
-                    </div>
-                </div>
-
-                {user && user.uuid !== userId && (
-                    <div className="relationship-actions">
-                        {isFollowing ? (
-                            <button
-                                className="relationship-btn-outline-danger"
-                                onClick={handleUnfollow}
-                            >
-                                <FaUserMinus/> Unfollow
-                            </button>
-                        ) : (
-                            <button
-                                className="relationship-btn-primary"
-                                onClick={handleFollow}
-                            >
-                                <FaUserPlus/> Follow
-                            </button>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            <div className="relationship-nav">
-                <button
-                    className={`relationship-nav-item ${activeTab === 'posts' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('posts')}
-                >
-                    Posts
-                </button>
-            </div>
-
-            {activeTab === 'posts' && (
-                <div className="relationship-content">
-                    {canViewPosts ? (
-                        <>
-                            <div className="relationship-post-filter">
-                                <select
-                                    value={postFilter}
-                                    onChange={(e) => setPostFilter(e.target.value)}
-                                >
-                                    <option value="all">All Posts</option>
-                                    <option value="suggestions">Suggestions</option>
-                                    <option value="experiences">Experiences</option>
-                                </select>
-                            </div>
-
-                            {filteredPosts.length === 0 ? (
-                                <div className="relationship-no-posts">
-                                    <p>No posts found.</p>
-                                </div>
+            <div className={`relationship-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
+                <div className="relationship-header">
+                    <div className="relationship-cover">
+                        <div className="relationship-avatar-container">
+                            {profilePicture ? (
+                                <img
+                                    src={profilePicture}
+                                    alt="Profile"
+                                    className="relationship-avatar"
+                                    onError={() => setProfilePicture(defaultProfilePicture)}
+                                />
                             ) : (
-                                <div className="relationship-posts-grid">
-                                    {filteredPosts.map(post => {
-                                        const isExperience = post.type === 'Experience';
-                                        const postId = post.uuid || post.id;
+                                <FaUserCircle className="relationship-default-icon"/>
+                            )}
+                            <div className="relationship-username">@{profileUser?.username}</div>
+                        </div>
+                    </div>
 
-                                        if (isExperience) {
+                    <div className="relationship-bio">
+                        <p>{profileUser?.biography || 'No bio provided'}</p>
+                    </div>
+
+                    <div className="relationship-stats">
+                        <div className="relationship-stat">
+                            <span className="relationship-stat-value">
+                                {(userPosts.experiences?.length || 0) + (userPosts.suggestions?.length || 0)}
+                            </span>
+                            <span className="relationship-stat-label">Posts</span>
+                        </div>
+                        <div className="relationship-stat">
+                            <span className="relationship-stat-value">{profileUser?.followerAmount || 0}</span>
+                            <span className="relationship-stat-label">Followers</span>
+                        </div>
+                        <div className="relationship-stat">
+                            <span className="relationship-stat-value">{profileUser?.followingAmount || 0}</span>
+                            <span className="relationship-stat-label">Following</span>
+                        </div>
+                    </div>
+
+                    {user && user.uuid !== userId && (
+                        <div className="relationship-actions">
+                            {isFollowing ? (
+                                <button
+                                    className="relationship-btn-outline-danger"
+                                    onClick={handleUnfollow}
+                                >
+                                    <FaUserMinus/> Unfollow
+                                </button>
+                            ) : (
+                                <button
+                                    className="relationship-btn-primary"
+                                    onClick={handleFollow}
+                                >
+                                    <FaUserPlus/> Follow
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="relationship-nav">
+                    <button
+                        className={`relationship-nav-item ${activeTab === 'posts' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('posts')}
+                    >
+                        Posts
+                    </button>
+                </div>
+
+                {activeTab === 'posts' && (
+                    <div className="relationship-content">
+                        {canViewPosts ? (
+                            <>
+                                <div className="relationship-post-filter">
+                                    <select
+                                        value={postFilter}
+                                        onChange={(e) => setPostFilter(e.target.value)}
+                                    >
+                                        <option value="all">All Posts</option>
+                                        <option value="suggestions">Suggestions</option>
+                                        <option value="experiences">Experiences</option>
+                                    </select>
+                                </div>
+
+                                {filteredPosts.length === 0 ? (
+                                    <div className="relationship-no-posts">
+                                        <p>No posts found.</p>
+                                    </div>
+                                ) : (
+                                    <div className="relationship-posts-grid">
+                                        {filteredPosts.map(post => {
+                                            const isExperience = post.type === 'Experience';
+                                            const postId = post.uuid || post.id;
+
+                                            if (isExperience) {
+                                                return (
+                                                    <ExperienceCard
+                                                        key={postId}
+                                                        user={user}
+                                                        post={post}
+                                                        username={profileUser.username}
+                                                        baseApiUrl={baseApiUrl}
+                                                        hiddenQuotes={hiddenQuotes}
+                                                        toggleQuote={() => toggleQuote(postId)}
+                                                        showMentions={showMentions}
+                                                        setShowMentions={setShowMentions}
+                                                        renderMentions={(mentions, id) => (
+                                                            showMentions[id] && (
+                                                                <div className="relationship-post-mentions">
+                                                                    <h6>Mentions:</h6>
+                                                                    <div className="relationship-mentions-list">
+                                                                        {mentions.map((mention, i) => (
+                                                                            <span
+                                                                                key={i}
+                                                                                className="relationship-mention clickable"
+                                                                                onClick={() => handleMentionClick(mention.uuid)}
+                                                                                style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
+                                                                            >
+                                                                                @{mention.username}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )
+                                                        )}
+                                                        renderTags={renderTags}
+                                                        formatDate={formatDate}
+                                                        isOwner={user?.uuid === profileUser.uuid}
+                                                    />
+                                                );
+                                            }
+
                                             return (
-                                                <ExperienceCard
+                                                <SuggestionCard
                                                     key={postId}
                                                     user={user}
                                                     post={post}
-                                                    username={profileUser.username}
                                                     baseApiUrl={baseApiUrl}
-                                                    hiddenQuotes={hiddenQuotes}
-                                                    toggleQuote={() => toggleQuote(postId)}
-                                                    showMentions={showMentions}
-                                                    setShowMentions={setShowMentions}
-                                                    renderMentions={(mentions, id) => (
-                                                        showMentions[id] && (
-                                                            <div className="relationship-post-mentions">
-                                                                <h6>Mentions:</h6>
-                                                                <div className="relationship-mentions-list">
-                                                                    {mentions.map((mention, i) => (
-                                                                        <span
-                                                                            key={i}
-                                                                            className="relationship-mention clickable"
-                                                                            onClick={() => handleMentionClick(mention.uuid)}
-                                                                            style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
-                                                                        >
-                                                                            @{mention.username}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )
-                                                    )}
+                                                    username={profileUser.username}
                                                     renderTags={renderTags}
                                                     formatDate={formatDate}
                                                     isOwner={user?.uuid === profileUser.uuid}
                                                 />
                                             );
-                                        }
+                                        })}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="relationship-no-posts">
+                                <p>This account is private. Follow to see their posts.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                                        return (
-                                            <SuggestionCard
-                                                key={postId}
-                                                user={user}
-                                                post={post}
-                                                baseApiUrl={baseApiUrl}
-                                                username={profileUser.username}
-                                                renderTags={renderTags}
-                                                formatDate={formatDate}
-                                                isOwner={user?.uuid === profileUser.uuid}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="relationship-no-posts">
-                            <p>This account is private. Follow to see their posts.</p>
-                        </div>
-                    )}
+                <div className="text-center">
+                    <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
+                        <FaArrowLeft/> Go back
+                    </button>
                 </div>
-            )}
-
-            <div className="text-center">
-                <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
-                    <FaArrowLeft/> Go back
-                </button>
             </div>
-
-            <div className="text-center">
-                <button className="btn btn-success mt-3" onClick={() => navigate('/')}>
-                    <FaHome/> Home
-                </button>
-            </div>
-
         </div>
     );
 };

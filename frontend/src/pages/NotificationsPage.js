@@ -1,58 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaHome, FaBell, FaCheck, FaTrash, FaUser, FaHeart, FaComment } from "react-icons/fa";
+import { FaBell, FaCheck, FaTrash, FaUser, FaHeart, FaComment } from "react-icons/fa";
 import '../styles/NotificationsPage.css';
+import Sidebar from '../components/SideBar';
 
-const NotificationsPage = ({ user }) => {
+const NotificationsPage = ({ user, setUser }) => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
     const [actorProfiles, setActorProfiles] = useState({});
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
     const navigate = useNavigate();
     const baseApiUrl = 'http://localhost:8080';
+    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
-                    credentials: 'include',
-                });
-                if (!res.ok) navigate('/login');
-            } catch {
-                navigate('/login');
-            }
-        };
-        checkAuth();
-    }, [navigate]);
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
-    useEffect(() => {
-        fetchNotifications();
-    }, []);
-
-    const fetchNotifications = async () => {
-        try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications`, {
-                credentials: 'include',
-            });
-
-            if (!res.ok) throw new Error('Failed to fetch notifications');
-
-            const data = await res.json();
-            setNotifications(data);
-
-            // Fetch actor profiles for notifications that have actorUuid
-            const actorUuids = [...new Set(data.filter(n => n.actorUuid).map(n => n.actorUuid))];
-            fetchActorProfiles(actorUuids);
-
-        } catch (err) {
-            console.error(err);
-            setMessage('Error loading notifications.');
-        } finally {
-            setLoading(false);
-        }
+    const handleImageError = () => {
+        setProfilePicture(defaultProfilePicture);
     };
 
-    const fetchActorProfiles = async (actorUuids) => {
+    const fetchActorProfiles = useCallback(async (actorUuids) => {
         const profiles = {};
 
         for (const uuid of actorUuids) {
@@ -71,7 +40,67 @@ const NotificationsPage = ({ user }) => {
         }
 
         setActorProfiles(profiles);
-    };
+    }, [baseApiUrl]);
+
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications`, {
+                credentials: 'include',
+            });
+
+            if (!res.ok) throw new Error('Failed to fetch notifications');
+
+            const data = await res.json();
+            setNotifications(data);
+
+            const actorUuids = [...new Set(data.filter(n => n.actorUuid).map(n => n.actorUuid))];
+            fetchActorProfiles(actorUuids);
+
+        } catch (err) {
+            console.error(err);
+            setMessage('Error loading notifications.');
+        } finally {
+            setLoading(false);
+        }
+    }, [baseApiUrl, fetchActorProfiles]);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                    credentials: 'include',
+                });
+                if (!res.ok) navigate('/login');
+            } catch {
+                navigate('/login');
+            }
+        };
+        checkAuth();
+    }, [navigate, baseApiUrl]);
+
+    useEffect(() => {
+        const fetchProfilePicture = async () => {
+            try {
+                const res = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                    credentials: 'include',
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setProfilePicture(
+                        data.profilePictureUrl
+                            ? `${baseApiUrl}${data.profilePictureUrl}`
+                            : defaultProfilePicture
+                    );
+                }
+            } catch (err) {
+                console.error('Error fetching profile picture:', err);
+                setProfilePicture(defaultProfilePicture);
+            }
+        };
+
+        fetchProfilePicture();
+        fetchNotifications();
+    }, [baseApiUrl, defaultProfilePicture, fetchNotifications]);
 
     const acknowledgeNotification = async (uuid) => {
         try {
@@ -172,19 +201,39 @@ const NotificationsPage = ({ user }) => {
         return new Date(timestamp).toLocaleString();
     };
 
-    const handleNotificationClick = (notification) => {
-        // Navigate based on notification type
+    const handleNotificationClick = useCallback((notification) => {
         if (notification.experienceUuid) {
             navigate(`/experience/${notification.experienceUuid}`);
         } else if (notification.actorUuid) {
             navigate(`/profile/${notification.actorUuid}`);
         }
-    };
+    }, [navigate]);
 
     if (loading) return <div className="container mt-4">Loading notifications...</div>;
 
     return (
         <div className="notifications-page container mt-4">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
+
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={baseApiUrl}
+                defaultProfilePicture={defaultProfilePicture}
+            />
+
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="text-center flex-grow-1">
                     <FaBell className="me-2" />
@@ -236,6 +285,8 @@ const NotificationsPage = ({ user }) => {
                         <div
                             key={notification.uuid}
                             className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                            onClick={() => handleNotificationClick(notification)}
+                            style={{ cursor: 'pointer' }}
                         >
                             <div className="notification-content">
                                 <div className="notification-header">
@@ -265,7 +316,10 @@ const NotificationsPage = ({ user }) => {
                                 {!notification.read && (
                                     <button
                                         className="btn btn-sm btn-outline-success me-2"
-                                        onClick={() => acknowledgeNotification(notification.uuid)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            acknowledgeNotification(notification.uuid);
+                                        }}
                                         title="Mark as read"
                                     >
                                         <FaCheck />
@@ -273,7 +327,10 @@ const NotificationsPage = ({ user }) => {
                                 )}
                                 <button
                                     className="btn btn-sm btn-outline-danger"
-                                    onClick={() => deleteNotification(notification.uuid)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteNotification(notification.uuid);
+                                    }}
                                     title="Delete notification"
                                 >
                                     <FaTrash />
@@ -282,25 +339,6 @@ const NotificationsPage = ({ user }) => {
                         </div>
                     ))
                 )}
-            </div>
-
-            <div className="navigation-buttons mt-4">
-                <div className="d-flex justify-content-center gap-3">
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => navigate(-1)}
-                    >
-                        <FaArrowLeft className="me-1" />
-                        Go Back
-                    </button>
-                    <button
-                        className="btn btn-success"
-                        onClick={() => navigate('/')}
-                    >
-                        <FaHome className="me-1" />
-                        Home
-                    </button>
-                </div>
             </div>
         </div>
     );

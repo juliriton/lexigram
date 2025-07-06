@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaReply, FaTimes, FaUpload, FaPalette } from 'react-icons/fa';
+import Sidebar from '../components/SideBar';
 import '../styles/PostCreationPage.css';
 
-const ReplySuggestionPage = ({ user }) => {
+const ReplySuggestionPage = ({ user, setUser }) => {
     const navigate = useNavigate();
     const { uuid } = useParams();
     const [quote, setQuote] = useState('');
@@ -23,29 +24,58 @@ const ReplySuggestionPage = ({ user }) => {
     const [reflectionError, setReflectionError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [fileName, setFileName] = useState('');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
     const baseApiUrl = 'http://localhost:8080';
+    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+    const handleImageError = () => setProfilePicture(defaultProfilePicture);
 
     useEffect(() => {
+        const fetchProfilePicture = async () => {
+            try {
+                const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                    credentials: 'include',
+                });
+
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    setProfilePicture(
+                        profileData.profilePictureUrl
+                            ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                            : defaultProfilePicture
+                    );
+                } else {
+                    setProfilePicture(defaultProfilePicture);
+                }
+            } catch (err) {
+                console.error('Error fetching profile picture:', err);
+                setProfilePicture(defaultProfilePicture);
+            }
+        };
+
         const checkAuth = async () => {
             try {
                 const res = await fetch(`${baseApiUrl}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
+                else fetchProfilePicture();
             } catch {
                 navigate('/login');
             }
         };
         checkAuth();
-    }, [navigate]);
+    }, [navigate, baseApiUrl, defaultProfilePicture]);
 
     const handleCancel = () => {
-        // Navigate back to the suggestion or home page
         const container = document.querySelector('.post-creation-container');
         if (container) {
             container.style.transform = 'scale(0.95)';
             container.style.opacity = '0.5';
-            setTimeout(() => navigate(-1), 200); // Go back to previous page
+            setTimeout(() => navigate(-1), 200);
         } else {
             navigate(-1);
         }
@@ -101,7 +131,7 @@ const ReplySuggestionPage = ({ user }) => {
 
     const handleReplySubmit = async e => {
         e.preventDefault();
-        console.log('Submit button clicked'); // Debug log
+        console.log('Submit button clicked');
 
         if (!user) {
             console.log('No user, redirecting to login');
@@ -115,7 +145,7 @@ const ReplySuggestionPage = ({ user }) => {
             return;
         }
 
-        console.log('Suggestion UUID:', uuid); // Debug log
+        console.log('Suggestion UUID:', uuid);
 
         if (fontSize < 8 || fontSize > 30) {
             console.log('Font size validation failed');
@@ -157,7 +187,7 @@ const ReplySuggestionPage = ({ user }) => {
             }
         };
 
-        console.log('Reply object:', replyObj); // Debug log
+        console.log('Reply object:', replyObj);
 
         const formData = new FormData();
         formData.append('post', new Blob([JSON.stringify(replyObj)], { type: 'application/json' }));
@@ -167,7 +197,7 @@ const ReplySuggestionPage = ({ user }) => {
         }
 
         const url = `${baseApiUrl}/api/auth/me/suggestion/${uuid}/reply`;
-        console.log('Request URL:', url); // Debug log
+        console.log('Request URL:', url);
 
         try {
             console.log('Making request...');
@@ -184,7 +214,6 @@ const ReplySuggestionPage = ({ user }) => {
                 const responseData = await resp.json();
                 console.log('Success response:', responseData);
 
-                // Show success feedback before navigating
                 const submitBtn = document.querySelector('.submit-btn');
                 if (submitBtn) {
                     submitBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
@@ -208,186 +237,209 @@ const ReplySuggestionPage = ({ user }) => {
     };
 
     return (
-        <div className="post-creation-container">
-            <div className="container-content">
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '1.5rem',
-                    padding: '1rem',
-                    background: 'linear-gradient(135deg, #e3f2fd, #f3e5f5)',
-                    borderRadius: 'var(--radius-lg)',
-                    border: '1px solid var(--border-color)'
-                }}>
-                    <FaReply size={20} style={{color: 'var(--primary-color)'}} />
-                    <span style={{
-                        fontSize: '1.1rem',
-                        fontWeight: '600',
-                        color: 'var(--text-primary)'
+        <div className="post-creation-page">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
+
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={baseApiUrl}
+                defaultProfilePicture={defaultProfilePicture}
+            />
+
+            <div className={`post-creation-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
+                <div className="container-content">
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        marginBottom: '1.5rem',
+                        padding: '1rem',
+                        background: 'linear-gradient(135deg, #e3f2fd, #f3e5f5)',
+                        borderRadius: 'var(--radius-lg)',
+                        border: '1px solid var(--border-color)'
                     }}>
-                        Reply to Suggestion with Experience
-                    </span>
-                </div>
-
-                <h2>Share Your Experience</h2>
-                <form onSubmit={handleReplySubmit} className="form-section">
-                    <div className="input-group">
-                        <textarea
-                            placeholder={`Share your quote (min ${QUOTE_MIN_CHARS} characters)`}
-                            value={quote}
-                            onChange={handleQuoteChange}
-                            required
-                        />
-                        {quoteError && <div className="error-text">{quoteError}</div>}
-                    </div>
-
-                    <div className="input-group">
-                        <textarea
-                            placeholder={REFLECTION_MIN_CHARS > 0 ? `Your reflection (min ${REFLECTION_MIN_CHARS} characters)` : "Your reflection"}
-                            value={reflection}
-                            onChange={handleReflectionChange}
-                        />
-                        {reflectionError && <div className="error-text">{reflectionError}</div>}
-                    </div>
-
-                    <input
-                        type="text"
-                        placeholder="Tags (comma separated)"
-                        value={tags}
-                        onChange={e=>setTags(e.target.value)}
-                    />
-
-                    <input
-                        type="text"
-                        placeholder="Mentions (e.g. @user1, @user2)"
-                        value={mentions}
-                        onChange={e=>setMentions(e.target.value)}
-                    />
-
-                    <div className="style-controls">
-                        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                            <FaPalette />
-                            <span style={{fontWeight: '600', color: 'var(--text-primary)'}}>Style Options</span>
-                        </div>
-                        <select
-                            value={fontFamily}
-                            onChange={e=>setFontFamily(e.target.value)}
-                        >
-                            <option value="Arial">Arial</option>
-                            <option value="Times New Roman">Times New Roman</option>
-                            <option value="Georgia">Georgia</option>
-                            <option value="Helvetica">Helvetica</option>
-                        </select>
-
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
-                            <input
-                                type="number"
-                                value={fontSize}
-                                min={8}
-                                max={30}
-                                onChange={handleFontSizeChange}
-                            />
-                            {fontSizeError && (
-                                <div className="error-text" style={{marginTop: '0.25rem'}}>{fontSizeError}</div>
-                            )}
-                        </div>
-
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center'}}>
-                            <label style={{fontSize: '0.875rem', fontWeight: '500'}}>Text Color</label>
-                            <input
-                                type="color"
-                                value={fontColor}
-                                onChange={e=>setFontColor(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div style={{position: 'relative'}}>
-                        <input
-                            type="file"
-                            accept="image/jpeg,video/mp4,video/webm,image/gif"
-                            onChange={handleFileChange}
-                            style={{
-                                position: 'absolute',
-                                opacity: 0,
-                                width: '100%',
-                                height: '100%',
-                                cursor: 'pointer'
-                            }}
-                        />
-                        <div style={{
-                            padding: '2rem',
-                            border: '2px dashed var(--border-color)',
-                            borderRadius: 'var(--radius-lg)',
-                            textAlign: 'center',
-                            background: 'linear-gradient(135deg, var(--secondary-color), #e2e8f0)',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '0.5rem'
+                        <FaReply size={20} style={{color: 'var(--primary-color)'}} />
+                        <span style={{
+                            fontSize: '1.1rem',
+                            fontWeight: '600',
+                            color: 'var(--text-primary)'
                         }}>
-                            <FaUpload size={24} style={{color: 'var(--primary-color)'}} />
-                            <span style={{fontWeight: '500', color: 'var(--text-primary)'}}>
-                                {fileName || 'Click to upload media'}
-                            </span>
-                            <span style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
-                                JPEG, MP4, WebM, GIF supported
-                            </span>
+                            Reply to Suggestion with Experience
+                        </span>
+                    </div>
+
+                    <h2>Share Your Experience</h2>
+                    <form onSubmit={handleReplySubmit} className="form-section">
+                        <div className="input-group">
+                            <textarea
+                                placeholder={`Share your quote (min ${QUOTE_MIN_CHARS} characters)`}
+                                value={quote}
+                                onChange={handleQuoteChange}
+                                required
+                            />
+                            {quoteError && <div className="error-text">{quoteError}</div>}
                         </div>
-                    </div>
 
-                    <div className="checkbox-group">
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={allowComments}
-                                onChange={() => setAllowComments(c => !c)}
-                            /> Comments
-                        </label>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={allowResonates}
-                                onChange={() => setAllowResonates(r => !r)}
-                            /> Resonates
-                        </label>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={allowForks}
-                                onChange={() => setAllowForks(f => !f)}
-                            /> Forks
-                        </label>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={allowSaves}
-                                onChange={() => setAllowSaves(s => !s)}
-                            /> Saves
-                        </label>
-                    </div>
+                        <div className="input-group">
+                            <textarea
+                                placeholder={REFLECTION_MIN_CHARS > 0 ? `Your reflection (min ${REFLECTION_MIN_CHARS} characters)` : "Your reflection"}
+                                value={reflection}
+                                onChange={handleReflectionChange}
+                            />
+                            {reflectionError && <div className="error-text">{reflectionError}</div>}
+                        </div>
 
-                    <div className="form-buttons">
-                        <button
-                            type="submit"
-                            className={`submit-btn ${isSubmitting ? 'loading' : ''}`}
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? 'Posting Reply...' : 'Post Reply'}
-                        </button>
-                        <button
-                            type="button"
-                            className="cancel-btn"
-                            onClick={handleCancel}
-                            disabled={isSubmitting}
-                        >
-                            <FaTimes /> Cancel
-                        </button>
-                    </div>
-                </form>
+                        <input
+                            type="text"
+                            placeholder="Tags (comma separated)"
+                            value={tags}
+                            onChange={e=>setTags(e.target.value)}
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="Mentions (e.g. @user1, @user2)"
+                            value={mentions}
+                            onChange={e=>setMentions(e.target.value)}
+                        />
+
+                        <div className="style-controls">
+                            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                <FaPalette />
+                                <span style={{fontWeight: '600', color: 'var(--text-primary)'}}>Style Options</span>
+                            </div>
+                            <select
+                                value={fontFamily}
+                                onChange={e=>setFontFamily(e.target.value)}
+                            >
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Helvetica">Helvetica</option>
+                            </select>
+
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                                <input
+                                    type="number"
+                                    value={fontSize}
+                                    min={8}
+                                    max={30}
+                                    onChange={handleFontSizeChange}
+                                />
+                                {fontSizeError && (
+                                    <div className="error-text" style={{marginTop: '0.25rem'}}>{fontSizeError}</div>
+                                )}
+                            </div>
+
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center'}}>
+                                <label style={{fontSize: '0.875rem', fontWeight: '500'}}>Text Color</label>
+                                <input
+                                    type="color"
+                                    value={fontColor}
+                                    onChange={e=>setFontColor(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div style={{position: 'relative'}}>
+                            <input
+                                type="file"
+                                accept="image/jpeg,video/mp4,video/webm,image/gif"
+                                onChange={handleFileChange}
+                                style={{
+                                    position: 'absolute',
+                                    opacity: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    cursor: 'pointer'
+                                }}
+                            />
+                            <div style={{
+                                padding: '2rem',
+                                border: '2px dashed var(--border-color)',
+                                borderRadius: 'var(--radius-lg)',
+                                textAlign: 'center',
+                                background: 'linear-gradient(135deg, var(--secondary-color), #e2e8f0)',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}>
+                                <FaUpload size={24} style={{color: 'var(--primary-color)'}} />
+                                <span style={{fontWeight: '500', color: 'var(--text-primary)'}}>
+                                    {fileName || 'Click to upload media'}
+                                </span>
+                                <span style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                    JPEG, MP4, WebM, GIF supported
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="checkbox-group">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowComments}
+                                    onChange={() => setAllowComments(c => !c)}
+                                /> Comments
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowResonates}
+                                    onChange={() => setAllowResonates(r => !r)}
+                                /> Resonates
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowForks}
+                                    onChange={() => setAllowForks(f => !f)}
+                                /> Forks
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={allowSaves}
+                                    onChange={() => setAllowSaves(s => !s)}
+                                /> Saves
+                            </label>
+                        </div>
+
+                        <div className="form-buttons">
+                            <button
+                                type="submit"
+                                className={`submit-btn ${isSubmitting ? 'loading' : ''}`}
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? 'Posting Reply...' : 'Post Reply'}
+                            </button>
+                            <button
+                                type="button"
+                                className="cancel-btn"
+                                onClick={handleCancel}
+                                disabled={isSubmitting}
+                            >
+                                <FaTimes /> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );

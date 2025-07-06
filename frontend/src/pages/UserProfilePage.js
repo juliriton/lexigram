@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaHome, FaArrowLeft, FaUser, FaUsers, FaBookmark, FaTimes, FaUserEdit, FaImage } from 'react-icons/fa';
+import { FaUser, FaUsers, FaBookmark, FaTimes, FaUserEdit, FaImage } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import '../styles/UserProfilePage.css';
 import ExperienceCard from '../components/ExperienceCard';
@@ -7,8 +7,9 @@ import SuggestionCard from '../components/SuggestionCard';
 import EditSuggestionModal from '../components/EditSuggestionModal';
 import EditExperienceModal from '../components/EditExperienceModal';
 import SavedContent from '../components/SavedContent';
+import Sidebar from '../components/SideBar';
 
-const UserProfilePage = ({ user }) => {
+const UserProfilePage = ({ user, setUser }) => {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [username, setUsername] = useState('');
@@ -33,9 +34,18 @@ const UserProfilePage = ({ user }) => {
     const [followerCount, setFollowerCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
     const [removeFollowerConfirmation, setRemoveFollowerConfirmation] = useState(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
 
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
+
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+    const handleImageError = () => {
+        setUsingDefaultImage(true);
+        setProfilePicture(defaultProfilePic);
+    };
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -70,6 +80,11 @@ const UserProfilePage = ({ user }) => {
 
                 setUsername(userData.username);
                 setProfile(profileData);
+                setProfilePicture(
+                    profileData.profilePictureUrl
+                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        : defaultProfilePic
+                );
                 setNewBio(profileData.biography || '');
             } catch (err) {
                 setError(err.message);
@@ -142,7 +157,6 @@ const UserProfilePage = ({ user }) => {
     useEffect(() => {
         const fetchConnections = async () => {
             try {
-                // Fetch follower count
                 const followerRes = await fetch(`${baseApiUrl}/api/auth/me/profile/followers`, {
                     credentials: 'include'
                 });
@@ -153,7 +167,6 @@ const UserProfilePage = ({ user }) => {
                     setFollowerCount(followerData.length);
                 }
 
-                // Fetch following count
                 const followingRes = await fetch(`${baseApiUrl}/api/auth/me/profile/following`, {
                     credentials: 'include'
                 });
@@ -242,6 +255,11 @@ New: "${bioToUpdate}"`);
             if (profileRes.ok) {
                 const profileData = await profileRes.json();
                 setProfile(profileData);
+                setProfilePicture(
+                    profileData.profilePictureUrl
+                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        : defaultProfilePic
+                );
             }
 
             setUsingDefaultImage(false);
@@ -285,7 +303,6 @@ New: "${bioToUpdate}"`);
         }
     };
 
-    // Nueva función para remover follower
     const handleRemoveFollower = async () => {
         if (!removeFollowerConfirmation) return;
 
@@ -301,7 +318,6 @@ New: "${bioToUpdate}"`);
                 throw new Error('Failed to remove follower');
             }
 
-            // Actualizar la lista de followers localmente
             setFollowers(followers.filter(follower => follower.uuid !== uuid));
             setFollowerCount(prevCount => prevCount - 1);
             setUpdateMessage(`${username} has been removed from your followers`);
@@ -313,7 +329,6 @@ New: "${bioToUpdate}"`);
         }
     };
 
-    // Nueva función para confirmar remover follower
     const confirmRemoveFollower = (follower) => {
         const uuid = follower?.uuid;
         const username = follower?.username;
@@ -363,7 +378,6 @@ New: "${bioToUpdate}"`);
     };
 
     const handleUpdateSuggestion = (updatedSuggestion, message) => {
-        // Actualizar en la lista de posts
         setPosts(prevPosts => prevPosts.map(post =>
             post.uuid === updatedSuggestion.uuid ? {
                 ...post,
@@ -380,19 +394,16 @@ New: "${bioToUpdate}"`);
     };
 
     const handleUpdateExperience = (updatedExperience, message) => {
-        // Actualizar en la lista de posts
         setPosts(prevPosts => prevPosts.map(post =>
             post.uuid === updatedExperience.uuid ? {
                 ...post,
                 ...updatedExperience,
-                type: 'Experience' // Asegurar que mantenga el tipo
+                type: 'Experience'
             } : post
         ));
 
-        // Mostrar mensaje de éxito
         setUpdateMessage(message || "Experience updated successfully!");
 
-        // Limpiar el mensaje después de 3 segundos
         setTimeout(() => {
             setUpdateMessage('');
         }, 3000);
@@ -421,8 +432,8 @@ New: "${bioToUpdate}"`);
     const renderTags = (tags) =>
         Array.isArray(tags) && tags.map((tag, i) => (
             <span key={i} className="tag-badge">
-        {typeof tag === 'object' ? tag.name : tag}
-      </span>
+                {typeof tag === 'object' ? tag.name : tag}
+            </span>
         ));
 
     const toggleQuote = (postId) => {
@@ -455,8 +466,8 @@ New: "${bioToUpdate}"`);
                             onClick={() => handleMentionClick(mention.uuid)}
                             style={{cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline'}}
                         >
-              @{mention.username}
-            </span>
+                            @{mention.username}
+                        </span>
                     ))}
                 </div>
             </div>
@@ -487,7 +498,7 @@ New: "${bioToUpdate}"`);
                         isOwner={true}
                         disableInteractions={true}
                         showEditOption={true}
-                        disablePopup={true} // ← Agregar esta línea
+                        disablePopup={true}
                     />
                 </div>
             );
@@ -508,10 +519,10 @@ New: "${bioToUpdate}"`);
                     renderTags={renderTags}
                     formatDate={formatDate}
                     onDelete={() => confirmDelete(post, 'Suggestion')}
-                    onEdit={() => handleEditSuggestion(post)} // Pasar la función de edición directamente
+                    onEdit={() => handleEditSuggestion(post)}
                     isOwner={true}
                     disableInteractions={true}
-                    disableInternalEdit={false} // Habilitar edición
+                    disableInternalEdit={false}
                 />
             </div>
         );
@@ -548,7 +559,6 @@ New: "${bioToUpdate}"`);
                                 <p className="connection-email">{connection.email}</p>
                             </div>
                         </div>
-                        {/* Mostrar botón de remover solo para followers */}
                         {connectionType === 'followers' && (
                             <button
                                 className="remove-follower-btn"
@@ -582,13 +592,33 @@ New: "${bioToUpdate}"`);
                 <div className="error-icon"></div>
                 <h3>Error Loading Profile</h3>
                 <p>{error || "No profile data found"}</p>
-                <button className="btn-primary" onClick={() => navigate('/')}>Home</button>
             </div>
         );
     }
 
     return (
         <div className="profile-container">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
+
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={baseApiUrl}
+                defaultProfilePicture={defaultProfilePic}
+            />
+
             <div className="profile-header">
                 <div className="profile-cover">
                     <div className="profile-avatar-container">
@@ -645,7 +675,6 @@ New: "${bioToUpdate}"`);
                 </div>
             )}
 
-            {/* Nuevo modal de confirmación para remover follower */}
             {removeFollowerConfirmation && (
                 <div className="modal-backdrop">
                     <div className="delete-confirmation-modal">
@@ -791,18 +820,6 @@ New: "${bioToUpdate}"`);
                     </div>
                 </div>
             )}
-
-            <div className="text-center">
-                <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
-                    <FaArrowLeft /> Go back
-                </button>
-            </div>
-
-            <div className="text-center">
-                <button className="btn btn-success mt-3" onClick={() => navigate('/')}>
-                    <FaHome /> Home
-                </button>
-            </div>
         </div>
     );
 };
