@@ -18,4 +18,7 @@ public interface ExperienceRepository extends JpaRepository<Experience, Long> {
   Set<Experience> findByQuoteStartingWithIgnoreCase(String prefix);
   Set<Experience> findByTagsNameStartingWithIgnoreCase(String prefix);
   Set<Experience> findByUserUsernameStartingWithIgnoreCase(String prefix);
+  Set<Experience> findByUserUsernameContainingIgnoreCase(String object);
+  Set<Experience> findByTagsNameContainingIgnoreCase(String object);
+  Set<Experience> findByQuoteContainingIgnoreCase(String object);
 }

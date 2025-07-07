@@ -33,6 +33,14 @@ const HomePage = ({ user, setUser }) => {
     const [searching, setSearching] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(8);
+    const [searchFilters, setSearchFilters] = useState({
+        users: true,
+        experiences: true,
+        suggestions: true,
+        tags: true,
+        exactMatch: false
+    });
+    const [searchFocused, setSearchFocused] = useState(false);
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
@@ -92,7 +100,14 @@ const HomePage = ({ user, setUser }) => {
 
         setSearching(true);
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/feed/search/${encodeURIComponent(cleanedQuery)}`, {
+            const response = await fetch(`${baseApiUrl}/api/auth/me/feed/search/${encodeURIComponent(cleanedQuery)}?` +
+                new URLSearchParams({
+                    users: searchFilters.users,
+                    experiences: searchFilters.experiences,
+                    suggestions: searchFilters.suggestions,
+                    tags: searchFilters.tags,
+                    exact: searchFilters.exactMatch
+                }), {
                 credentials: 'include'
             });
 
@@ -101,16 +116,17 @@ const HomePage = ({ user, setUser }) => {
                 setSearchResults({
                     users: data.connections || [],
                     experiences: data.experiences || [],
-                    suggestions: data.suggestions || []
+                    suggestions: data.suggestions || [],
+                    tags: data.tags || []
                 });
                 setCurrentPage(1);
             } else {
                 console.error('Search failed:', response.status);
-                setSearchResults({ users: [], experiences: [], suggestions: [] });
+                setSearchResults({ users: [], experiences: [], suggestions: [], tags: [] });
             }
         } catch (err) {
             console.error('Error performing search:', err);
-            setSearchResults({ users: [], experiences: [], suggestions: [] });
+            setSearchResults({ users: [], experiences: [], suggestions: [], tags: [] });
         } finally {
             setSearching(false);
         }
@@ -120,6 +136,7 @@ const HomePage = ({ user, setUser }) => {
         setSearchQuery('');
         setSearchResults(null);
         setCurrentPage(1);
+        setSearchFocused(false);
     };
 
     const handleMentionClick = (mentionUuid) => {
@@ -285,6 +302,12 @@ const HomePage = ({ user, setUser }) => {
                             placeholder="Search users, posts, tags..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setSearchFocused(true)}
+                            onBlur={() => {
+                                if (!searchQuery) {
+                                    setSearchFocused(false);
+                                }
+                            }}
                         />
                         <button type="submit" className="search-button">
                             <FaSearch />
@@ -295,6 +318,46 @@ const HomePage = ({ user, setUser }) => {
                             </button>
                         )}
                     </div>
+
+                    {(searchFocused || searchQuery) && (
+                        <div className="search-filters">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.users}
+                                    onChange={() => setSearchFilters({...searchFilters, users: !searchFilters.users})}
+                                /> Users
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.experiences}
+                                    onChange={() => setSearchFilters({...searchFilters, experiences: !searchFilters.experiences})}
+                                /> Experiences
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.suggestions}
+                                    onChange={() => setSearchFilters({...searchFilters, suggestions: !searchFilters.suggestions})}
+                                /> Suggestions
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.tags}
+                                    onChange={() => setSearchFilters({...searchFilters, tags: !searchFilters.tags})}
+                                /> Tags
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.exactMatch}
+                                    onChange={() => setSearchFilters({...searchFilters, exactMatch: !searchFilters.exactMatch})}
+                                /> Exact Match
+                            </label>
+                        </div>
+                    )}
                 </form>
 
                 {!searchResults && user && (
@@ -360,6 +423,23 @@ const HomePage = ({ user, setUser }) => {
                                                 <FaUserCircle size={30} />
                                             )}
                                             <span>{userResult.username}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {searchResults.tags && searchResults.tags.length > 0 && (
+                            <div className="tags-section">
+                                <h4>Tags</h4>
+                                <div className="tags-grid">
+                                    {searchResults.tags.map(tag => (
+                                        <div
+                                            key={tag.uuid}
+                                            className="tag-result"
+                                            onClick={() => navigate(`/tag/${tag.name}`)}
+                                        >
+                                            #{tag.name}
                                         </div>
                                     ))}
                                 </div>
@@ -433,7 +513,8 @@ const HomePage = ({ user, setUser }) => {
                     {searchResults &&
                         displayExperiences.length === 0 &&
                         displaySuggestions.length === 0 &&
-                        (!searchResults.users || searchResults.users.length === 0) && (
+                        (!searchResults.users || searchResults.users.length === 0) &&
+                        (!searchResults.tags || searchResults.tags.length === 0) && (
                             <div className="no-results">
                                 <p>No results found for "{searchQuery}"</p>
                             </div>

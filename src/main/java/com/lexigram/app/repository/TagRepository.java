@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public interface TagRepository extends JpaRepository<Tag, Long> {
   Optional<Tag> findByName(String name);
-  Set<Tag> findByNameStartingWith(String prefix);
   Optional<Tag> findByUuid(UUID uuid);
+  Set<Tag> findByNameContainingIgnoreCase(String object);
+  Set<Tag> findByNameStartingWithIgnoreCase(String object);
 }
