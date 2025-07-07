@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../styles/TagPage.css';
 import { useNavigate } from "react-router-dom";
 import Sidebar from '../components/SideBar';
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 const TagPage = ({ user, setUser }) => {
     const [allTags, setAllTags] = useState([]);
@@ -14,10 +15,49 @@ const TagPage = ({ user, setUser }) => {
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
+    // Pagination state
+    const [allTagsPage, setAllTagsPage] = useState(1);
+    const [feedTagsPage, setFeedTagsPage] = useState(1);
+    const [itemsPerPage] = useState(10);
+
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
     const handleImageError = () => {
         setProfilePicture(defaultProfilePicture);
+    };
+
+    // Pagination functions for All Tags
+    const getAllTagsPaginated = () => {
+        const startIndex = (allTagsPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return allTags.slice(startIndex, endIndex);
+    };
+
+    const allTagsTotalPages = () => Math.ceil(allTags.length / itemsPerPage);
+
+    const handleAllTagsPrevPage = () => {
+        setAllTagsPage(prev => Math.max(prev - 1, 1));
+    };
+
+    const handleAllTagsNextPage = () => {
+        setAllTagsPage(prev => Math.min(prev + 1, allTagsTotalPages()));
+    };
+
+    // Pagination functions for Feed Tags
+    const getFeedTagsPaginated = () => {
+        const startIndex = (feedTagsPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return feedTags.slice(startIndex, endIndex);
+    };
+
+    const feedTagsTotalPages = () => Math.ceil(feedTags.length / itemsPerPage);
+
+    const handleFeedTagsPrevPage = () => {
+        setFeedTagsPage(prev => Math.max(prev - 1, 1));
+    };
+
+    const handleFeedTagsNextPage = () => {
+        setFeedTagsPage(prev => Math.min(prev + 1, feedTagsTotalPages()));
     };
 
     useEffect(() => {
@@ -66,6 +106,7 @@ const TagPage = ({ user, setUser }) => {
             if (response.ok) {
                 const tags = await response.json();
                 setAllTags(tags);
+                setAllTagsPage(1); // Reset to first page when tags change
             } else if (response.status === 401) {
                 setError('Unauthorized - please log in');
             } else {
@@ -85,6 +126,7 @@ const TagPage = ({ user, setUser }) => {
             if (response.ok) {
                 const tags = await response.json();
                 setFeedTags(Array.from(tags));
+                setFeedTagsPage(1); // Reset to first page when tags change
             }
         } catch (err) {
             console.error('Error fetching feed tags:', err);
@@ -177,6 +219,11 @@ const TagPage = ({ user, setUser }) => {
     if (loading) return <div className="loading">Loading tags...</div>;
     if (error) return <div className="error">{error}</div>;
 
+    const paginatedAllTags = getAllTagsPaginated();
+    const paginatedFeedTags = getFeedTagsPaginated();
+    const showAllTagsPagination = allTags.length > itemsPerPage;
+    const showFeedTagsPagination = feedTags.length > itemsPerPage;
+
     return (
         <div className="tag-page">
             {/* Burger menu for sidebar */}
@@ -232,7 +279,7 @@ const TagPage = ({ user, setUser }) => {
                 <div className="section">
                     <h2>All Tags</h2>
                     <div className="tags-list">
-                        {allTags.map(tag => (
+                        {paginatedAllTags.map(tag => (
                             <div
                                 key={tag.uuid}
                                 className={`tag ${isTagInFeed(tag.uuid) ? 'selected' : ''}`}
@@ -248,12 +295,33 @@ const TagPage = ({ user, setUser }) => {
                     {allTags.length === 0 && (
                         <div className="no-tags">No tags available</div>
                     )}
+                    {showAllTagsPagination && (
+                        <div className="pagination-controls mt-3">
+                            <button
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={handleAllTagsPrevPage}
+                                disabled={allTagsPage === 1}
+                            >
+                                <FaArrowLeft />
+                            </button>
+                            <span className="page-info mx-3">
+                                Page {allTagsPage} of {allTagsTotalPages()}
+                            </span>
+                            <button
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={handleAllTagsNextPage}
+                                disabled={allTagsPage >= allTagsTotalPages()}
+                            >
+                                <FaArrowRight />
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="section">
                     <h2>Feed Tags</h2>
                     <div className="tags-list">
-                        {feedTags.map(tag => (
+                        {paginatedFeedTags.map(tag => (
                             <div
                                 key={tag.uuid}
                                 className="tag feed-tag"
@@ -266,6 +334,27 @@ const TagPage = ({ user, setUser }) => {
                     </div>
                     {feedTags.length === 0 && (
                         <div className="no-tags">No tags in feed</div>
+                    )}
+                    {showFeedTagsPagination && (
+                        <div className="pagination-controls mt-3">
+                            <button
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={handleFeedTagsPrevPage}
+                                disabled={feedTagsPage === 1}
+                            >
+                                <FaArrowLeft />
+                            </button>
+                            <span className="page-info mx-3">
+                                Page {feedTagsPage} of {feedTagsTotalPages()}
+                            </span>
+                            <button
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={handleFeedTagsNextPage}
+                                disabled={feedTagsPage >= feedTagsTotalPages()}
+                            >
+                                <FaArrowRight />
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>

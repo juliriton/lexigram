@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaUser, FaUsers, FaBookmark, FaTimes, FaUserEdit, FaImage } from 'react-icons/fa';
+import { FaUser, FaUsers, FaBookmark, FaTimes, FaUserEdit, FaImage, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import '../styles/UserProfilePage.css';
 import ExperienceCard from '../components/ExperienceCard';
@@ -37,6 +37,13 @@ const UserProfilePage = ({ user, setUser }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
 
+    // Pagination states
+    const [postsPage, setPostsPage] = useState(1);
+    const [savedPage, setSavedPage] = useState(1);
+    const [followersPage, setFollowersPage] = useState(1);
+    const [followingPage, setFollowingPage] = useState(1);
+    const [itemsPerPage] = useState(4);
+
     const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
     const baseApiUrl = 'http://localhost:8080';
 
@@ -46,6 +53,31 @@ const UserProfilePage = ({ user, setUser }) => {
         setUsingDefaultImage(true);
         setProfilePicture(defaultProfilePic);
     };
+
+    // Pagination functions
+    const getPaginatedItems = (items, currentPage) => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return items.slice(startIndex, endIndex);
+    };
+
+    const totalPages = (items) => Math.ceil(items.length / itemsPerPage);
+
+    const handlePrevPage = (setPage, currentPage) => {
+        setPage(Math.max(currentPage - 1, 1));
+    };
+
+    const handleNextPage = (setPage, currentPage, items) => {
+        setPage(Math.min(currentPage + 1, totalPages(items)));
+    };
+
+    // Reset pagination when tab changes
+    useEffect(() => {
+        setPostsPage(1);
+        setSavedPage(1);
+        setFollowersPage(1);
+        setFollowingPage(1);
+    }, [activeTab]);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -143,8 +175,8 @@ const UserProfilePage = ({ user, setUser }) => {
                     }
                 }
 
-                console.log("Processed posts:", processedPosts);
                 setPosts(processedPosts);
+                setPostsPage(1); // Reset to first page when posts change
             } catch (err) {
                 console.error("Error fetching posts:", err);
                 setPosts([]);
@@ -528,7 +560,7 @@ New: "${bioToUpdate}"`);
         );
     };
 
-    const renderConnectionList = (connections, connectionType) => {
+    const renderConnectionList = (connections, connectionType, currentPage, setPage) => {
         if (connections.length === 0) {
             return (
                 <div className="no-connections">
@@ -537,42 +569,69 @@ New: "${bioToUpdate}"`);
             );
         }
 
+        const paginatedConnections = getPaginatedItems(connections, currentPage);
+        const totalPagesCount = totalPages(connections);
+
         return (
-            <div className="connections-list">
-                {connections.map(connection => (
-                    <div key={connection.uuid} className="connection-card">
-                        <div
-                            className="connection-info-clickable"
-                            onClick={() => handleNavigateToUserProfile(connection.uuid)}
-                        >
-                            <div className="connection-avatar">
-                                <img
-                                    src={getConnectionProfileImageUrl(connection)}
-                                    alt={connection.username}
-                                    onError={(e) => {
-                                        e.target.src = defaultProfilePic;
-                                    }}
-                                />
-                            </div>
-                            <div className="connection-info">
-                                <h4 className="connection-username">{connection.username}</h4>
-                                <p className="connection-email">{connection.email}</p>
-                            </div>
-                        </div>
-                        {connectionType === 'followers' && (
-                            <button
-                                className="remove-follower-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    confirmRemoveFollower(connection);
-                                }}
-                                title="Remove follower"
+            <div className="connections-container">
+                <div className="connections-list">
+                    {paginatedConnections.map(connection => (
+                        <div key={connection.uuid} className="connection-card">
+                            <div
+                                className="connection-info-clickable"
+                                onClick={() => handleNavigateToUserProfile(connection.uuid)}
                             >
-                                <FaTimes />
-                            </button>
-                        )}
+                                <div className="connection-avatar">
+                                    <img
+                                        src={getConnectionProfileImageUrl(connection)}
+                                        alt={connection.username}
+                                        onError={(e) => {
+                                            e.target.src = defaultProfilePic;
+                                        }}
+                                    />
+                                </div>
+                                <div className="connection-info">
+                                    <h4 className="connection-username">{connection.username}</h4>
+                                    <p className="connection-email">{connection.email}</p>
+                                </div>
+                            </div>
+                            {connectionType === 'followers' && (
+                                <button
+                                    className="remove-follower-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        confirmRemoveFollower(connection);
+                                    }}
+                                    title="Remove follower"
+                                >
+                                    <FaTimes />
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {connections.length > itemsPerPage && (
+                    <div className="pagination-controls">
+                        <button
+                            className="pagination-button"
+                            onClick={() => handlePrevPage(setPage, currentPage)}
+                            disabled={currentPage === 1}
+                        >
+                            <FaArrowLeft />
+                        </button>
+                        <span className="page-info">
+                            Page {currentPage} of {totalPagesCount}
+                        </span>
+                        <button
+                            className="pagination-button"
+                            onClick={() => handleNextPage(setPage, currentPage, connections)}
+                            disabled={currentPage >= totalPagesCount}
+                        >
+                            <FaArrowRight />
+                        </button>
                     </div>
-                ))}
+                )}
             </div>
         );
     };
@@ -745,7 +804,10 @@ New: "${bioToUpdate}"`);
                         <div className="filter-controls">
                             <select
                                 value={postFilter}
-                                onChange={(e) => setPostFilter(e.target.value)}
+                                onChange={(e) => {
+                                    setPostFilter(e.target.value);
+                                    setPostsPage(1);
+                                }}
                                 className="filter-select"
                             >
                                 <option value="all">All Posts</option>
@@ -760,10 +822,32 @@ New: "${bioToUpdate}"`);
                             <p>No posts found for this filter.</p>
                         </div>
                     ) : (
-                        <div className="post-carousel">
-                            <div className="carousel-track">
-                                {posts.map(renderPost)}
+                        <div className="posts-container">
+                            <div className="posts-grid">
+                                {getPaginatedItems(posts, postsPage).map(renderPost)}
                             </div>
+
+                            {posts.length > itemsPerPage && (
+                                <div className="pagination-controls">
+                                    <button
+                                        className="pagination-button"
+                                        onClick={() => handlePrevPage(setPostsPage, postsPage)}
+                                        disabled={postsPage === 1}
+                                    >
+                                        <FaArrowLeft />
+                                    </button>
+                                    <span className="page-info">
+                                        Page {postsPage} of {totalPages(posts)}
+                                    </span>
+                                    <button
+                                        className="pagination-button"
+                                        onClick={() => handleNextPage(setPostsPage, postsPage, posts)}
+                                        disabled={postsPage >= totalPages(posts)}
+                                    >
+                                        <FaArrowRight />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -772,9 +856,11 @@ New: "${bioToUpdate}"`);
             {activeTab === 'saved' && (
                 <div className="profile-content profile-saved">
                     <SavedContent
-                        key="saved-content"
                         user={user}
                         baseApiUrl={baseApiUrl}
+                        currentPage={savedPage}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setSavedPage}
                     />
                 </div>
             )}
@@ -782,14 +868,14 @@ New: "${bioToUpdate}"`);
             {activeTab === 'followers' && (
                 <div className="profile-content profile-connections">
                     <h3>People who follow you</h3>
-                    {renderConnectionList(followers, 'followers')}
+                    {renderConnectionList(followers, 'followers', followersPage, setFollowersPage)}
                 </div>
             )}
 
             {activeTab === 'following' && (
                 <div className="profile-content profile-connections">
                     <h3>People you follow</h3>
-                    {renderConnectionList(following, 'following')}
+                    {renderConnectionList(following, 'following', followingPage, setFollowingPage)}
                 </div>
             )}
 

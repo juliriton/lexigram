@@ -5,6 +5,7 @@ import {
     FaUserPlus,
     FaUserMinus,
     FaArrowLeft,
+    FaArrowRight
 } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
@@ -26,6 +27,8 @@ const RelationshipProfile = ({ user, setUser }) => {
     const [postFilter, setPostFilter] = useState('all');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userProfilePicture, setUserProfilePicture] = useState(null);
+    const [postsPage, setPostsPage] = useState(1);
+    const [itemsPerPage] = useState(4);
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
@@ -35,6 +38,27 @@ const RelationshipProfile = ({ user, setUser }) => {
         setProfilePicture(defaultProfilePicture);
         setUserProfilePicture(defaultProfilePicture);
     };
+
+    // Pagination functions
+    const getPaginatedItems = (items) => {
+        const startIndex = (postsPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return items.slice(startIndex, endIndex);
+    };
+
+    const totalPages = (items) => Math.ceil(items.length / itemsPerPage);
+
+    const handlePrevPage = () => {
+        setPostsPage(prev => Math.max(prev - 1, 1));
+    };
+
+    const handleNextPage = (items) => {
+        setPostsPage(prev => Math.min(prev + 1, totalPages(items)));
+    };
+
+    useEffect(() => {
+        setPostsPage(1); // Reset to first page when tab or filter changes
+    }, [activeTab, postFilter]);
 
     useEffect(() => {
         const fetchUserProfilePicture = async () => {
@@ -205,6 +229,9 @@ const RelationshipProfile = ({ user, setUser }) => {
     }
 
     const filteredPosts = filterPosts();
+    const paginatedPosts = getPaginatedItems(filteredPosts);
+    const totalPagesCount = totalPages(filteredPosts);
+    const showPagination = filteredPosts.length > itemsPerPage;
 
     return (
         <div className="relationship-profile-page">
@@ -305,7 +332,10 @@ const RelationshipProfile = ({ user, setUser }) => {
                                 <div className="relationship-post-filter">
                                     <select
                                         value={postFilter}
-                                        onChange={(e) => setPostFilter(e.target.value)}
+                                        onChange={(e) => {
+                                            setPostFilter(e.target.value);
+                                            setPostsPage(1);
+                                        }}
                                     >
                                         <option value="all">All Posts</option>
                                         <option value="suggestions">Suggestions</option>
@@ -318,63 +348,87 @@ const RelationshipProfile = ({ user, setUser }) => {
                                         <p>No posts found.</p>
                                     </div>
                                 ) : (
-                                    <div className="relationship-posts-grid">
-                                        {filteredPosts.map(post => {
-                                            const isExperience = post.type === 'Experience';
-                                            const postId = post.uuid || post.id;
+                                    <>
+                                        <div className="relationship-posts-grid">
+                                            {paginatedPosts.map(post => {
+                                                const isExperience = post.type === 'Experience';
+                                                const postId = post.uuid || post.id;
 
-                                            if (isExperience) {
+                                                if (isExperience) {
+                                                    return (
+                                                        <ExperienceCard
+                                                            key={postId}
+                                                            user={user}
+                                                            post={post}
+                                                            username={profileUser.username}
+                                                            baseApiUrl={baseApiUrl}
+                                                            hiddenQuotes={hiddenQuotes}
+                                                            toggleQuote={() => toggleQuote(postId)}
+                                                            showMentions={showMentions}
+                                                            setShowMentions={setShowMentions}
+                                                            renderMentions={(mentions, id) => (
+                                                                showMentions[id] && (
+                                                                    <div className="relationship-post-mentions">
+                                                                        <h6>Mentions:</h6>
+                                                                        <div className="relationship-mentions-list">
+                                                                            {mentions.map((mention, i) => (
+                                                                                <span
+                                                                                    key={i}
+                                                                                    className="relationship-mention clickable"
+                                                                                    onClick={() => handleMentionClick(mention.uuid)}
+                                                                                    style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
+                                                                                >
+                                                                                    @{mention.username}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            )}
+                                                            renderTags={renderTags}
+                                                            formatDate={formatDate}
+                                                            isOwner={user?.uuid === profileUser.uuid}
+                                                        />
+                                                    );
+                                                }
+
                                                 return (
-                                                    <ExperienceCard
+                                                    <SuggestionCard
                                                         key={postId}
                                                         user={user}
                                                         post={post}
-                                                        username={profileUser.username}
                                                         baseApiUrl={baseApiUrl}
-                                                        hiddenQuotes={hiddenQuotes}
-                                                        toggleQuote={() => toggleQuote(postId)}
-                                                        showMentions={showMentions}
-                                                        setShowMentions={setShowMentions}
-                                                        renderMentions={(mentions, id) => (
-                                                            showMentions[id] && (
-                                                                <div className="relationship-post-mentions">
-                                                                    <h6>Mentions:</h6>
-                                                                    <div className="relationship-mentions-list">
-                                                                        {mentions.map((mention, i) => (
-                                                                            <span
-                                                                                key={i}
-                                                                                className="relationship-mention clickable"
-                                                                                onClick={() => handleMentionClick(mention.uuid)}
-                                                                                style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
-                                                                            >
-                                                                                @{mention.username}
-                                                                            </span>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )
-                                                        )}
+                                                        username={profileUser.username}
                                                         renderTags={renderTags}
                                                         formatDate={formatDate}
                                                         isOwner={user?.uuid === profileUser.uuid}
                                                     />
                                                 );
-                                            }
+                                            })}
+                                        </div>
 
-                                            return (
-                                                <SuggestionCard
-                                                    key={postId}
-                                                    user={user}
-                                                    post={post}
-                                                    baseApiUrl={baseApiUrl}
-                                                    username={profileUser.username}
-                                                    renderTags={renderTags}
-                                                    formatDate={formatDate}
-                                                    isOwner={user?.uuid === profileUser.uuid}
-                                                />
-                                            );
-                                        })}
-                                    </div>
+                                        {showPagination && (
+                                            <div className="relationship-pagination-controls">
+                                                <button
+                                                    className="relationship-pagination-button"
+                                                    onClick={handlePrevPage}
+                                                    disabled={postsPage === 1}
+                                                >
+                                                    <FaArrowLeft />
+                                                </button>
+                                                <span className="relationship-page-info">
+                                                    Page {postsPage} of {totalPagesCount}
+                                                </span>
+                                                <button
+                                                    className="relationship-pagination-button"
+                                                    onClick={() => handleNextPage(filteredPosts)}
+                                                    disabled={postsPage >= totalPagesCount}
+                                                >
+                                                    <FaArrowRight />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </>
                         ) : (

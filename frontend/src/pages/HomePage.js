@@ -8,7 +8,9 @@ import {
     FaPhotoVideo,
     FaQuestion,
     FaBorderAll,
-    FaSearch
+    FaSearch,
+    FaArrowLeft,
+    FaArrowRight
 } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
@@ -29,6 +31,8 @@ const HomePage = ({ user, setUser }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState(null);
     const [searching, setSearching] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(8);
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
 
@@ -73,6 +77,7 @@ const HomePage = ({ user, setUser }) => {
 
         if (!cleanedQuery) {
             setSearchResults(null);
+            setCurrentPage(1);
             return;
         }
 
@@ -98,6 +103,7 @@ const HomePage = ({ user, setUser }) => {
                     experiences: data.experiences || [],
                     suggestions: data.suggestions || []
                 });
+                setCurrentPage(1);
             } else {
                 console.error('Search failed:', response.status);
                 setSearchResults({ users: [], experiences: [], suggestions: [] });
@@ -113,6 +119,7 @@ const HomePage = ({ user, setUser }) => {
     const clearSearch = () => {
         setSearchQuery('');
         setSearchResults(null);
+        setCurrentPage(1);
     };
 
     const handleMentionClick = (mentionUuid) => {
@@ -125,45 +132,26 @@ const HomePage = ({ user, setUser }) => {
         }
     };
 
-    const renderExperienceCards = (experiencesArray) => {
-        return experiencesArray.map(exp => {
-            return (
-                <ExperienceCard
-                    key={exp.uuid}
-                    user={user}
-                    post={exp}
-                    baseApiUrl={baseApiUrl}
-                    username={exp.user?.username || user?.username || 'Usuario'}
-                    hiddenQuotes={hiddenQuotes}
-                    toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
-                    showMentions={showMentions}
-                    setShowMentions={setShowMentions}
-                    renderMentions={(mentions, id) => (
-                        showMentions[id] && (
-                            <div className="post-mentions">
-                                <h6>Mentions:</h6>
-                                <div className="mentions-list">
-                                    {mentions.map((mention, i) => (
-                                        <span
-                                            key={i}
-                                            className="mention clickable"
-                                            onClick={() => handleMentionClick(mention.uuid)}
-                                            style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
-                                        >
-                                            @{mention.username}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )
-                    )}
-                    renderTags={renderTags}
-                    formatDate={formatDate}
-                    disablePopup={false}
-                    isOwner={user && exp.user && user.uuid === exp.user.uuid}
-                />
-            );
-        });
+    const getPaginatedItems = (items) => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return items.slice(startIndex, endIndex);
+    };
+
+    const getInterleavedPosts = () => {
+        const result = [];
+        const maxLength = Math.max(displayExperiences.length, displaySuggestions.length);
+
+        for (let i = 0; i < maxLength; i++) {
+            if (i < displayExperiences.length) {
+                result.push({ ...displayExperiences[i], type: 'experience' });
+            }
+            if (i < displaySuggestions.length) {
+                result.push({ ...displaySuggestions[i], type: 'suggestion' });
+            }
+        }
+
+        return result;
     };
 
     useEffect(() => {
@@ -188,10 +176,12 @@ const HomePage = ({ user, setUser }) => {
                         const feedData = await feedRes.json();
                         setExperiences(feedData.experiences || []);
                         setSuggestions(feedData.suggestions || []);
+                        setCurrentPage(1);
                     }
                 } else {
                     setUser(null);
                     await fetchGuestFeed();
+                    setCurrentPage(1);
                 }
             } catch (err) {
                 console.error('Error loading user or feed:', err);
@@ -246,6 +236,11 @@ const HomePage = ({ user, setUser }) => {
             displaySuggestions = suggestions;
         }
     }
+
+    const interleavedPosts = getInterleavedPosts();
+    const paginatedPosts = getPaginatedItems(interleavedPosts);
+    const totalPagesCount = Math.ceil(interleavedPosts.length / itemsPerPage);
+    const showPagination = interleavedPosts.length > itemsPerPage && !searching;
 
     if (loading) {
         return (
@@ -381,20 +376,59 @@ const HomePage = ({ user, setUser }) => {
                 )}
 
                 <div className="posts-grid">
-                    {renderExperienceCards(displayExperiences)}
-
-                    {displaySuggestions.map(sug => (
-                        <SuggestionCard
-                            key={sug.uuid}
-                            user={user}
-                            post={sug}
-                            baseApiUrl={baseApiUrl}
-                            username={sug.user?.username || user?.username || 'Usuario'}
-                            renderTags={renderTags}
-                            formatDate={formatDate}
-                            isOwner={user && sug.user && user.uuid === sug.user.uuid}
-                        />
-                    ))}
+                    {paginatedPosts.map(post => {
+                        if (post.type === 'experience') {
+                            return (
+                                <ExperienceCard
+                                    key={post.uuid}
+                                    user={user}
+                                    post={post}
+                                    baseApiUrl={baseApiUrl}
+                                    username={post.user?.username || user?.username || 'Usuario'}
+                                    hiddenQuotes={hiddenQuotes}
+                                    toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
+                                    showMentions={showMentions}
+                                    setShowMentions={setShowMentions}
+                                    renderMentions={(mentions, id) => (
+                                        showMentions[id] && (
+                                            <div className="post-mentions">
+                                                <h6>Mentions:</h6>
+                                                <div className="mentions-list">
+                                                    {mentions.map((mention, i) => (
+                                                        <span
+                                                            key={i}
+                                                            className="mention clickable"
+                                                            onClick={() => handleMentionClick(mention.uuid)}
+                                                            style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
+                                                        >
+                                                            @{mention.username}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )
+                                    )}
+                                    renderTags={renderTags}
+                                    formatDate={formatDate}
+                                    disablePopup={false}
+                                    isOwner={user && post.user && user.uuid === post.user.uuid}
+                                />
+                            );
+                        } else {
+                            return (
+                                <SuggestionCard
+                                    key={post.uuid}
+                                    user={user}
+                                    post={post}
+                                    baseApiUrl={baseApiUrl}
+                                    username={post.user?.username || user?.username || 'Usuario'}
+                                    renderTags={renderTags}
+                                    formatDate={formatDate}
+                                    isOwner={user && post.user && user.uuid === post.user.uuid}
+                                />
+                            );
+                        }
+                    })}
 
                     {searchResults &&
                         displayExperiences.length === 0 &&
@@ -405,6 +439,28 @@ const HomePage = ({ user, setUser }) => {
                             </div>
                         )}
                 </div>
+
+                {showPagination && (
+                    <div className="pagination-container">
+                        <button
+                            className="pagination-button"
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            <FaArrowLeft />
+                        </button>
+                        <span className="page-info">
+                            Page {currentPage} of {totalPagesCount}
+                        </span>
+                        <button
+                            className="pagination-button"
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            disabled={currentPage >= totalPagesCount}
+                        >
+                            <FaArrowRight />
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="create-post-icon" onClick={() => navigate(user ? '/post/create' : '/login')}>

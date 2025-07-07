@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBell, FaCheck, FaTrash, FaUser, FaHeart, FaComment } from "react-icons/fa";
+import { FaBell, FaCheck, FaTrash, FaUser, FaHeart, FaComment, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import '../styles/NotificationsPage.css';
 import Sidebar from '../components/SideBar';
 
@@ -11,6 +11,8 @@ const NotificationsPage = ({ user, setUser }) => {
     const [actorProfiles, setActorProfiles] = useState({});
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
     const navigate = useNavigate();
     const baseApiUrl = 'http://localhost:8080';
     const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
@@ -19,6 +21,23 @@ const NotificationsPage = ({ user, setUser }) => {
 
     const handleImageError = () => {
         setProfilePicture(defaultProfilePicture);
+    };
+
+    // Pagination functions
+    const getPaginatedItems = (items) => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return items.slice(startIndex, endIndex);
+    };
+
+    const totalPages = () => Math.ceil(notifications.length / itemsPerPage);
+
+    const handlePrevPage = () => {
+        setCurrentPage(prev => Math.max(prev - 1, 1));
+    };
+
+    const handleNextPage = () => {
+        setCurrentPage(prev => Math.min(prev + 1, totalPages()));
     };
 
     const fetchActorProfiles = useCallback(async (actorUuids) => {
@@ -52,6 +71,7 @@ const NotificationsPage = ({ user, setUser }) => {
 
             const data = await res.json();
             setNotifications(data);
+            setCurrentPage(1); // Reset to first page when notifications change
 
             const actorUuids = [...new Set(data.filter(n => n.actorUuid).map(n => n.actorUuid))];
             fetchActorProfiles(actorUuids);
@@ -211,6 +231,10 @@ const NotificationsPage = ({ user, setUser }) => {
 
     if (loading) return <div className="container mt-4">Loading notifications...</div>;
 
+    const paginatedNotifications = getPaginatedItems(notifications);
+    const totalPagesCount = totalPages();
+    const showPagination = notifications.length > itemsPerPage;
+
     return (
         <div className="notifications-page container mt-4">
             <label className="burger" htmlFor="burger">
@@ -254,21 +278,26 @@ const NotificationsPage = ({ user, setUser }) => {
 
             {notifications.length > 0 && (
                 <div className="notification-actions mb-4">
-                    <div className="d-flex gap-2 justify-content-end">
-                        <button
-                            className="btn btn-outline-primary btn-sm"
-                            onClick={acknowledgeAllNotifications}
-                        >
-                            <FaCheck className="me-1" />
-                            Mark All Read
-                        </button>
-                        <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={deleteAllNotifications}
-                        >
-                            <FaTrash className="me-1" />
-                            Delete All
-                        </button>
+                    <div className="d-flex gap-2 justify-content-between align-items-center">
+                        <div className="pagination-info">
+                            Showing {paginatedNotifications.length} of {notifications.length} notifications
+                        </div>
+                        <div className="d-flex gap-2">
+                            <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={acknowledgeAllNotifications}
+                            >
+                                <FaCheck className="me-1" />
+                                Mark All Read
+                            </button>
+                            <button
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={deleteAllNotifications}
+                            >
+                                <FaTrash className="me-1" />
+                                Delete All
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -281,63 +310,87 @@ const NotificationsPage = ({ user, setUser }) => {
                         <p className="text-muted">You're all caught up!</p>
                     </div>
                 ) : (
-                    notifications.map((notification) => (
-                        <div
-                            key={notification.uuid}
-                            className={`notification-item ${!notification.read ? 'unread' : ''}`}
-                            onClick={() => handleNotificationClick(notification)}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            <div className="notification-content">
-                                <div className="notification-header">
-                                    <div className="notification-icon-wrapper">
-                                        {getNotificationIcon(notification.type)}
-                                    </div>
-                                    <div className="notification-info flex-grow-1">
-                                        <h6 className="notification-title mb-1">
-                                            {notification.title}
-                                            {!notification.read && <span className="unread-dot"></span>}
-                                        </h6>
-                                        <p className="notification-text mb-1">{notification.text}</p>
-                                        {notification.actorUuid && actorProfiles[notification.actorUuid] && (
-                                            <small className="text-muted">
-                                                by @{actorProfiles[notification.actorUuid].username}
-                                            </small>
-                                        )}
-                                        <div className="notification-meta">
-                                            <small className="text-muted">
-                                                {formatDate(notification.creationDate)}
-                                            </small>
+                    <>
+                        {paginatedNotifications.map((notification) => (
+                            <div
+                                key={notification.uuid}
+                                className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                                onClick={() => handleNotificationClick(notification)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <div className="notification-content">
+                                    <div className="notification-header">
+                                        <div className="notification-icon-wrapper">
+                                            {getNotificationIcon(notification.type)}
+                                        </div>
+                                        <div className="notification-info flex-grow-1">
+                                            <h6 className="notification-title mb-1">
+                                                {notification.title}
+                                                {!notification.read && <span className="unread-dot"></span>}
+                                            </h6>
+                                            <p className="notification-text mb-1">{notification.text}</p>
+                                            {notification.actorUuid && actorProfiles[notification.actorUuid] && (
+                                                <small className="text-muted">
+                                                    by @{actorProfiles[notification.actorUuid].username}
+                                                </small>
+                                            )}
+                                            <div className="notification-meta">
+                                                <small className="text-muted">
+                                                    {formatDate(notification.creationDate)}
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="notification-actions">
-                                {!notification.read && (
+                                <div className="notification-actions">
+                                    {!notification.read && (
+                                        <button
+                                            className="btn btn-sm btn-outline-success me-2"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                acknowledgeNotification(notification.uuid);
+                                            }}
+                                            title="Mark as read"
+                                        >
+                                            <FaCheck />
+                                        </button>
+                                    )}
                                     <button
-                                        className="btn btn-sm btn-outline-success me-2"
+                                        className="btn btn-sm btn-outline-danger"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            acknowledgeNotification(notification.uuid);
+                                            deleteNotification(notification.uuid);
                                         }}
-                                        title="Mark as read"
+                                        title="Delete notification"
                                     >
-                                        <FaCheck />
+                                        <FaTrash />
                                     </button>
-                                )}
+                                </div>
+                            </div>
+                        ))}
+
+                        {showPagination && (
+                            <div className="pagination-controls mt-4">
                                 <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        deleteNotification(notification.uuid);
-                                    }}
-                                    title="Delete notification"
+                                    className="btn btn-outline-secondary"
+                                    onClick={handlePrevPage}
+                                    disabled={currentPage === 1}
                                 >
-                                    <FaTrash />
+                                    <FaArrowLeft />
+                                </button>
+                                <span className="page-info mx-3">
+                                    Page {currentPage} of {totalPagesCount}
+                                </span>
+                                <button
+                                    className="btn btn-outline-secondary"
+                                    onClick={handleNextPage}
+                                    disabled={currentPage >= totalPagesCount}
+                                >
+                                    <FaArrowRight />
                                 </button>
                             </div>
-                        </div>
-                    ))
+                        )}
+                    </>
                 )}
             </div>
         </div>
