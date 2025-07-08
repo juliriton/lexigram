@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
@@ -37,7 +39,6 @@ public class AuthController {
     return ResponseEntity.ok(user);
   }
 
-  //Verificar si usuario esta logeado
   @GetMapping("/me")
   public ResponseEntity<UserDTO> getCurrentUser(HttpSession session) {
     Long id = (Long) session.getAttribute("user");

@@ -263,26 +263,7 @@ public class UserService {
   }
 
   public Optional<ConnectionDTO> removeFollower(Long id, UUID toRemoveUuid) {
-    Optional<User> userOptional = userRepository.findById(id);
-
-    if (userOptional.isEmpty()) {
-      throw new UserNotFoundException();
-    }
-
-    User user = userOptional.get();
-    Optional<User> toRemoveOptional = userRepository.findByUuid(toRemoveUuid);
-
-    if (toRemoveOptional.isPresent()) {
-      User toRemove = toRemoveOptional.get();
-      UserProfile toRemoveProfile = userProfileRepository.findById(toRemove.getId()).get();
-      user.removeFollower(toRemove);
-      userRepository.save(user);
-      return Optional.of(new ConnectionDTO(toRemove.getUuid(),
-          toRemove.getUsername(),
-          toRemove.getEmail(),
-          toRemoveProfile.getProfilePictureUrl()));
-    }
-    return Optional.empty();
+    return null;
   }
 
 }

@@ -12,9 +12,12 @@ import TagPage from "./pages/TagPage";
 import ForkExperiencePage from "./pages/ForkExperiencePage";
 import ReplySuggestionPage from "./pages/ReplySuggestionPage";
 import PostViewPage from "./pages/PostViewPage";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import './App.css';
+import axios from "axios";
 
 function App() {
+    axios.defaults.withCredentials = true;
     const [user, setUser] = useState(null);
 
     return (
@@ -33,6 +36,7 @@ function App() {
                 <Route path="/tags" element={<TagPage user={user} /> } />
                 <Route path="/fork/:uuid" element={<ForkExperiencePage user={user} />} />
                 <Route path="/suggestion/:uuid/reply" element={<ReplySuggestionPage user={user} />} />
+                <Route path="/login/success" element={<OAuthCallbackPage setUser={setUser} />} />
             </Routes>
         </Router>
     );

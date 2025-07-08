@@ -35,6 +35,10 @@ const LoginPage = ({ setUser }) => {
         }
     };
 
+    const handleGoogleLogin = () => {
+        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+    };
+
     return (
         <div className="login-wrapper">
             <div className="login-container">
@@ -69,6 +73,11 @@ const LoginPage = ({ setUser }) => {
                     )}
                     <button type="submit" className="boton-elegante">Login</button>
                 </form>
+                <div className="oauth-buttons">
+                    <button onClick={handleGoogleLogin} className="google-login-button">
+                        Sign in with Google
+                    </button>
+                </div>
                 <p>
                     Don't have an account? <Link to="/signup">Sign up</Link>
                 </p>
