@@ -1,5 +1,6 @@
 package com.lexigram.app.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -15,6 +16,9 @@ import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
+
+  @Value("${lexigram.frontend.url:http://localhost:3000}")
+  private String frontendUrl;
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -42,7 +46,7 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
-            .defaultSuccessUrl("http://localhost:3000/login/success", true)
+            .defaultSuccessUrl(frontendUrl + "/login/success", true)
         )
         .formLogin(form -> form.disable())
         .httpBasic(httpBasic -> httpBasic.disable());
@@ -52,7 +56,13 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+
+    // Allow both local and AWS frontend URLs
+    configuration.setAllowedOrigins(Arrays.asList(
+        "http://localhost:3000",
+        frontendUrl
+    ));
+
     configuration.setAllowedMethods(Arrays.asList("*"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
