@@ -5,7 +5,7 @@ import {
     FaUserPlus,
     FaUserMinus,
     FaArrowLeft,
-    FaArrowRight
+    FaArrowRight, FaClock
 } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
@@ -31,6 +31,7 @@ const RelationshipProfile = ({ user, setUser }) => {
     const [postsPage, setPostsPage] = useState(1);
     const [itemsPerPage] = useState(4);
     const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
+    const [followRequestPending, setFollowRequestPending] = useState(false);
 
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -57,7 +58,7 @@ const RelationshipProfile = ({ user, setUser }) => {
     };
 
     useEffect(() => {
-        setPostsPage(1); // Reset to first page when tab or filter changes
+        setPostsPage(1);
     }, [activeTab, postFilter]);
 
     useEffect(() => {
@@ -108,6 +109,8 @@ const RelationshipProfile = ({ user, setUser }) => {
             setProfileUser(userData);
             setIsFollowing(userData.isFollowing);
             setCanViewPosts(userData.canViewPosts !== false);
+
+            setFollowRequestPending(userData.followRequestPending || false);
 
             const profilePicUrl = userData.profilePictureUrl
                 ? userData.profilePictureUrl.startsWith('http')
@@ -161,6 +164,15 @@ const RelationshipProfile = ({ user, setUser }) => {
             });
 
             if (response.ok) {
+                const result = await response.json();
+
+                if (result.requestPending) {
+                    setFollowRequestPending(true);
+                } else if (result.following) {
+
+                    setIsFollowing(true);
+                }
+                // Refrescar datos del perfil
                 fetchProfileData();
             }
         } catch (err) {
@@ -183,6 +195,25 @@ const RelationshipProfile = ({ user, setUser }) => {
             }
         } catch (err) {
             console.error('Error unfollowing user:', err);
+        }
+    };
+
+    const handleCancelFollowRequest = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/auth/me/users/${userId}/cancel-follow-request`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                setFollowRequestPending(false);
+                fetchProfileData();
+            }
+        } catch (err) {
+            console.error('Error canceling follow request:', err);
         }
     };
 
@@ -303,6 +334,13 @@ const RelationshipProfile = ({ user, setUser }) => {
                                     onClick={handleUnfollow}
                                 >
                                     <FaUserMinus/> Unfollow
+                                </button>
+                            ) : followRequestPending ? (
+                                <button
+                                    className="relationship-btn-outline-warning"
+                                    onClick={handleCancelFollowRequest}
+                                >
+                                    <FaClock/> Pending
                                 </button>
                             ) : (
                                 <button

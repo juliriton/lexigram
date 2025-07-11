@@ -1,6 +1,7 @@
 package com.lexigram.app.model.user;
 
 import com.lexigram.app.model.Comment;
+import com.lexigram.app.model.FollowRequest;
 import com.lexigram.app.model.Notification;
 import com.lexigram.app.model.Save;
 import com.lexigram.app.model.suggestion.Suggestion;
@@ -78,6 +79,12 @@ public class User {
   @OneToMany(mappedBy = "actor", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Notification> triggeredNotifications = new ArrayList<>();
 
+  @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<FollowRequest> sentFollowRequests = new HashSet<>();
+
+  @OneToMany(mappedBy = "requested", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<FollowRequest> receivedFollowRequests = new HashSet<>();
+
   private Long followingAmount;
 
   private Long followerAmount;
@@ -141,6 +148,9 @@ public class User {
   public Set<User> getFollowing() {
     return following;
   }
+
+  public Set<FollowRequest> getSentFollowRequests() { return sentFollowRequests; }
+  public Set<FollowRequest> getReceivedFollowRequests() { return receivedFollowRequests; }
 
   public void addFollower(User user) {
     followers.add(user);

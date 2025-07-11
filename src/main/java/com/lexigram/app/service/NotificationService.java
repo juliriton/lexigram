@@ -1,6 +1,7 @@
 package com.lexigram.app.service;
 
 import com.lexigram.app.dto.NotificationDTO;
+import com.lexigram.app.model.FollowRequest;
 import com.lexigram.app.model.Notification;
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.suggestion.Suggestion;
@@ -42,6 +43,7 @@ public class NotificationService {
       UUID actorUuid = n.getActor() != null ? n.getActor().getUuid() : null;
       UUID experienceUuid = n.getExperience() != null ? n.getExperience().getUuid() : null;
       UUID suggestionUuid = n.getSuggestion() != null ? n.getSuggestion().getUuid() : null;
+      UUID followRequestUuid = n.getFollowRequest() != null ? n.getFollowRequest().getUuid() : null;
 
       notificationDTOs.add(new NotificationDTO(
           n.getUuid(),
@@ -52,6 +54,7 @@ public class NotificationService {
           actorUuid,
           experienceUuid,
           suggestionUuid,
+          followRequestUuid,
           n.getType()
       ));
     }
@@ -212,6 +215,19 @@ public class NotificationService {
     notification.setExperience(experience);
     notification.setSuggestion(suggestion);
     notification.setType(type);
+
+    return notificationRepository.save(notification);
+  }
+
+  public Notification createFollowRequestNotification(User actor, User recipient, FollowRequest followRequest) {
+    Notification notification = new Notification();
+    notification.setTitle("Follow Request");
+    notification.setText(actor.getUsername() + " wants to follow you.");
+    notification.setRead(false);
+    notification.setRecipient(recipient);
+    notification.setActor(actor);
+    notification.setType(NotificationType.FOLLOW_REQUEST);
+    notification.setFollowRequest(followRequest);
 
     return notificationRepository.save(notification);
   }

@@ -17,6 +17,8 @@ public class NotificationDTO {
 
   private NotificationType type;
 
+  private UUID followRequestUuid;
+
   public NotificationDTO(UUID uuid,
                          String title,
                          String text,
@@ -35,6 +37,31 @@ public class NotificationDTO {
     this.experienceUuid = experienceUuid;
     this.suggestionUuid = suggestionUuid;
     this.type = type;
+  }
+
+  public NotificationDTO(UUID uuid,
+                         String title,
+                         String text,
+                         boolean read,
+                         long creationDate,
+                         UUID actorUuid,
+                         UUID experienceUuid,
+                         UUID suggestionUuid,UUID followRequestUuid,
+                         NotificationType type) {
+    this.uuid = uuid;
+    this.title = title;
+    this.text = text;
+    this.read = read;
+    this.creationDate = creationDate;
+    this.actorUuid = actorUuid;
+    this.experienceUuid = experienceUuid;
+    this.suggestionUuid = suggestionUuid;
+    this.followRequestUuid = followRequestUuid;
+    this.type = type;
+  }
+
+  public UUID getFollowRequestUuid() {
+    return followRequestUuid;
   }
 
   public UUID getUuid() {

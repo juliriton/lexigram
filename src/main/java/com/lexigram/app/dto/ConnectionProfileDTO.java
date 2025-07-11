@@ -10,6 +10,7 @@ public class ConnectionProfileDTO {
   private Long followerAmount;
   private boolean isPrivate;
   private boolean canViewPosts;
+  private boolean followRequestPending;
 
 
   public ConnectionProfileDTO() {}
@@ -60,5 +61,13 @@ public class ConnectionProfileDTO {
   public boolean getIsPrivate() { return isPrivate; }
 
   public boolean getCanViewPosts() { return canViewPosts; }
+
+  public boolean isFollowRequestPending() {
+    return followRequestPending;
+  }
+
+  public void setFollowRequestPending(boolean followRequestPending) {
+    this.followRequestPending = followRequestPending;
+  }
 
 }

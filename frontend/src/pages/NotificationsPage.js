@@ -71,7 +71,7 @@ const NotificationsPage = ({ user, setUser }) => {
 
             const data = await res.json();
             setNotifications(data);
-            setCurrentPage(1); // Reset to first page when notifications change
+            setCurrentPage(1);
 
             const actorUuids = [...new Set(data.filter(n => n.actorUuid).map(n => n.actorUuid))];
             fetchActorProfiles(actorUuids);
@@ -235,6 +235,44 @@ const NotificationsPage = ({ user, setUser }) => {
     const totalPagesCount = totalPages();
     const showPagination = notifications.length > itemsPerPage;
 
+    const acceptFollowRequest = async (requestUuid) => {
+        try {
+            const res = await fetch(`${API_URL}/api/auth/me/follow-requests/${requestUuid}/accept`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (res.ok) {
+                setMessage('Follow request accepted.');
+                fetchNotifications();
+            } else {
+                setMessage('Failed to accept follow request.');
+            }
+        } catch (err) {
+            console.error(err);
+            setMessage('Error accepting follow request.');
+        }
+    };
+
+    const rejectFollowRequest = async (requestUuid) => {
+        try {
+            const res = await fetch(`${API_URL}/api/auth/me/follow-requests/${requestUuid}/reject`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (res.ok) {
+                setMessage('Follow request rejected.');
+                fetchNotifications();
+            } else {
+                setMessage('Failed to reject follow request.');
+            }
+        } catch (err) {
+            console.error(err);
+            setMessage('Error rejecting follow request.');
+        }
+    };
+
     return (
         <div className="notifications-page container mt-4">
             <label className="burger" htmlFor="burger">
@@ -339,9 +377,33 @@ const NotificationsPage = ({ user, setUser }) => {
                                                     {formatDate(notification.creationDate)}
                                                 </small>
                                             </div>
+
+                                            {notification.type === 'FOLLOW_REQUEST' && notification.followRequestUuid && (
+                                                <div className="follow-request-actions mt-2">
+                                                    <button
+                                                        className="btn btn-sm btn-success me-2"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            acceptFollowRequest(notification.followRequestUuid);
+                                                        }}
+                                                    >
+                                                        Accept
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-danger"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            rejectFollowRequest(notification.followRequestUuid);
+                                                        }}
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
+
                                 <div className="notification-actions">
                                     {!notification.read && (
                                         <button

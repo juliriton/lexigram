@@ -7,11 +7,7 @@ import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.user.User;
 import com.lexigram.app.model.user.UserProfile;
 import com.lexigram.app.model.user.UserPrivacySettings;
-import com.lexigram.app.repository.ExperienceRepository;
-import com.lexigram.app.repository.SuggestionRepository;
-import com.lexigram.app.repository.UserProfileRepository;
-import com.lexigram.app.repository.UserRepository;
-import com.lexigram.app.repository.UserPrivacySettingsRepository;
+import com.lexigram.app.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,34 +21,32 @@ public class RelationshipProfileService {
   private final ExperienceRepository experienceRepository;
   private final SuggestionRepository suggestionRepository;
   private final UserPrivacySettingsRepository userPrivacySettingsRepository;
+  private final FollowRequestRepository followRequestRepository;
 
   @Autowired
   public RelationshipProfileService(UserRepository userRepository,
                                     UserProfileRepository userProfileRepository,
                                     ExperienceRepository experienceRepository,
                                     SuggestionRepository suggestionRepository,
-                                    UserPrivacySettingsRepository userPrivacySettingsRepository) {
+                                    UserPrivacySettingsRepository userPrivacySettingsRepository, FollowRequestRepository followRequestRepository) {
     this.userRepository = userRepository;
     this.userProfileRepository = userProfileRepository;
     this.experienceRepository = experienceRepository;
     this.suggestionRepository = suggestionRepository;
     this.userPrivacySettingsRepository = userPrivacySettingsRepository;
+    this.followRequestRepository = followRequestRepository;
   }
 
   private boolean canViewPrivateContent(User viewer, User targetUser) {
-    // Si es el mismo usuario, puede ver todo
     if (viewer.getId().equals(targetUser.getId())) {
       return true;
     }
 
-    // Verificar si la cuenta es privada
     Optional<UserPrivacySettings> privacySettings = userPrivacySettingsRepository.findByUser(targetUser);
     if (privacySettings.isPresent() && !privacySettings.get().getVisibility()) {
-      // La cuenta es privada, verificar si el viewer sigue al targetUser
       return targetUser.getFollowers().contains(viewer);
     }
 
-    // La cuenta es pública
     return true;
   }
 
@@ -61,50 +55,55 @@ public class RelationshipProfileService {
     return privacySettings.isPresent() && !privacySettings.get().getVisibility();
   }
 
-  public Optional<ConnectionProfileDTO> getRelationshipProfileByUuid(Long viewerId, UUID uuid) {
+  public Optional<ConnectionProfileDTO> getRelationshipProfileByUuid(Long viewerId, UUID targetUserUuid) {
     Optional<User> viewerOptional = userRepository.findById(viewerId);
-    if (viewerOptional.isEmpty()) {
-      return Optional.empty();
-    }
+    if (viewerOptional.isEmpty()) return Optional.empty();
 
     User viewer = viewerOptional.get();
-    Optional<User> targetUserOptional = userRepository.findByUuid(uuid);
+    Optional<User> targetUserOptional = userRepository.findByUuid(targetUserUuid);
+    if (targetUserOptional.isEmpty()) return Optional.empty();
 
-    if (targetUserOptional.isPresent()) {
-      User targetUser = targetUserOptional.get();
+    User targetUser = targetUserOptional.get();
 
-      Optional<UserProfile> targetProfileOptional = userProfileRepository.findByUserUuid(uuid);
-      if (targetProfileOptional.isEmpty()) {
-        return Optional.empty();
-      }
+    Optional<UserProfile> targetProfileOptional = userProfileRepository.findByUserUuid(targetUserUuid);
+    if (targetProfileOptional.isEmpty()) return Optional.empty();
 
-      UserProfile targetProfile = targetProfileOptional.get();
+    UserProfile targetProfile = targetProfileOptional.get();
 
-      String username = targetUser.getUsername();
-      String profilePicture = targetProfile.getProfilePictureUrl();
-      boolean isFollowing = targetUser.getFollowers().contains(viewer);
-      Long targetFollowingAmount = targetUser.getFollowingAmount();
-      Long targetFollowerAmount = targetUser.getFollowerAmount();
+    String username = targetUser.getUsername();
+    String profilePicture = targetProfile.getProfilePictureUrl();
+    boolean isFollowing = targetUser.getFollowers().contains(viewer);
+    Long targetFollowingAmount = targetUser.getFollowingAmount();
+    Long targetFollowerAmount = targetUser.getFollowerAmount();
+    boolean isPrivate = isPrivateAccount(targetUser);
+    boolean canViewPrivateContent = canViewPrivateContent(viewer, targetUser);
+    String biography = (isPrivate && !canViewPrivateContent) ? null : targetProfile.getBiography();
 
-      boolean isPrivate = isPrivateAccount(targetUser);
-      boolean canViewPrivateContent = canViewPrivateContent(viewer, targetUser);
-
-      // Si es una cuenta privada y no puede ver contenido privado, ocultar biografía
-      String biography = (isPrivate && !canViewPrivateContent) ? null : targetProfile.getBiography();
-
-      ConnectionProfileDTO connectionProfileDTO = new ConnectionProfileDTO(
-          username,
-          biography,
-          profilePicture,
-          isFollowing,
-          targetFollowingAmount,
-          targetFollowerAmount,
-          isPrivate,
-          canViewPrivateContent);
-      return Optional.of(connectionProfileDTO);
+    boolean followRequestPending = false;
+    if (!isFollowing) {
+      followRequestPending = followRequestRepository.existsByRequesterIdAndRequestedId(
+          viewerId,
+          targetUser.getId()
+      );
     }
-    return Optional.empty();
+
+    ConnectionProfileDTO dto = new ConnectionProfileDTO(
+        username,
+        biography,
+        profilePicture,
+        isFollowing,
+        targetFollowingAmount,
+        targetFollowerAmount,
+        isPrivate,
+        canViewPrivateContent
+    );
+
+    dto.setFollowRequestPending(followRequestPending);
+
+    return Optional.of(dto);
   }
+
+
 
   public Optional<ConnectionProfileDTO> getRelationshipProfileByUsername(Long viewerId, String username) {
     String trimmedUsername = username.trim();

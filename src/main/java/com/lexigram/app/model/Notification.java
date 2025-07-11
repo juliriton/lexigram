@@ -59,6 +59,10 @@ public class Notification {
   @Enumerated(EnumType.STRING)
   private NotificationType type; // like, comment, mention to manage in sort by like comment mention
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "follow_request_id")
+  private FollowRequest followRequest;
+
 
   public UUID getUuid() {
     return uuid;
@@ -131,5 +135,12 @@ public class Notification {
     this.type = type;
   }
 
+  public FollowRequest getFollowRequest() {
+    return followRequest;
+  }
+
+  public void setFollowRequest(FollowRequest followRequest) {
+    this.followRequest = followRequest;
+  }
 
 }
