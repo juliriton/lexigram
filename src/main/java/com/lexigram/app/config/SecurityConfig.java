@@ -69,7 +69,7 @@ public class SecurityConfig {
         baseUrl                           // Production backend URL
     );
 
-    configuration.setAllowedOrigins(allowedOrigins);
+    configuration.setAllowedOriginPatterns(Arrays.asList("*")); // More permissive for debugging
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);

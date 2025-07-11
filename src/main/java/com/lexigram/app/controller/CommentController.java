@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth/me/comment")
 public class CommentController {
@@ -112,7 +111,6 @@ public class CommentController {
 }
 
 // Controlador para comentarios de experiencias
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth/me/experience")
 class ExperienceCommentController {
@@ -151,8 +149,6 @@ class ExperienceCommentController {
   }
 }
 
-// Controlador público para obtener comentarios
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/experience")
 class PublicExperienceController {
