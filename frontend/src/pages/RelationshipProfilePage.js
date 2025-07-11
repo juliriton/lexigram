@@ -11,6 +11,7 @@ import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
 import Sidebar from '../components/SideBar';
 import '../styles/RelationshipProfilePage.css';
+import { API_URL } from '../Api.js';
 
 const RelationshipProfile = ({ user, setUser }) => {
     const { userId } = useParams();
@@ -29,8 +30,7 @@ const RelationshipProfile = ({ user, setUser }) => {
     const [userProfilePicture, setUserProfilePicture] = useState(null);
     const [postsPage, setPostsPage] = useState(1);
     const [itemsPerPage] = useState(4);
-    const baseApiUrl = 'http://localhost:8080';
-    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
 
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -63,14 +63,14 @@ const RelationshipProfile = ({ user, setUser }) => {
     useEffect(() => {
         const fetchUserProfilePicture = async () => {
             try {
-                const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                const profileRes = await fetch(`${API_URL}/api/auth/me/profile`, {
                     credentials: 'include',
                 });
 
                 if (profileRes.ok) {
                     const profileData = await profileRes.json();
                     const picUrl = profileData.profilePictureUrl
-                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        ? `${API_URL}${profileData.profilePictureUrl}`
                         : defaultProfilePicture;
                     setUserProfilePicture(picUrl);
                 }
@@ -82,7 +82,7 @@ const RelationshipProfile = ({ user, setUser }) => {
 
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
@@ -92,11 +92,11 @@ const RelationshipProfile = ({ user, setUser }) => {
             }
         };
         checkAuth();
-    }, [navigate, baseApiUrl, defaultProfilePicture]);
+    }, [navigate, defaultProfilePicture]);
 
     const fetchProfileData = useCallback(async () => {
         try {
-            const userRes = await fetch(`${baseApiUrl}/api/auth/me/users/${userId}/profile`, {
+            const userRes = await fetch(`${API_URL}/api/auth/me/users/${userId}/profile`, {
                 credentials: 'include'
             });
 
@@ -112,12 +112,12 @@ const RelationshipProfile = ({ user, setUser }) => {
             const profilePicUrl = userData.profilePictureUrl
                 ? userData.profilePictureUrl.startsWith('http')
                     ? userData.profilePictureUrl
-                    : `${baseApiUrl}${userData.profilePictureUrl}`
+                    : `${API_URL}${userData.profilePictureUrl}`
                 : defaultProfilePicture;
             setProfilePicture(profilePicUrl);
 
             if (userData.canViewPosts !== false) {
-                const postsRes = await fetch(`${baseApiUrl}/api/auth/me/users/${userId}/profile/posts`, {
+                const postsRes = await fetch(`${API_URL}/api/auth/me/users/${userId}/profile/posts`, {
                     credentials: 'include'
                 });
 
@@ -131,7 +131,7 @@ const RelationshipProfile = ({ user, setUser }) => {
         } finally {
             setLoading(false);
         }
-    }, [userId, baseApiUrl, defaultProfilePicture]);
+    }, [userId, defaultProfilePicture]);
 
     useEffect(() => {
         fetchProfileData();
@@ -152,7 +152,7 @@ const RelationshipProfile = ({ user, setUser }) => {
         }
 
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/users/${userId}/follow`, {
+            const response = await fetch(`${API_URL}/api/auth/me/users/${userId}/follow`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -170,7 +170,7 @@ const RelationshipProfile = ({ user, setUser }) => {
 
     const handleUnfollow = async () => {
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/users/${userId}/unfollow`, {
+            const response = await fetch(`${API_URL}/api/auth/me/users/${userId}/unfollow`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -252,7 +252,7 @@ const RelationshipProfile = ({ user, setUser }) => {
                 handleImageError={handleImageError}
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
-                baseApiUrl={baseApiUrl}
+                baseApiUrl={API_URL}
                 defaultProfilePicture={defaultProfilePicture}
             />
 
@@ -361,7 +361,7 @@ const RelationshipProfile = ({ user, setUser }) => {
                                                             user={user}
                                                             post={post}
                                                             username={profileUser.username}
-                                                            baseApiUrl={baseApiUrl}
+                                                            baseApiUrl={API_URL}
                                                             hiddenQuotes={hiddenQuotes}
                                                             toggleQuote={() => toggleQuote(postId)}
                                                             showMentions={showMentions}
@@ -397,7 +397,7 @@ const RelationshipProfile = ({ user, setUser }) => {
                                                         key={postId}
                                                         user={user}
                                                         post={post}
-                                                        baseApiUrl={baseApiUrl}
+                                                        baseApiUrl={API_URL}
                                                         username={profileUser.username}
                                                         renderTags={renderTags}
                                                         formatDate={formatDate}

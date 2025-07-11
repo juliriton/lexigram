@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaQuestion, FaTrash, FaEdit } from 'react-icons/fa';
+import { FaQuestion, FaTrash, FaEdit, FaEllipsisH } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SuggestionInteractions from './SuggestionInteractions';
 import '../styles/SuggestionCard.css';
@@ -13,7 +13,8 @@ const SuggestionCard = ({
                             onDelete,
                             onEdit,
                             isOwner,
-                            onActionComplete
+                            onActionComplete,
+                            showEditOption = false
                         }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -29,9 +30,14 @@ const SuggestionCard = ({
 
     const [isExpanded, setIsExpanded] = React.useState(false);
     const [showAllTags, setShowAllTags] = React.useState(false);
+    const [showOptions, setShowOptions] = React.useState(false);
 
     const toggleExpanded = () => setIsExpanded(!isExpanded);
     const toggleTags = () => setShowAllTags(!showAllTags);
+    const toggleOptions = (e) => {
+        e.stopPropagation();
+        setShowOptions(!showOptions);
+    };
 
     const suggestionText = post.body || '';
     const suggestionPreviewLen = 30;
@@ -60,6 +66,22 @@ const SuggestionCard = ({
     const handleSuggestionInteractionComplete = (updatedSuggestion) => {
         if (onActionComplete) {
             onActionComplete(updatedSuggestion);
+        }
+    };
+
+    const handleEdit = (e) => {
+        e.stopPropagation();
+        setShowOptions(false);
+        if (onEdit && typeof onEdit === 'function') {
+            onEdit(post);
+        }
+    };
+
+    const handleDelete = (e) => {
+        e.stopPropagation();
+        setShowOptions(false);
+        if (onDelete && typeof onDelete === 'function') {
+            onDelete();
         }
     };
 
@@ -92,6 +114,8 @@ const SuggestionCard = ({
                 <span className="stat-value">{post.replyAmount || 0}</span>
             </div>
         );
+
+        return stats;
     };
 
     return (
@@ -115,6 +139,31 @@ const SuggestionCard = ({
                         <span>{post.type || "Suggestion"}</span>
                     </div>
                 </div>
+
+                {isOwner && (
+                    <div className="post-options">
+                        <button
+                            className="options-btn"
+                            onClick={toggleOptions}
+                            aria-label="Post options"
+                        >
+                            <FaEllipsisH />
+                        </button>
+
+                        {showOptions && (
+                            <div className="options-dropdown">
+                                {(showEditOption || onEdit) && (
+                                    <button onClick={handleEdit} className="option-item edit">
+                                        <FaEdit size={14} /> <span>Edit</span>
+                                    </button>
+                                )}
+                                <button onClick={handleDelete} className="option-item delete">
+                                    <FaTrash size={14} /> <span>Delete</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="suggestion-text-container">
                     <span className="suggestion-prompt">{promptText}</span>
@@ -177,18 +226,6 @@ const SuggestionCard = ({
 
                 {/* Render stats based on privacy settings */}
                 {renderSuggestionStats()}
-
-                {isOwner && (
-                    <div className="actions">
-                        <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={onDelete}
-                            aria-label="Delete Suggestion"
-                        >
-                            <FaTrash /> Delete
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     );

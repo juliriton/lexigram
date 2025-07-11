@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FaReply, FaTimes, FaUpload, FaPalette } from 'react-icons/fa';
 import Sidebar from '../components/SideBar';
 import '../styles/PostCreationPage.css';
+import { API_URL } from '../Api.js';
 
 const ReplySuggestionPage = ({ user, setUser }) => {
     const navigate = useNavigate();
@@ -26,8 +27,7 @@ const ReplySuggestionPage = ({ user, setUser }) => {
     const [fileName, setFileName] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
-    const baseApiUrl = 'http://localhost:8080';
-    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
 
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -36,7 +36,7 @@ const ReplySuggestionPage = ({ user, setUser }) => {
     useEffect(() => {
         const fetchProfilePicture = async () => {
             try {
-                const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                const profileRes = await fetch(`${API_URL}/api/auth/me/profile`, {
                     credentials: 'include',
                 });
 
@@ -44,7 +44,7 @@ const ReplySuggestionPage = ({ user, setUser }) => {
                     const profileData = await profileRes.json();
                     setProfilePicture(
                         profileData.profilePictureUrl
-                            ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                            ? `${API_URL}${profileData.profilePictureUrl}`
                             : defaultProfilePicture
                     );
                 } else {
@@ -58,7 +58,7 @@ const ReplySuggestionPage = ({ user, setUser }) => {
 
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
@@ -68,7 +68,7 @@ const ReplySuggestionPage = ({ user, setUser }) => {
             }
         };
         checkAuth();
-    }, [navigate, baseApiUrl, defaultProfilePicture]);
+    }, [navigate, defaultProfilePicture]);
 
     const handleCancel = () => {
         const container = document.querySelector('.post-creation-container');
@@ -196,7 +196,7 @@ const ReplySuggestionPage = ({ user, setUser }) => {
             formData.append('file', file);
         }
 
-        const url = `${baseApiUrl}/api/auth/me/suggestion/${uuid}/reply`;
+        const url = `${API_URL}/api/auth/me/suggestion/${uuid}/reply`;
         console.log('Request URL:', url);
 
         try {
@@ -255,7 +255,7 @@ const ReplySuggestionPage = ({ user, setUser }) => {
                 handleImageError={handleImageError}
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
-                baseApiUrl={baseApiUrl}
+                baseApiUrl={API_URL}
                 defaultProfilePicture={defaultProfilePicture}
             />
 

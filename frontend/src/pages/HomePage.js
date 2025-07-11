@@ -16,6 +16,7 @@ import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
 import SideBar from '../components/SideBar';
 import '../styles/HomePage.css';
+import { API_URL } from '../Api.js';
 
 const HomePage = ({ user, setUser }) => {
     const navigate = useNavigate();
@@ -41,12 +42,11 @@ const HomePage = ({ user, setUser }) => {
         exactMatch: false
     });
     const [searchFocused, setSearchFocused] = useState(false);
-    const baseApiUrl = 'http://localhost:8080';
-    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
 
     const fetchGuestFeed = async () => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/feed`);
+            const res = await fetch(`${API_URL}/api/auth/feed`);
             if (res.ok) {
                 const feedData = await res.json();
                 setExperiences(feedData.experiences || []);
@@ -59,7 +59,7 @@ const HomePage = ({ user, setUser }) => {
 
     const fetchProfilePicture = useCallback(async () => {
         try {
-            const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+            const profileRes = await fetch(`${API_URL}/api/auth/me/profile`, {
                 credentials: 'include',
             });
 
@@ -67,7 +67,7 @@ const HomePage = ({ user, setUser }) => {
                 const profileData = await profileRes.json();
                 setProfilePicture(
                     profileData.profilePictureUrl
-                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        ? `${API_URL}${profileData.profilePictureUrl}`
                         : defaultProfilePicture
                 );
             } else {
@@ -77,7 +77,7 @@ const HomePage = ({ user, setUser }) => {
             console.error('Error fetching profile picture:', err);
             setProfilePicture(defaultProfilePicture);
         }
-    }, [baseApiUrl, defaultProfilePicture]);
+    }, [defaultProfilePicture]);
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -100,7 +100,7 @@ const HomePage = ({ user, setUser }) => {
 
         setSearching(true);
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/feed/search/${encodeURIComponent(cleanedQuery)}?` +
+            const response = await fetch(`${API_URL}/api/auth/me/feed/search/${encodeURIComponent(cleanedQuery)}?` +
                 new URLSearchParams({
                     users: searchFilters.users,
                     experiences: searchFilters.experiences,
@@ -174,14 +174,14 @@ const HomePage = ({ user, setUser }) => {
     useEffect(() => {
         const fetchUserAndFeed = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, { credentials: 'include' });
+                const res = await fetch(`${API_URL}/api/auth/me`, { credentials: 'include' });
                 if (res.ok) {
                     const data = await res.json();
                     setUser(data);
 
                     fetchProfilePicture();
 
-                    let feedUrl = `${baseApiUrl}/api/auth/me/feed`;
+                    let feedUrl = `${API_URL}/api/auth/me/feed`;
                     if (feedType === 'following') {
                         feedUrl += '/following';
                     } else if (feedType === 'discover') {
@@ -208,7 +208,7 @@ const HomePage = ({ user, setUser }) => {
             }
         };
         fetchUserAndFeed();
-    }, [setUser, feedType, fetchProfilePicture, baseApiUrl]);
+    }, [setUser, feedType, fetchProfilePicture]);
 
     const handleImageError = () => setProfilePicture(defaultProfilePicture);
 
@@ -287,7 +287,7 @@ const HomePage = ({ user, setUser }) => {
                 handleImageError={handleImageError}
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
-                baseApiUrl={baseApiUrl}
+                baseApiUrl={API_URL}
                 defaultProfilePicture={defaultProfilePicture}
             />
 
@@ -411,7 +411,7 @@ const HomePage = ({ user, setUser }) => {
                                         >
                                             {userResult.profilePictureUrl ? (
                                                 <img
-                                                    src={`${baseApiUrl}${userResult.profilePictureUrl}`}
+                                                    src={`${API_URL}${userResult.profilePictureUrl}`}
                                                     alt={userResult.username}
                                                     className="user-avatar"
                                                     onError={(e) => {
@@ -463,7 +463,7 @@ const HomePage = ({ user, setUser }) => {
                                     key={post.uuid}
                                     user={user}
                                     post={post}
-                                    baseApiUrl={baseApiUrl}
+                                    baseApiUrl={API_URL}
                                     username={post.user?.username || user?.username || 'Usuario'}
                                     hiddenQuotes={hiddenQuotes}
                                     toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
@@ -500,7 +500,7 @@ const HomePage = ({ user, setUser }) => {
                                     key={post.uuid}
                                     user={user}
                                     post={post}
-                                    baseApiUrl={baseApiUrl}
+                                    baseApiUrl={API_URL}
                                     username={post.user?.username || user?.username || 'Usuario'}
                                     renderTags={renderTags}
                                     formatDate={formatDate}

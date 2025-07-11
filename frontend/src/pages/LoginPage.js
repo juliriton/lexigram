@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../styles/LoginPage.css';
+import {API_URL} from "../Api";
 
 const LoginPage = ({ setUser }) => {
     const [credential, setCredential] = useState('');
@@ -15,7 +16,7 @@ const LoginPage = ({ setUser }) => {
         const trimmedPassword = password.trim();
 
         try {
-            const response = await fetch('http://localhost:8080/api/auth/login', {
+            const response = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ credential: trimmedCredential, password: trimmedPassword }),
@@ -36,7 +37,7 @@ const LoginPage = ({ setUser }) => {
     };
 
     const handleGoogleLogin = () => {
-        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+        window.location.href = `${API_URL}/oauth2/authorization/google`;
     };
 
     return (

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import HomePage from './HomePage';
 import PostPopupModal from '../components/PostPopUpModal';
+import { API_URL } from '../Api.js';
 
 const PostViewPage = ({ user, setUser }) => {
     const { uuid } = useParams();
@@ -49,7 +50,7 @@ const PostViewPage = ({ user, setUser }) => {
                 postUuid={uuid}
                 type={getPostType()}
                 user={user}
-                baseApiUrl="http://localhost:8080"
+                baseApiUrl={API_URL}
                 formatDate={formatDate}
                 enableFallback={true}
             />

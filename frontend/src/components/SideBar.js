@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaHome, FaUserCircle, FaCog, FaSignOutAlt, FaTimes, FaEnvelope, FaTags } from 'react-icons/fa';
 import '../styles/SideBar.css'
 
-const Sidebar = ({ user, setUser, profilePicture, handleImageError, sidebarOpen, toggleSidebar, baseApiUrl, defaultProfilePicture }) => {
+const Sidebar = ({ user, setUser, profilePicture, handleImageError, sidebarOpen, toggleSidebar, baseApiUrl }) => {
     const navigate = useNavigate();
 
     const handleLogout = () => {

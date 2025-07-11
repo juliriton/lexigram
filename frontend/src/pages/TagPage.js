@@ -3,6 +3,7 @@ import '../styles/TagPage.css';
 import { useNavigate } from "react-router-dom";
 import Sidebar from '../components/SideBar';
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { API_URL } from '../Api.js';
 
 const TagPage = ({ user, setUser }) => {
     const [allTags, setAllTags] = useState([]);
@@ -12,8 +13,7 @@ const TagPage = ({ user, setUser }) => {
     const [error, setError] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
-    const baseApiUrl = 'http://localhost:8080';
-    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
 
     // Pagination state
     const [allTagsPage, setAllTagsPage] = useState(1);
@@ -63,7 +63,7 @@ const TagPage = ({ user, setUser }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
@@ -72,19 +72,19 @@ const TagPage = ({ user, setUser }) => {
             }
         };
         checkAuth();
-    }, [navigate, baseApiUrl]);
+    }, [navigate]);
 
     useEffect(() => {
         const fetchProfilePicture = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                const res = await fetch(`${API_URL}/api/auth/me/profile`, {
                     credentials: 'include',
                 });
                 if (res.ok) {
                     const data = await res.json();
                     setProfilePicture(
                         data.profilePictureUrl
-                            ? `${baseApiUrl}${data.profilePictureUrl}`
+                            ? `${API_URL}${data.profilePictureUrl}`
                             : defaultProfilePicture
                     );
                 }
@@ -95,12 +95,12 @@ const TagPage = ({ user, setUser }) => {
         };
 
         fetchProfilePicture();
-    }, [baseApiUrl, defaultProfilePicture]);
+    }, [defaultProfilePicture]);
 
     // Fetch all tags
     const fetchAllTags = async () => {
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/all`, {
+            const response = await fetch(`${API_URL}/api/auth/me/tags/all`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -120,7 +120,7 @@ const TagPage = ({ user, setUser }) => {
     // Fetch feed tags
     const fetchFeedTags = async () => {
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed`, {
+            const response = await fetch(`${API_URL}/api/auth/me/tags/feed`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -136,7 +136,7 @@ const TagPage = ({ user, setUser }) => {
     // Add tag to feed
     const addTagToFeed = async (uuid) => {
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed/add/${uuid}`, {
+            const response = await fetch(`${API_URL}/api/auth/me/tags/feed/add/${uuid}`, {
                 method: 'POST',
                 credentials: 'include'
             });
@@ -151,7 +151,7 @@ const TagPage = ({ user, setUser }) => {
     // Remove tag from feed
     const removeTagFromFeed = async (uuid) => {
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed/remove/${uuid}`, {
+            const response = await fetch(`${API_URL}/api/auth/me/tags/feed/remove/${uuid}`, {
                 method: 'POST',
                 credentials: 'include'
             });
@@ -166,7 +166,7 @@ const TagPage = ({ user, setUser }) => {
     // Add all tags to feed
     const addAllTagsToFeed = async () => {
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed/add-all`, {
+            const response = await fetch(`${API_URL}/api/auth/me/tags/feed/add-all`, {
                 method: 'POST',
                 credentials: 'include'
             });
@@ -181,7 +181,7 @@ const TagPage = ({ user, setUser }) => {
     // Clear all tags from feed
     const clearFeed = async () => {
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed/clear`, {
+            const response = await fetch(`${API_URL}/api/auth/me/tags/feed/clear`, {
                 method: 'POST',
                 credentials: 'include'
             });
@@ -245,7 +245,7 @@ const TagPage = ({ user, setUser }) => {
                 handleImageError={handleImageError}
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
-                baseApiUrl={baseApiUrl}
+                baseApiUrl={API_URL}
                 defaultProfilePicture={defaultProfilePicture}
             />
 

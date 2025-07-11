@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SettingsPage.css';
 import Sidebar from '../components/SideBar';
+import { API_URL } from '../Api.js';
 
 const SettingsPage = ({ user, setUser }) => {
     const [privacy, setPrivacy] = useState(null);
@@ -17,8 +18,7 @@ const SettingsPage = ({ user, setUser }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
     const navigate = useNavigate();
-    const baseApiUrl = 'http://localhost:8080';
-    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
 
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -29,7 +29,7 @@ const SettingsPage = ({ user, setUser }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
@@ -38,19 +38,19 @@ const SettingsPage = ({ user, setUser }) => {
             }
         };
         checkAuth();
-    }, [navigate, baseApiUrl]);
+    }, [navigate]);
 
     useEffect(() => {
         const fetchUserSettings = async () => {
             try {
                 const [resUser, resPrivacy, resProfile] = await Promise.all([
-                    fetch(`${baseApiUrl}/api/auth/me`, {
+                    fetch(`${API_URL}/api/auth/me`, {
                         credentials: 'include',
                     }),
-                    fetch(`${baseApiUrl}/api/auth/me/privacy`, {
+                    fetch(`${API_URL}/api/auth/me/privacy`, {
                         credentials: 'include',
                     }),
-                    fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                    fetch(`${API_URL}/api/auth/me/profile`, {
                         credentials: 'include',
                     })
                 ]);
@@ -66,7 +66,7 @@ const SettingsPage = ({ user, setUser }) => {
                 setOldPrivacy(privacyData.visibility);
                 setProfilePicture(
                     profileData.profilePictureUrl
-                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        ? `${API_URL}${profileData.profilePictureUrl}`
                         : defaultProfilePicture
                 );
 
@@ -80,12 +80,12 @@ const SettingsPage = ({ user, setUser }) => {
         };
 
         fetchUserSettings();
-    }, [baseApiUrl, defaultProfilePicture]); // Added defaultProfilePicture to dependencies
+    }, [defaultProfilePicture]); // Added defaultProfilePicture to dependencies
 
     const updateUsername = async () => {
         if (username !== oldUsername) {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me/username`, {
+                const res = await fetch(`${API_URL}/api/auth/me/username`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -103,7 +103,7 @@ const SettingsPage = ({ user, setUser }) => {
     const updateEmail = async () => {
         if (email !== oldEmail) {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me/email`, {
+                const res = await fetch(`${API_URL}/api/auth/me/email`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -121,7 +121,7 @@ const SettingsPage = ({ user, setUser }) => {
     const updatePassword = async () => {
         if (password !== oldPassword) {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me/password`, {
+                const res = await fetch(`${API_URL}/api/auth/me/password`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -140,7 +140,7 @@ const SettingsPage = ({ user, setUser }) => {
     const togglePrivacy = async () => {
         const newPrivacy = !privacy;
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/privacy`, {
+            const res = await fetch(`${API_URL}/api/auth/me/privacy`, {
                 method: 'PUT',
                 credentials: 'include',
             });
@@ -156,7 +156,7 @@ const SettingsPage = ({ user, setUser }) => {
 
     const deleteAccount = async () => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+            const res = await fetch(`${API_URL}/api/auth/me`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -194,7 +194,7 @@ const SettingsPage = ({ user, setUser }) => {
                 handleImageError={handleImageError}
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
-                baseApiUrl={baseApiUrl}
+                API_URL={API_URL}
                 defaultProfilePicture={defaultProfilePicture}
             />
 

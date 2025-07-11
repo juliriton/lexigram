@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import {API_URL} from "../Api";
 
 const OAuthCallbackPage = ({ setUser }) => {
     const navigate = useNavigate();
@@ -9,7 +10,7 @@ const OAuthCallbackPage = ({ setUser }) => {
         const completeOAuthFlow = async () => {
             try {
                 // 1. First verify the OAuth success endpoint
-                const oauthResponse = await fetch('http://localhost:8080/api/auth/oauth2/success', {
+                const oauthResponse = await fetch(`${API_URL}/api/auth/oauth2/success`, {
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
@@ -23,7 +24,7 @@ const OAuthCallbackPage = ({ setUser }) => {
                 const userData = await oauthResponse.json();
 
                 // 2. Verify the session is properly set
-                const sessionResponse = await fetch('http://localhost:8080/api/auth/me', {
+                const sessionResponse = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FaTimes, FaUpload, FaPalette, FaCodeBranch } from 'react-icons/fa';
 import Sidebar from '../components/SideBar';
 import '../styles/PostCreationPage.css';
+import {API_URL} from "../Api";
 
 const ForkExperiencePage = ({ user, setUser }) => {
     const navigate = useNavigate();
@@ -25,8 +26,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
     const [fileName, setFileName] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
-    const baseApiUrl = 'http://localhost:8080';
-    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
 
     // Fork-specific state
     const [originalExperience, setOriginalExperience] = useState(null);
@@ -39,7 +39,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
     useEffect(() => {
         const fetchProfilePicture = async () => {
             try {
-                const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                const profileRes = await fetch(`${API_URL}/api/auth/me/profile`, {
                     credentials: 'include',
                 });
 
@@ -47,7 +47,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
                     const profileData = await profileRes.json();
                     setProfilePicture(
                         profileData.profilePictureUrl
-                            ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                            ? `${API_URL}${profileData.profilePictureUrl}`
                             : defaultProfilePicture
                     );
                 } else {
@@ -61,7 +61,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
 
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
@@ -75,7 +75,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
             if (uuid) {
                 setLoadingOriginal(true);
                 try {
-                    const res = await fetch(`${baseApiUrl}/api/auth/me/experience/${uuid}`, {
+                    const res = await fetch(`${API_URL}/api/auth/me/experience/${uuid}`, {
                         credentials: 'include',
                     });
                     if (res.ok) {
@@ -100,7 +100,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
 
         checkAuth();
         loadOriginalExperience();
-    }, [navigate, uuid, baseApiUrl, defaultProfilePicture]);
+    }, [navigate, uuid, defaultProfilePicture]);
 
     const handleCancel = () => {
         const container = document.querySelector('.post-creation-container');
@@ -194,7 +194,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
         if (file) formData.append('file', file);
 
         try {
-            const resp = await fetch(`${baseApiUrl}/api/auth/me/experience/${uuid}/fork`, {
+            const resp = await fetch(`${API_URL}/api/auth/me/experience/${uuid}/fork`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
@@ -239,7 +239,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
                     handleImageError={handleImageError}
                     sidebarOpen={sidebarOpen}
                     toggleSidebar={toggleSidebar}
-                    baseApiUrl={baseApiUrl}
+                    baseApiUrl={API_URL}
                     defaultProfilePicture={defaultProfilePicture}
                 />
 
@@ -274,7 +274,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
                     handleImageError={handleImageError}
                     sidebarOpen={sidebarOpen}
                     toggleSidebar={toggleSidebar}
-                    baseApiUrl={baseApiUrl}
+                    baseApiUrl={API_URL}
                     defaultProfilePicture={defaultProfilePicture}
                 />
 
@@ -311,7 +311,7 @@ const ForkExperiencePage = ({ user, setUser }) => {
                 handleImageError={handleImageError}
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
-                baseApiUrl={baseApiUrl}
+                baseApiUrl={API_URL}
                 defaultProfilePicture={defaultProfilePicture}
             />
 

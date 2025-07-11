@@ -8,6 +8,7 @@ import EditSuggestionModal from '../components/EditSuggestionModal';
 import EditExperienceModal from '../components/EditExperienceModal';
 import SavedContent from '../components/SavedContent';
 import Sidebar from '../components/SideBar';
+import { API_URL } from '../Api.js';
 
 const UserProfilePage = ({ user, setUser }) => {
     const navigate = useNavigate();
@@ -44,8 +45,7 @@ const UserProfilePage = ({ user, setUser }) => {
     const [followingPage, setFollowingPage] = useState(1);
     const [itemsPerPage] = useState(4);
 
-    const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
-    const baseApiUrl = 'http://localhost:8080';
+    const defaultProfilePic = `${API_URL}/images/default-profile-picture.jpg`;
 
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -82,7 +82,7 @@ const UserProfilePage = ({ user, setUser }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
@@ -97,10 +97,10 @@ const UserProfilePage = ({ user, setUser }) => {
         const loadProfile = async () => {
             try {
                 const [resUser, resProfile] = await Promise.all([
-                    fetch(`${baseApiUrl}/api/auth/me`, {
+                    fetch(`${API_URL}/api/auth/me`, {
                         credentials: 'include'
                     }),
-                    fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                    fetch(`${API_URL}/api/auth/me/profile`, {
                         credentials: 'include'
                     })
                 ]);
@@ -114,7 +114,7 @@ const UserProfilePage = ({ user, setUser }) => {
                 setProfile(profileData);
                 setProfilePicture(
                     profileData.profilePictureUrl
-                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        ? `${API_URL}${profileData.profilePictureUrl}`
                         : defaultProfilePic
                 );
                 setNewBio(profileData.biography || '');
@@ -134,13 +134,13 @@ const UserProfilePage = ({ user, setUser }) => {
             let url;
             switch (postFilter) {
                 case 'suggestions':
-                    url = `${baseApiUrl}/api/auth/me/profile/posts/suggestions`;
+                    url = `${API_URL}/api/auth/me/profile/posts/suggestions`;
                     break;
                 case 'experiences':
-                    url = `${baseApiUrl}/api/auth/me/profile/posts/experiences`;
+                    url = `${API_URL}/api/auth/me/profile/posts/experiences`;
                     break;
                 default:
-                    url = `${baseApiUrl}/api/auth/me/profile/posts`;
+                    url = `${API_URL}/api/auth/me/profile/posts`;
             }
 
             try {
@@ -189,7 +189,7 @@ const UserProfilePage = ({ user, setUser }) => {
     useEffect(() => {
         const fetchConnections = async () => {
             try {
-                const followerRes = await fetch(`${baseApiUrl}/api/auth/me/profile/followers`, {
+                const followerRes = await fetch(`${API_URL}/api/auth/me/profile/followers`, {
                     credentials: 'include'
                 });
 
@@ -199,7 +199,7 @@ const UserProfilePage = ({ user, setUser }) => {
                     setFollowerCount(followerData.length);
                 }
 
-                const followingRes = await fetch(`${baseApiUrl}/api/auth/me/profile/following`, {
+                const followingRes = await fetch(`${API_URL}/api/auth/me/profile/following`, {
                     credentials: 'include'
                 });
 
@@ -221,7 +221,7 @@ const UserProfilePage = ({ user, setUser }) => {
             if (!profile?.profilePictureUrl || attemptedLoad) return;
 
             setAttemptedLoad(true);
-            const imgUrl = `${baseApiUrl}${profile.profilePictureUrl}`;
+            const imgUrl = `${API_URL}${profile.profilePictureUrl}`;
             const img = new Image();
             img.onload = () => setUsingDefaultImage(false);
             img.onerror = () => setUsingDefaultImage(true);
@@ -236,7 +236,7 @@ const UserProfilePage = ({ user, setUser }) => {
             const previousBioValue = profile.biography || 'No bio yet — still searching for the right words.';
             const bioToUpdate = newBio.trim() || 'No bio yet — still searching for the right words.';
 
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/biography`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/edit/biography`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -272,7 +272,7 @@ New: "${bioToUpdate}"`);
         formData.append('file', selectedFile);
 
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/profile-picture`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/edit/profile-picture`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
@@ -280,7 +280,7 @@ New: "${bioToUpdate}"`);
 
             if (!res.ok) throw new Error('Upload failed');
 
-            const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+            const profileRes = await fetch(`${API_URL}/api/auth/me/profile`, {
                 credentials: 'include'
             });
 
@@ -289,7 +289,7 @@ New: "${bioToUpdate}"`);
                 setProfile(profileData);
                 setProfilePicture(
                     profileData.profilePictureUrl
-                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        ? `${API_URL}${profileData.profilePictureUrl}`
                         : defaultProfilePic
                 );
             }
@@ -313,8 +313,8 @@ New: "${bioToUpdate}"`);
 
         try {
             const endpoint = type === 'Experience'
-                ? `${baseApiUrl}/api/auth/me/profile/posts/delete/experiences/${uuid}`
-                : `${baseApiUrl}/api/auth/me/profile/posts/delete/suggestions/${uuid}`;
+                ? `${API_URL}/api/auth/me/profile/posts/delete/experiences/${uuid}`
+                : `${API_URL}/api/auth/me/profile/posts/delete/suggestions/${uuid}`;
 
             const res = await fetch(endpoint, {
                 method: 'DELETE',
@@ -341,7 +341,7 @@ New: "${bioToUpdate}"`);
         const { uuid, username } = removeFollowerConfirmation;
 
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/followers/remove/${uuid}`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/followers/remove/${uuid}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -445,7 +445,7 @@ New: "${bioToUpdate}"`);
         if (usingDefaultImage || !profile?.profilePictureUrl) {
             return defaultProfilePic;
         }
-        return `${baseApiUrl}${profile.profilePictureUrl}?t=${Date.now()}`;
+        return `${API_URL}${profile.profilePictureUrl}?t=${Date.now()}`;
     };
 
     const handleNavigateToUserProfile = (uuid) => {
@@ -456,7 +456,7 @@ New: "${bioToUpdate}"`);
         if (!connection?.profilePictureUrl) {
             return defaultProfilePic;
         }
-        return `${baseApiUrl}${connection.profilePictureUrl}`;
+        return `${API_URL}${connection.profilePictureUrl}`;
     };
 
     const formatDate = (timestamp) => new Date(timestamp).toLocaleDateString();
@@ -516,7 +516,7 @@ New: "${bioToUpdate}"`);
                     <ExperienceCard
                         user={user}
                         post={post}
-                        baseApiUrl={baseApiUrl}
+                        baseApiUrl={API_URL}
                         username={'Me'}
                         hiddenQuotes={hiddenQuotes}
                         toggleQuote={toggleQuote}
@@ -541,7 +541,7 @@ New: "${bioToUpdate}"`);
                 <SuggestionCard
                     user={user}
                     post={post}
-                    baseApiUrl={baseApiUrl}
+                    baseApiUrl={API_URL}
                     username={'Me'}
                     hiddenQuotes={hiddenQuotes}
                     toggleQuote={toggleQuote}
@@ -674,7 +674,7 @@ New: "${bioToUpdate}"`);
                 handleImageError={handleImageError}
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
-                baseApiUrl={baseApiUrl}
+                baseApiUrl={API_URL}
                 defaultProfilePicture={defaultProfilePic}
             />
 
@@ -752,7 +752,7 @@ New: "${bioToUpdate}"`);
                     suggestion={editingSuggestion}
                     onClose={handleCloseSuggestionModal}
                     onUpdate={handleUpdateSuggestion}
-                    baseApiUrl={baseApiUrl}
+                    baseApiUrl={API_URL}
                 />
             )}
 
@@ -761,7 +761,7 @@ New: "${bioToUpdate}"`);
                     experience={editingExperience}
                     onClose={handleCloseExperienceModal}
                     onUpdate={handleUpdateExperience}
-                    baseApiUrl={baseApiUrl}
+                    baseApiUrl={API_URL}
                 />
             )}
 
@@ -857,7 +857,7 @@ New: "${bioToUpdate}"`);
                 <div className="profile-content profile-saved">
                     <SavedContent
                         user={user}
-                        baseApiUrl={baseApiUrl}
+                        baseApiUrl={API_URL}
                         currentPage={savedPage}
                         itemsPerPage={itemsPerPage}
                         onPageChange={setSavedPage}

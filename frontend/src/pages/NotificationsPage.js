@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaBell, FaCheck, FaTrash, FaUser, FaHeart, FaComment, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import '../styles/NotificationsPage.css';
 import Sidebar from '../components/SideBar';
+import {API_URL} from "../Api";
 
 const NotificationsPage = ({ user, setUser }) => {
     const [notifications, setNotifications] = useState([]);
@@ -14,8 +15,7 @@ const NotificationsPage = ({ user, setUser }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const navigate = useNavigate();
-    const baseApiUrl = 'http://localhost:8080';
-    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
 
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -45,7 +45,7 @@ const NotificationsPage = ({ user, setUser }) => {
 
         for (const uuid of actorUuids) {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me/users/${uuid}/profile`, {
+                const res = await fetch(`${API_URL}/api/auth/me/users/${uuid}/profile`, {
                     credentials: 'include',
                 });
 
@@ -59,11 +59,11 @@ const NotificationsPage = ({ user, setUser }) => {
         }
 
         setActorProfiles(profiles);
-    }, [baseApiUrl]);
+    }, []);
 
     const fetchNotifications = useCallback(async () => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications`, {
                 credentials: 'include',
             });
 
@@ -82,12 +82,12 @@ const NotificationsPage = ({ user, setUser }) => {
         } finally {
             setLoading(false);
         }
-    }, [baseApiUrl, fetchActorProfiles]);
+    }, [fetchActorProfiles]);
 
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
@@ -96,19 +96,19 @@ const NotificationsPage = ({ user, setUser }) => {
             }
         };
         checkAuth();
-    }, [navigate, baseApiUrl]);
+    }, [navigate]);
 
     useEffect(() => {
         const fetchProfilePicture = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                const res = await fetch(`${API_URL}/api/auth/me/profile`, {
                     credentials: 'include',
                 });
                 if (res.ok) {
                     const data = await res.json();
                     setProfilePicture(
                         data.profilePictureUrl
-                            ? `${baseApiUrl}${data.profilePictureUrl}`
+                            ? `${API_URL}${data.profilePictureUrl}`
                             : defaultProfilePicture
                     );
                 }
@@ -120,11 +120,11 @@ const NotificationsPage = ({ user, setUser }) => {
 
         fetchProfilePicture();
         fetchNotifications();
-    }, [baseApiUrl, defaultProfilePicture, fetchNotifications]);
+    }, [defaultProfilePicture, fetchNotifications]);
 
     const acknowledgeNotification = async (uuid) => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications/acknowledge/${uuid}`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications/acknowledge/${uuid}`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -145,7 +145,7 @@ const NotificationsPage = ({ user, setUser }) => {
 
     const acknowledgeAllNotifications = async () => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications/acknowledge`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications/acknowledge`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -164,7 +164,7 @@ const NotificationsPage = ({ user, setUser }) => {
 
     const deleteNotification = async (uuid) => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications/delete/${uuid}`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications/delete/${uuid}`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -187,7 +187,7 @@ const NotificationsPage = ({ user, setUser }) => {
         }
 
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications/delete`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications/delete`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -254,7 +254,7 @@ const NotificationsPage = ({ user, setUser }) => {
                 handleImageError={handleImageError}
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
-                baseApiUrl={baseApiUrl}
+                baseApiUrl={API_URL}
                 defaultProfilePicture={defaultProfilePicture}
             />
 
