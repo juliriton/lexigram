@@ -12,7 +12,7 @@ COPY gradle gradle/
 COPY src src/
 
 # Build the application
-RUN ./gradlew build -x test
+RUN chmod +x ./gradlew && ./gradlew build -x test
 
 # Runtime stage
 FROM openjdk:17-jdk-slim
