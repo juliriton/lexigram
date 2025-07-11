@@ -1,19 +1,22 @@
+// HomePage.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FaUserCircle,
-    FaCog,
-    FaSignOutAlt,
     FaTimes,
     FaPenFancy,
     FaPhotoVideo,
     FaQuestion,
     FaBorderAll,
-    FaSearch, FaEnvelope, FaTags
+    FaSearch,
+    FaArrowLeft,
+    FaArrowRight
 } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import SuggestionCard from '../components/SuggestionCard';
+import SideBar from '../components/SideBar';
 import '../styles/HomePage.css';
+import { API_URL } from '../Api.js';
 
 const HomePage = ({ user, setUser }) => {
     const navigate = useNavigate();
@@ -29,12 +32,21 @@ const HomePage = ({ user, setUser }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState(null);
     const [searching, setSearching] = useState(false);
-    const baseApiUrl = 'http://localhost:8080';
-    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(8);
+    const [searchFilters, setSearchFilters] = useState({
+        users: true,
+        experiences: true,
+        suggestions: true,
+        tags: true,
+        exactMatch: false
+    });
+    const [searchFocused, setSearchFocused] = useState(false);
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
 
     const fetchGuestFeed = async () => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/feed`);
+            const res = await fetch(`${API_URL}/api/auth/feed`);
             if (res.ok) {
                 const feedData = await res.json();
                 setExperiences(feedData.experiences || []);
@@ -47,7 +59,7 @@ const HomePage = ({ user, setUser }) => {
 
     const fetchProfilePicture = useCallback(async () => {
         try {
-            const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+            const profileRes = await fetch(`${API_URL}/api/auth/me/profile`, {
                 credentials: 'include',
             });
 
@@ -55,7 +67,7 @@ const HomePage = ({ user, setUser }) => {
                 const profileData = await profileRes.json();
                 setProfilePicture(
                     profileData.profilePictureUrl
-                        ? `${baseApiUrl}${profileData.profilePictureUrl}`
+                        ? `${API_URL}${profileData.profilePictureUrl}`
                         : defaultProfilePicture
                 );
             } else {
@@ -65,7 +77,7 @@ const HomePage = ({ user, setUser }) => {
             console.error('Error fetching profile picture:', err);
             setProfilePicture(defaultProfilePicture);
         }
-    }, [baseApiUrl, defaultProfilePicture]);
+    }, [defaultProfilePicture]);
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -73,6 +85,7 @@ const HomePage = ({ user, setUser }) => {
 
         if (!cleanedQuery) {
             setSearchResults(null);
+            setCurrentPage(1);
             return;
         }
 
@@ -87,7 +100,14 @@ const HomePage = ({ user, setUser }) => {
 
         setSearching(true);
         try {
-            const response = await fetch(`${baseApiUrl}/api/auth/me/feed/search/${encodeURIComponent(cleanedQuery)}`, {
+            const response = await fetch(`${API_URL}/api/auth/me/feed/search/${encodeURIComponent(cleanedQuery)}?` +
+                new URLSearchParams({
+                    users: searchFilters.users,
+                    experiences: searchFilters.experiences,
+                    suggestions: searchFilters.suggestions,
+                    tags: searchFilters.tags,
+                    exact: searchFilters.exactMatch
+                }), {
                 credentials: 'include'
             });
 
@@ -96,15 +116,17 @@ const HomePage = ({ user, setUser }) => {
                 setSearchResults({
                     users: data.connections || [],
                     experiences: data.experiences || [],
-                    suggestions: data.suggestions || []
+                    suggestions: data.suggestions || [],
+                    tags: data.tags || []
                 });
+                setCurrentPage(1);
             } else {
                 console.error('Search failed:', response.status);
-                setSearchResults({ users: [], experiences: [], suggestions: [] });
+                setSearchResults({ users: [], experiences: [], suggestions: [], tags: [] });
             }
         } catch (err) {
             console.error('Error performing search:', err);
-            setSearchResults({ users: [], experiences: [], suggestions: [] });
+            setSearchResults({ users: [], experiences: [], suggestions: [], tags: [] });
         } finally {
             setSearching(false);
         }
@@ -113,6 +135,8 @@ const HomePage = ({ user, setUser }) => {
     const clearSearch = () => {
         setSearchQuery('');
         setSearchResults(null);
+        setCurrentPage(1);
+        setSearchFocused(false);
     };
 
     const handleMentionClick = (mentionUuid) => {
@@ -125,58 +149,39 @@ const HomePage = ({ user, setUser }) => {
         }
     };
 
-    const renderExperienceCards = (experiencesArray) => {
-        return experiencesArray.map(exp => {
-            return (
-                <ExperienceCard
-                    key={exp.uuid}
-                    user={user}
-                    post={exp}
-                    baseApiUrl={baseApiUrl}
-                    username={exp.user?.username || user?.username || 'Usuario'}
-                    hiddenQuotes={hiddenQuotes}
-                    toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
-                    showMentions={showMentions}
-                    setShowMentions={setShowMentions}
-                    renderMentions={(mentions, id) => (
-                        showMentions[id] && (
-                            <div className="post-mentions">
-                                <h6>Mentions:</h6>
-                                <div className="mentions-list">
-                                    {mentions.map((mention, i) => (
-                                        <span
-                                            key={i}
-                                            className="mention clickable"
-                                            onClick={() => handleMentionClick(mention.uuid)}
-                                            style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
-                                        >
-                                            @{mention.username}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )
-                    )}
-                    renderTags={renderTags}
-                    formatDate={formatDate}
-                    disablePopup={false}
-                    isOwner={user && exp.user && user.uuid === exp.user.uuid}
-                />
-            );
-        });
+    const getPaginatedItems = (items) => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return items.slice(startIndex, endIndex);
+    };
+
+    const getInterleavedPosts = () => {
+        const result = [];
+        const maxLength = Math.max(displayExperiences.length, displaySuggestions.length);
+
+        for (let i = 0; i < maxLength; i++) {
+            if (i < displayExperiences.length) {
+                result.push({ ...displayExperiences[i], type: 'experience' });
+            }
+            if (i < displaySuggestions.length) {
+                result.push({ ...displaySuggestions[i], type: 'suggestion' });
+            }
+        }
+
+        return result;
     };
 
     useEffect(() => {
         const fetchUserAndFeed = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, { credentials: 'include' });
+                const res = await fetch(`${API_URL}/api/auth/me`, { credentials: 'include' });
                 if (res.ok) {
                     const data = await res.json();
                     setUser(data);
 
                     fetchProfilePicture();
 
-                    let feedUrl = `${baseApiUrl}/api/auth/me/feed`;
+                    let feedUrl = `${API_URL}/api/auth/me/feed`;
                     if (feedType === 'following') {
                         feedUrl += '/following';
                     } else if (feedType === 'discover') {
@@ -188,10 +193,12 @@ const HomePage = ({ user, setUser }) => {
                         const feedData = await feedRes.json();
                         setExperiences(feedData.experiences || []);
                         setSuggestions(feedData.suggestions || []);
+                        setCurrentPage(1);
                     }
                 } else {
                     setUser(null);
                     await fetchGuestFeed();
+                    setCurrentPage(1);
                 }
             } catch (err) {
                 console.error('Error loading user or feed:', err);
@@ -201,28 +208,10 @@ const HomePage = ({ user, setUser }) => {
             }
         };
         fetchUserAndFeed();
-    }, [setUser, feedType, fetchProfilePicture, baseApiUrl]);
-
-    const handleLogout = () => {
-        fetch(`${baseApiUrl}/api/auth/me/logout`, {
-            method: 'POST',
-            credentials: 'include',
-        })
-            .then(() => {
-                setUser(null);
-                setSidebarOpen(false);
-                window.location.href = '/';
-            })
-            .catch(err => console.error('Logout failed:', err));
-    };
+    }, [setUser, feedType, fetchProfilePicture]);
 
     const handleImageError = () => setProfilePicture(defaultProfilePicture);
 
-    const goToProfile = () => { navigate(user ? '/profile' : '/login'); setSidebarOpen(false); };
-    const goToSettings = () => { navigate(user ? '/settings' : '/login'); setSidebarOpen(false); };
-    const goToNotifications = () => { navigate(user ? '/notifications' : '/login'); setSidebarOpen(false); };
-    const goToTags = () => { navigate(user ? '/tags' : '/login'); setSidebarOpen(false); };
-    const goToLogin = () => { navigate('/login'); setSidebarOpen(false); };
     const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
     const formatDate = ts => new Date(ts).toLocaleDateString();
@@ -265,6 +254,11 @@ const HomePage = ({ user, setUser }) => {
         }
     }
 
+    const interleavedPosts = getInterleavedPosts();
+    const paginatedPosts = getPaginatedItems(interleavedPosts);
+    const totalPagesCount = Math.ceil(interleavedPosts.length / itemsPerPage);
+    const showPagination = interleavedPosts.length > itemsPerPage && !searching;
+
     if (loading) {
         return (
             <div className="container">
@@ -286,56 +280,16 @@ const HomePage = ({ user, setUser }) => {
                 <span></span><span></span><span></span>
             </label>
 
-            <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-header">
-                    <h3>Menu</h3>
-                    <FaTimes className="close-btn" onClick={toggleSidebar} />
-                </div>
-                <div className="sidebar-content">
-                    {user ? (
-                        <>
-                            <div className="user-info">
-                                {profilePicture ? (
-                                    <img
-                                        src={profilePicture}
-                                        alt="Profile"
-                                        className="profile-image"
-                                        onError={handleImageError}
-                                    />
-                                ) : (
-                                    <FaUserCircle size={40} />
-                                )}
-                                <p>{user.username || 'Usuario'}</p>
-                            </div>
-                            <div className="sidebar-menu-items">
-                                <div className="menu-item" onClick={goToProfile}>
-                                    <FaUserCircle size={20}/> <span>Profile</span>
-                                </div>
-                                <div className="menu-item" onClick={goToSettings}>
-                                    <FaCog size={20}/> <span>Settings</span>
-                                </div>
-                                <div className="menu-item" onClick={goToNotifications}>
-                                    <FaEnvelope size={20}/> <span>Notifications</span>
-                                </div>
-                                <div className="menu-item" onClick={goToTags}>
-                                    <FaTags size={20}/> <span>Tags</span>
-                                </div>
-                                <div className="menu-item" onClick={handleLogout}>
-                                    <FaSignOutAlt size={20}/> <span>Log out</span>
-                                </div>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="sidebar-menu-items">
-                            <div className="menu-item" onClick={goToLogin}>
-                            <FaUserCircle size={20} /> <span>Log In</span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {sidebarOpen && <div className="sidebar-overlay" onClick={toggleSidebar}></div>}
+            <SideBar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={API_URL}
+                defaultProfilePicture={defaultProfilePicture}
+            />
 
             <div className="main-content">
                 <h1 className="app-title">Lexigram</h1>
@@ -348,6 +302,12 @@ const HomePage = ({ user, setUser }) => {
                             placeholder="Search users, posts, tags..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setSearchFocused(true)}
+                            onBlur={() => {
+                                if (!searchQuery) {
+                                    setSearchFocused(false);
+                                }
+                            }}
                         />
                         <button type="submit" className="search-button">
                             <FaSearch />
@@ -358,6 +318,46 @@ const HomePage = ({ user, setUser }) => {
                             </button>
                         )}
                     </div>
+
+                    {(searchFocused || searchQuery) && (
+                        <div className="search-filters">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.users}
+                                    onChange={() => setSearchFilters({...searchFilters, users: !searchFilters.users})}
+                                /> Users
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.experiences}
+                                    onChange={() => setSearchFilters({...searchFilters, experiences: !searchFilters.experiences})}
+                                /> Experiences
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.suggestions}
+                                    onChange={() => setSearchFilters({...searchFilters, suggestions: !searchFilters.suggestions})}
+                                /> Suggestions
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.tags}
+                                    onChange={() => setSearchFilters({...searchFilters, tags: !searchFilters.tags})}
+                                /> Tags
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={searchFilters.exactMatch}
+                                    onChange={() => setSearchFilters({...searchFilters, exactMatch: !searchFilters.exactMatch})}
+                                /> Exact Match
+                            </label>
+                        </div>
+                    )}
                 </form>
 
                 {!searchResults && user && (
@@ -411,7 +411,7 @@ const HomePage = ({ user, setUser }) => {
                                         >
                                             {userResult.profilePictureUrl ? (
                                                 <img
-                                                    src={`${baseApiUrl}${userResult.profilePictureUrl}`}
+                                                    src={`${API_URL}${userResult.profilePictureUrl}`}
                                                     alt={userResult.username}
                                                     className="user-avatar"
                                                     onError={(e) => {
@@ -428,6 +428,23 @@ const HomePage = ({ user, setUser }) => {
                                 </div>
                             </div>
                         )}
+
+                        {searchResults.tags && searchResults.tags.length > 0 && (
+                            <div className="tags-section">
+                                <h4>Tags</h4>
+                                <div className="tags-grid">
+                                    {searchResults.tags.map(tag => (
+                                        <div
+                                            key={tag.uuid}
+                                            className="tag-result"
+                                            onClick={() => navigate(`/tag/${tag.name}`)}
+                                        >
+                                            #{tag.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -439,30 +456,92 @@ const HomePage = ({ user, setUser }) => {
                 )}
 
                 <div className="posts-grid">
-                    {renderExperienceCards(displayExperiences)}
-
-                    {displaySuggestions.map(sug => (
-                        <SuggestionCard
-                            key={sug.uuid}
-                            user={user}
-                            post={sug}
-                            baseApiUrl={baseApiUrl}
-                            username={sug.user?.username || user?.username || 'Usuario'}
-                            renderTags={renderTags}
-                            formatDate={formatDate}
-                            isOwner={user && sug.user && user.uuid === sug.user.uuid}
-                        />
-                    ))}
+                    {paginatedPosts.map(post => {
+                        if (post.type === 'experience') {
+                            return (
+                                <ExperienceCard
+                                    key={post.uuid}
+                                    user={user}
+                                    post={post}
+                                    baseApiUrl={API_URL}
+                                    username={post.user?.username || user?.username || 'Usuario'}
+                                    hiddenQuotes={hiddenQuotes}
+                                    toggleQuote={id => setHiddenQuotes(prev => ({ ...prev, [id]: !prev[id] }))}
+                                    showMentions={showMentions}
+                                    setShowMentions={setShowMentions}
+                                    renderMentions={(mentions, id) => (
+                                        showMentions[id] && (
+                                            <div className="post-mentions">
+                                                <h6>Mentions:</h6>
+                                                <div className="mentions-list">
+                                                    {mentions.map((mention, i) => (
+                                                        <span
+                                                            key={i}
+                                                            className="mention clickable"
+                                                            onClick={() => handleMentionClick(mention.uuid)}
+                                                            style={{ cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline' }}
+                                                        >
+                                                            @{mention.username}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )
+                                    )}
+                                    renderTags={renderTags}
+                                    formatDate={formatDate}
+                                    disablePopup={false}
+                                    isOwner={user && post.user && user.uuid === post.user.uuid}
+                                />
+                            );
+                        } else {
+                            return (
+                                <SuggestionCard
+                                    key={post.uuid}
+                                    user={user}
+                                    post={post}
+                                    baseApiUrl={API_URL}
+                                    username={post.user?.username || user?.username || 'Usuario'}
+                                    renderTags={renderTags}
+                                    formatDate={formatDate}
+                                    isOwner={user && post.user && user.uuid === post.user.uuid}
+                                />
+                            );
+                        }
+                    })}
 
                     {searchResults &&
                         displayExperiences.length === 0 &&
                         displaySuggestions.length === 0 &&
-                        (!searchResults.users || searchResults.users.length === 0) && (
+                        (!searchResults.users || searchResults.users.length === 0) &&
+                        (!searchResults.tags || searchResults.tags.length === 0) && (
                             <div className="no-results">
                                 <p>No results found for "{searchQuery}"</p>
                             </div>
                         )}
                 </div>
+
+                {showPagination && (
+                    <div className="pagination-container">
+                        <button
+                            className="pagination-button"
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            <FaArrowLeft />
+                        </button>
+                        <span className="page-info">
+                            Page {currentPage} of {totalPagesCount}
+                        </span>
+                        <button
+                            className="pagination-button"
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            disabled={currentPage >= totalPagesCount}
+                        >
+                            <FaArrowRight />
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="create-post-icon" onClick={() => navigate(user ? '/post/create' : '/login')}>

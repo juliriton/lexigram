@@ -1,63 +1,51 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaHome, FaBell, FaCheck, FaTrash, FaUser, FaHeart, FaComment } from "react-icons/fa";
+import { FaBell, FaCheck, FaTrash, FaUser, FaHeart, FaComment, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import '../styles/NotificationsPage.css';
+import Sidebar from '../components/SideBar';
+import {API_URL} from "../Api";
 
-const NotificationsPage = ({ user }) => {
+const NotificationsPage = ({ user, setUser }) => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
     const [actorProfiles, setActorProfiles] = useState({});
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
     const navigate = useNavigate();
-    const baseApiUrl = 'http://localhost:8080';
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
-                    credentials: 'include',
-                });
-                if (!res.ok) navigate('/login');
-            } catch {
-                navigate('/login');
-            }
-        };
-        checkAuth();
-    }, [navigate]);
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
-    useEffect(() => {
-        fetchNotifications();
-    }, []);
-
-    const fetchNotifications = async () => {
-        try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications`, {
-                credentials: 'include',
-            });
-
-            if (!res.ok) throw new Error('Failed to fetch notifications');
-
-            const data = await res.json();
-            setNotifications(data);
-
-            // Fetch actor profiles for notifications that have actorUuid
-            const actorUuids = [...new Set(data.filter(n => n.actorUuid).map(n => n.actorUuid))];
-            fetchActorProfiles(actorUuids);
-
-        } catch (err) {
-            console.error(err);
-            setMessage('Error loading notifications.');
-        } finally {
-            setLoading(false);
-        }
+    const handleImageError = () => {
+        setProfilePicture(defaultProfilePicture);
     };
 
-    const fetchActorProfiles = async (actorUuids) => {
+    // Pagination functions
+    const getPaginatedItems = (items) => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return items.slice(startIndex, endIndex);
+    };
+
+    const totalPages = () => Math.ceil(notifications.length / itemsPerPage);
+
+    const handlePrevPage = () => {
+        setCurrentPage(prev => Math.max(prev - 1, 1));
+    };
+
+    const handleNextPage = () => {
+        setCurrentPage(prev => Math.min(prev + 1, totalPages()));
+    };
+
+    const fetchActorProfiles = useCallback(async (actorUuids) => {
         const profiles = {};
 
         for (const uuid of actorUuids) {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me/users/${uuid}/profile`, {
+                const res = await fetch(`${API_URL}/api/auth/me/users/${uuid}/profile`, {
                     credentials: 'include',
                 });
 
@@ -71,11 +59,72 @@ const NotificationsPage = ({ user }) => {
         }
 
         setActorProfiles(profiles);
-    };
+    }, []);
+
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications`, {
+                credentials: 'include',
+            });
+
+            if (!res.ok) throw new Error('Failed to fetch notifications');
+
+            const data = await res.json();
+            setNotifications(data);
+            setCurrentPage(1); // Reset to first page when notifications change
+
+            const actorUuids = [...new Set(data.filter(n => n.actorUuid).map(n => n.actorUuid))];
+            fetchActorProfiles(actorUuids);
+
+        } catch (err) {
+            console.error(err);
+            setMessage('Error loading notifications.');
+        } finally {
+            setLoading(false);
+        }
+    }, [fetchActorProfiles]);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
+                    credentials: 'include',
+                });
+                if (!res.ok) navigate('/login');
+            } catch {
+                navigate('/login');
+            }
+        };
+        checkAuth();
+    }, [navigate]);
+
+    useEffect(() => {
+        const fetchProfilePicture = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/auth/me/profile`, {
+                    credentials: 'include',
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setProfilePicture(
+                        data.profilePictureUrl
+                            ? `${API_URL}${data.profilePictureUrl}`
+                            : defaultProfilePicture
+                    );
+                }
+            } catch (err) {
+                console.error('Error fetching profile picture:', err);
+                setProfilePicture(defaultProfilePicture);
+            }
+        };
+
+        fetchProfilePicture();
+        fetchNotifications();
+    }, [defaultProfilePicture, fetchNotifications]);
 
     const acknowledgeNotification = async (uuid) => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications/acknowledge/${uuid}`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications/acknowledge/${uuid}`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -96,7 +145,7 @@ const NotificationsPage = ({ user }) => {
 
     const acknowledgeAllNotifications = async () => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications/acknowledge`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications/acknowledge`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -115,7 +164,7 @@ const NotificationsPage = ({ user }) => {
 
     const deleteNotification = async (uuid) => {
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications/delete/${uuid}`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications/delete/${uuid}`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -138,7 +187,7 @@ const NotificationsPage = ({ user }) => {
         }
 
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/notifications/delete`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/notifications/delete`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -172,19 +221,43 @@ const NotificationsPage = ({ user }) => {
         return new Date(timestamp).toLocaleString();
     };
 
-    const handleNotificationClick = (notification) => {
-        // Navigate based on notification type
+    const handleNotificationClick = useCallback((notification) => {
         if (notification.experienceUuid) {
             navigate(`/experience/${notification.experienceUuid}`);
         } else if (notification.actorUuid) {
             navigate(`/profile/${notification.actorUuid}`);
         }
-    };
+    }, [navigate]);
 
     if (loading) return <div className="container mt-4">Loading notifications...</div>;
 
+    const paginatedNotifications = getPaginatedItems(notifications);
+    const totalPagesCount = totalPages();
+    const showPagination = notifications.length > itemsPerPage;
+
     return (
         <div className="notifications-page container mt-4">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
+
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={API_URL}
+                defaultProfilePicture={defaultProfilePicture}
+            />
+
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="text-center flex-grow-1">
                     <FaBell className="me-2" />
@@ -205,21 +278,26 @@ const NotificationsPage = ({ user }) => {
 
             {notifications.length > 0 && (
                 <div className="notification-actions mb-4">
-                    <div className="d-flex gap-2 justify-content-end">
-                        <button
-                            className="btn btn-outline-primary btn-sm"
-                            onClick={acknowledgeAllNotifications}
-                        >
-                            <FaCheck className="me-1" />
-                            Mark All Read
-                        </button>
-                        <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={deleteAllNotifications}
-                        >
-                            <FaTrash className="me-1" />
-                            Delete All
-                        </button>
+                    <div className="d-flex gap-2 justify-content-between align-items-center">
+                        <div className="pagination-info">
+                            Showing {paginatedNotifications.length} of {notifications.length} notifications
+                        </div>
+                        <div className="d-flex gap-2">
+                            <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={acknowledgeAllNotifications}
+                            >
+                                <FaCheck className="me-1" />
+                                Mark All Read
+                            </button>
+                            <button
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={deleteAllNotifications}
+                            >
+                                <FaTrash className="me-1" />
+                                Delete All
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -232,75 +310,88 @@ const NotificationsPage = ({ user }) => {
                         <p className="text-muted">You're all caught up!</p>
                     </div>
                 ) : (
-                    notifications.map((notification) => (
-                        <div
-                            key={notification.uuid}
-                            className={`notification-item ${!notification.read ? 'unread' : ''}`}
-                        >
-                            <div className="notification-content">
-                                <div className="notification-header">
-                                    <div className="notification-icon-wrapper">
-                                        {getNotificationIcon(notification.type)}
-                                    </div>
-                                    <div className="notification-info flex-grow-1">
-                                        <h6 className="notification-title mb-1">
-                                            {notification.title}
-                                            {!notification.read && <span className="unread-dot"></span>}
-                                        </h6>
-                                        <p className="notification-text mb-1">{notification.text}</p>
-                                        {notification.actorUuid && actorProfiles[notification.actorUuid] && (
-                                            <small className="text-muted">
-                                                by @{actorProfiles[notification.actorUuid].username}
-                                            </small>
-                                        )}
-                                        <div className="notification-meta">
-                                            <small className="text-muted">
-                                                {formatDate(notification.creationDate)}
-                                            </small>
+                    <>
+                        {paginatedNotifications.map((notification) => (
+                            <div
+                                key={notification.uuid}
+                                className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                                onClick={() => handleNotificationClick(notification)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <div className="notification-content">
+                                    <div className="notification-header">
+                                        <div className="notification-icon-wrapper">
+                                            {getNotificationIcon(notification.type)}
+                                        </div>
+                                        <div className="notification-info flex-grow-1">
+                                            <h6 className="notification-title mb-1">
+                                                {notification.title}
+                                                {!notification.read && <span className="unread-dot"></span>}
+                                            </h6>
+                                            <p className="notification-text mb-1">{notification.text}</p>
+                                            {notification.actorUuid && actorProfiles[notification.actorUuid] && (
+                                                <small className="text-muted">
+                                                    by @{actorProfiles[notification.actorUuid].username}
+                                                </small>
+                                            )}
+                                            <div className="notification-meta">
+                                                <small className="text-muted">
+                                                    {formatDate(notification.creationDate)}
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="notification-actions">
-                                {!notification.read && (
+                                <div className="notification-actions">
+                                    {!notification.read && (
+                                        <button
+                                            className="btn btn-sm btn-outline-success me-2"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                acknowledgeNotification(notification.uuid);
+                                            }}
+                                            title="Mark as read"
+                                        >
+                                            <FaCheck />
+                                        </button>
+                                    )}
                                     <button
-                                        className="btn btn-sm btn-outline-success me-2"
-                                        onClick={() => acknowledgeNotification(notification.uuid)}
-                                        title="Mark as read"
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteNotification(notification.uuid);
+                                        }}
+                                        title="Delete notification"
                                     >
-                                        <FaCheck />
+                                        <FaTrash />
                                     </button>
-                                )}
+                                </div>
+                            </div>
+                        ))}
+
+                        {showPagination && (
+                            <div className="pagination-controls mt-4">
                                 <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => deleteNotification(notification.uuid)}
-                                    title="Delete notification"
+                                    className="btn btn-outline-secondary"
+                                    onClick={handlePrevPage}
+                                    disabled={currentPage === 1}
                                 >
-                                    <FaTrash />
+                                    <FaArrowLeft />
+                                </button>
+                                <span className="page-info mx-3">
+                                    Page {currentPage} of {totalPagesCount}
+                                </span>
+                                <button
+                                    className="btn btn-outline-secondary"
+                                    onClick={handleNextPage}
+                                    disabled={currentPage >= totalPagesCount}
+                                >
+                                    <FaArrowRight />
                                 </button>
                             </div>
-                        </div>
-                    ))
+                        )}
+                    </>
                 )}
-            </div>
-
-            <div className="navigation-buttons mt-4">
-                <div className="d-flex justify-content-center gap-3">
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => navigate(-1)}
-                    >
-                        <FaArrowLeft className="me-1" />
-                        Go Back
-                    </button>
-                    <button
-                        className="btn btn-success"
-                        onClick={() => navigate('/')}
-                    >
-                        <FaHome className="me-1" />
-                        Home
-                    </button>
-                </div>
             </div>
         </div>
     );

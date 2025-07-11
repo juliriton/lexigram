@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaBookmark } from 'react-icons/fa';
+import { FaBookmark, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import ExperienceCard from './ExperienceCard';
 import SuggestionCard from './SuggestionCard';
 import '../styles/SavedContent.css';
 
-const SavedContent = ({ user, baseApiUrl }) => {
+const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChange }) => {
     const [savedExperiences, setSavedExperiences] = useState([]);
     const [savedSuggestions, setSavedSuggestions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -97,7 +97,16 @@ const SavedContent = ({ user, baseApiUrl }) => {
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
+        onPageChange(1); // Reset to first page when tab changes
     };
+
+    const getPaginatedItems = (items) => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return items.slice(startIndex, endIndex);
+    };
+
+    const getTotalPages = (items) => Math.ceil(items.length / itemsPerPage);
 
     if (loading) {
         return (
@@ -117,6 +126,9 @@ const SavedContent = ({ user, baseApiUrl }) => {
     }
 
     const noSavedContent = savedExperiences.length === 0 && savedSuggestions.length === 0;
+    const currentItems = activeTab === 'experiences' ? savedExperiences : savedSuggestions;
+    const paginatedItems = getPaginatedItems(currentItems);
+    const totalPages = getTotalPages(currentItems);
 
     return (
         <div className="saved-content-container">
@@ -147,50 +159,74 @@ const SavedContent = ({ user, baseApiUrl }) => {
                     <p>When you save experiences or suggestions, they'll appear here.</p>
                 </div>
             ) : (
-                <div className="saved-content-list">
-                    {activeTab === 'experiences' && savedExperiences.length === 0 && (
-                        <div className="no-saved-content">
-                            <p>You haven't saved any experiences yet.</p>
+                <>
+                    <div className="saved-content-list">
+                        {activeTab === 'experiences' && savedExperiences.length === 0 && (
+                            <div className="no-saved-content">
+                                <p>You haven't saved any experiences yet.</p>
+                            </div>
+                        )}
+
+                        {activeTab === 'experiences' && paginatedItems.map(experience => (
+                            <ExperienceCard
+                                key={experience.uuid}
+                                user={user}
+                                post={experience}
+                                baseApiUrl={baseApiUrl}
+                                username={experience.user?.username || 'Unknown'}
+                                hiddenQuotes={hiddenQuotes}
+                                toggleQuote={toggleQuote}
+                                showMentions={showMentions}
+                                setShowMentions={setShowMentions}
+                                formatDate={formatDate}
+                                renderTags={renderTags}
+                                onActionComplete={handleExperienceActionComplete}
+                                isOwner={false}
+                            />
+                        ))}
+
+                        {activeTab === 'suggestions' && savedSuggestions.length === 0 && (
+                            <div className="no-saved-content">
+                                <p>You haven't saved any suggestions yet.</p>
+                            </div>
+                        )}
+
+                        {activeTab === 'suggestions' && paginatedItems.map(suggestion => (
+                            <SuggestionCard
+                                key={suggestion.uuid}
+                                user={user}
+                                post={suggestion}
+                                baseApiUrl={baseApiUrl}
+                                username={suggestion.user?.username || 'Unknown'}
+                                formatDate={formatDate}
+                                onActionComplete={handleSuggestionActionComplete}
+                                isOwner={false}
+                            />
+                        ))}
+                    </div>
+
+                    {currentItems.length > itemsPerPage && (
+                        <div className="saved-content-pagination">
+                            <button
+                                className="pagination-button"
+                                onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <FaArrowLeft />
+                            </button>
+                            <span className="page-info">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button
+                                className="pagination-button"
+                                onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+                                disabled={currentPage >= totalPages}
+                            >
+                                <FaArrowRight />
+                            </button>
                         </div>
                     )}
-
-                    {activeTab === 'experiences' && savedExperiences.map(experience => (
-                        <ExperienceCard
-                            key={experience.uuid}
-                            user={user}
-                            post={experience}
-                            baseApiUrl={baseApiUrl}
-                            username={experience.user?.username || 'Unknown'}
-                            hiddenQuotes={hiddenQuotes}
-                            toggleQuote={toggleQuote}
-                            showMentions={showMentions}
-                            setShowMentions={setShowMentions}
-                            formatDate={formatDate}
-                            renderTags={renderTags}
-                            onActionComplete={handleExperienceActionComplete}
-                            isOwner={false}
-                        />
-                    ))}
-
-                    {activeTab === 'suggestions' && savedSuggestions.length === 0 && (
-                        <div className="no-saved-content">
-                            <p>You haven't saved any suggestions yet.</p>
-                        </div>
-                    )}
-
-                    {activeTab === 'suggestions' && savedSuggestions.map(suggestion => (
-                        <SuggestionCard
-                            key={suggestion.uuid}
-                            user={user}
-                            post={suggestion}
-                            baseApiUrl={baseApiUrl}
-                            username={suggestion.user?.username || 'Unknown'}
-                            formatDate={formatDate}
-                            onActionComplete={handleSuggestionActionComplete}
-                            isOwner={false}
-                        />
-                    ))}
-                </div>
+                </>
             )}
         </div>
     );

@@ -1,5 +1,6 @@
 package com.lexigram.app.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -11,8 +12,13 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import java.util.Arrays;
+
 @Configuration
 public class SecurityConfig {
+
+  @Value("${lexigram.frontend.url:http://localhost:3000}")
+  private String frontendUrl;
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -26,6 +32,9 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
+                "/api/auth/**",
+                "/oauth2/**",
+                "/login/oauth2/**",
                 "/api/auth/feed",
                 "/api/auth/signup",
                 "/api/auth/login",
@@ -36,6 +45,9 @@ public class SecurityConfig {
             ).permitAll()
             .anyRequest().authenticated()
         )
+        .oauth2Login(oauth2 -> oauth2
+            .defaultSuccessUrl(frontendUrl + "/login/success", true)
+        )
         .formLogin(form -> form.disable())
         .httpBasic(httpBasic -> httpBasic.disable());
     return http.build();
@@ -44,10 +56,17 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.addAllowedOrigin("http://localhost:3000");
-    configuration.addAllowedMethod("*");
-    configuration.addAllowedHeader("*");
+
+    // Allow both local and AWS frontend URLs
+    configuration.setAllowedOrigins(Arrays.asList(
+        "http://localhost:3000",
+        frontendUrl
+    ));
+
+    configuration.setAllowedMethods(Arrays.asList("*"));
+    configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
+    configuration.setMaxAge(3600L);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);

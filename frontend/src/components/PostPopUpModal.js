@@ -7,6 +7,7 @@ const PostPopupModal = ({
                             isOpen,
                             onClose,
                             postUuid,
+                            type,
                             user,
                             baseApiUrl,
                             formatDate
@@ -21,20 +22,23 @@ const PostPopupModal = ({
         if (isOpen && postUuid) {
             fetchPost();
         }
-    }, [isOpen, postUuid]);
+    }, [isOpen, postUuid, type]);
 
     const fetchPost = async () => {
         setLoading(true);
         setError(null);
 
         try {
-            // Try authenticated endpoint first if user is logged in
-            let endpoint = `${baseApiUrl}/api/auth/me/experience/${postUuid}`;
-            let options = {};
-
-            if (user) {
-                options.credentials = 'include';
+            // Determine endpoint based on post type
+            let endpoint;
+            if (type === 'Suggestion') {
+                endpoint = `${baseApiUrl}/api/auth/me/suggestion/${postUuid}`;
+            } else {
+                endpoint = `${baseApiUrl}/api/auth/me/experience/${postUuid}`;
             }
+
+            let options = {};
+            options.credentials = 'include';
 
             const response = await fetch(endpoint, options);
 
@@ -43,6 +47,8 @@ const PostPopupModal = ({
                 setPost(postData);
             } else if (response.status === 404) {
                 setError('Post not found');
+            } else if (response.status === 401) {
+                setError('Unauthorized - please log in');
             } else {
                 setError('Failed to load post');
             }
@@ -168,7 +174,7 @@ const PostPopupModal = ({
 
                 {post && !loading && !error && (
                     <div style={{ padding: '20px' }}>
-                        {post.type === 'Experience' ? (
+                        {(post.type === 'Experience' || type === 'Experience') ? (
                             <ExperienceCard
                                 user={user}
                                 post={post}

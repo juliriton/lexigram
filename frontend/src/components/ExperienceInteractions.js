@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete, onCommentClick }) => {
 
+    const [showCopiedMessage, setShowCopiedMessage] = useState(false);
     const navigate = useNavigate();
 
     const getUserInteractionStatus = (experience, user) => {
@@ -154,8 +155,10 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
 
     const handleShare = async () => {
         try {
+            let urlToShare = `${window.location.origin}/experience/${experience.uuid}`;
+
             if (user) {
-                // If user is logged in, get the share link from the API
+                // If user is logged in, try to get the share link from the API
                 const endpoint = `${baseApiUrl}/api/auth/me/experience/${experience.uuid}/share`;
                 const res = await fetch(endpoint, {
                     method: 'GET',
@@ -163,23 +166,20 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
                 });
 
                 if (res.ok) {
-                    const shareLink = await res.text();
-                    await copyToClipboard(shareLink);
-                } else {
-                    // Fallback to manual URL construction
-                    const shareUrl = `${window.location.origin}/experience/${experience.uuid}`;
-                    await copyToClipboard(shareUrl);
+                    urlToShare = await res.text();
                 }
-            } else {
-                // If not logged in, construct URL manually
-                const shareUrl = `${window.location.origin}/experience/${experience.uuid}`;
-                await copyToClipboard(shareUrl);
             }
+
+            await copyToClipboard(urlToShare);
+            setShowCopiedMessage(true);
+            setTimeout(() => setShowCopiedMessage(false), 2000); // Hide after 2 seconds
         } catch (err) {
             console.error('Error sharing:', err);
             // Fallback to manual URL construction
             const shareUrl = `${window.location.origin}/experience/${experience.uuid}`;
             await copyToClipboard(shareUrl);
+            setShowCopiedMessage(true);
+            setTimeout(() => setShowCopiedMessage(false), 2000);
         }
     };
 
@@ -226,7 +226,7 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
                         disabled={processingAction}
                         title={user ? (interactions.resonated ? 'Remove resonate' : 'Resonate') : 'Log in to resonate'}
                     >
-                        {interactions.resonated ? <FaHeart /> : <FaRegHeart />}
+                        {interactions.resonated ? <FaHeart/> : <FaRegHeart/>}
                         <span className="interaction-count">{interactions.resonatesAmount}</span>
                     </button>
                 )}
@@ -238,7 +238,7 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
                         disabled={processingAction}
                         title={user ? (interactions.saved ? 'Unsave' : 'Save') : 'Log in to save'}
                     >
-                        {interactions.saved ? <FaBookmark /> : <FaRegBookmark />}
+                        {interactions.saved ? <FaBookmark/> : <FaRegBookmark/>}
                         <span className="interaction-count">{interactions.saveAmount}</span>
                     </button>
                 )}
@@ -249,7 +249,7 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
                         onClick={handleComment}
                         title={user ? 'Comment' : 'Log in to comment'}
                     >
-                        <FaCommentAlt />
+                        <FaCommentAlt/>
                         <span className="interaction-count">{interactions.commentAmount}</span>
                     </button>
                 )}
@@ -260,7 +260,8 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
                     onClick={handleShare}
                     title="Share"
                 >
-                    <FaShare />
+                    <FaShare/>
+                    {showCopiedMessage && <span className="copied-message">Copied!</span>}
                 </button>
 
                 {allowForks && (
@@ -269,7 +270,7 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
                         onClick={handleFork}
                         title={user ? 'Fork' : 'Log in to fork'}
                     >
-                        <FaCodeFork />
+                        <FaCodeFork/>
                     </button>
                 )}
             </div>

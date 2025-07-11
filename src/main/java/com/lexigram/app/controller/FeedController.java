@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
@@ -48,11 +49,19 @@ public class FeedController {
   }
 
   @GetMapping("/me/feed/search/{object}")
-  public ResponseEntity<SearchDTO> getFeedSearchObject(HttpSession session, @PathVariable String object) {
+  public ResponseEntity<SearchDTO> getFeedSearchObject(
+      HttpSession session,
+      @PathVariable String object,
+      @RequestParam(required = false, defaultValue = "true") boolean users,
+      @RequestParam(required = false, defaultValue = "true") boolean experiences,
+      @RequestParam(required = false, defaultValue = "true") boolean suggestions,
+      @RequestParam(required = false, defaultValue = "true") boolean tags,
+      @RequestParam(required = false, defaultValue = "false") boolean exact) {
+
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    return ResponseEntity.ok(feedService.getSearchObject(object, id));
+    return ResponseEntity.ok(feedService.getSearchObject(object, id, users, experiences, suggestions, tags, exact));
   }
 
   @GetMapping("/me/feed/discover")
@@ -62,5 +71,4 @@ public class FeedController {
 
     return ResponseEntity.ok(feedService.getAllDiscoverPosts(id));
   }
-
 }

@@ -1,9 +1,11 @@
 import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaPhotoVideo, FaQuestion, FaTimes, FaUpload, FaPalette } from 'react-icons/fa';
+import Sidebar from '../components/SideBar';
 import '../styles/PostCreationPage.css';
+import {API_URL} from '../Api'
 
-const PostCreationPage = ({ user }) => {
+const PostCreationPage = ({ user, setUser }) => {
     const navigate = useNavigate();
     const [activeForm, setActiveForm] = useState('experience');
     const [quote, setQuote] = useState('');
@@ -28,24 +30,52 @@ const PostCreationPage = ({ user }) => {
     const [suggestionTextError, setSuggestionTextError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [fileName, setFileName] = useState('');
-    const baseApiUrl = 'http://localhost:8080';
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
+
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+    const handleImageError = () => setProfilePicture(defaultProfilePicture);
 
     useEffect(() => {
+        const fetchProfilePicture = async () => {
+            try {
+                const profileRes = await fetch(`${API_URL}/api/auth/me/profile`, {
+                    credentials: 'include',
+                });
+
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    setProfilePicture(
+                        profileData.profilePictureUrl
+                            ? `${API_URL}${profileData.profilePictureUrl}`
+                            : defaultProfilePicture
+                    );
+                } else {
+                    setProfilePicture(defaultProfilePicture);
+                }
+            } catch (err) {
+                console.error('Error fetching profile picture:', err);
+                setProfilePicture(defaultProfilePicture);
+            }
+        };
+
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
+                else fetchProfilePicture();
             } catch {
                 navigate('/login');
             }
         };
         checkAuth();
-    }, [navigate]);
+    }, [navigate, defaultProfilePicture]);
 
     const handleCancel = () => {
-        // Pequeña animación antes de navegar
         const container = document.querySelector('.post-creation-container');
         if (container) {
             container.style.transform = 'scale(0.95)';
@@ -113,7 +143,6 @@ const PostCreationPage = ({ user }) => {
 
     const handleFormToggle = (formType) => {
         if (formType !== activeForm) {
-            // Efecto de transición suave
             const formSection = document.querySelector('.form-section');
             if (formSection) {
                 formSection.style.opacity = '0';
@@ -171,14 +200,13 @@ const PostCreationPage = ({ user }) => {
         if (file) formData.append('file', file);
 
         try {
-            const resp = await fetch('http://localhost:8080/api/auth/me/post/experience', {
+            const resp = await fetch(`${API_URL}/api/auth/me/post/experience`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
             });
 
             if (resp.ok) {
-                // Mostrar feedback de éxito antes de navegar
                 const submitBtn = document.querySelector('.submit-btn');
                 if (submitBtn) {
                     submitBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
@@ -224,7 +252,7 @@ const PostCreationPage = ({ user }) => {
         };
 
         try {
-            const resp = await fetch('http://localhost:8080/api/auth/me/post/suggestion', {
+            const resp = await fetch(`${API_URL}/api/auth/me/post/suggestion`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(suggestionObj),
@@ -232,7 +260,6 @@ const PostCreationPage = ({ user }) => {
             });
 
             if (resp.ok) {
-                // Mostrar feedback de éxito antes de navegar
                 const submitBtn = document.querySelector('.submit-btn');
                 if (submitBtn) {
                     submitBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
@@ -252,246 +279,269 @@ const PostCreationPage = ({ user }) => {
     };
 
     return (
-        <div className="post-creation-container">
-            <div className="container-content">
-                <div className="form-toggle-buttons">
-                    <button
-                        className={`toggle-button ${activeForm==='experience'?'active':''}`}
-                        onClick={() => handleFormToggle('experience')}
-                        type="button"
-                    >
-                        <FaPhotoVideo size={18}/> <span>Experience</span>
-                    </button>
-                    <button
-                        className={`toggle-button ${activeForm==='suggestion'?'active':''}`}
-                        onClick={() => handleFormToggle('suggestion')}
-                        type="button"
-                    >
-                        <FaQuestion size={18}/> <span>Suggestion</span>
-                    </button>
-                </div>
+        <div className="post-creation-page">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
 
-                {activeForm==='experience' && (
-                    <>
-                        <h2>Create a New Experience</h2>
-                        <form onSubmit={handlePostSubmit} className="form-section">
-                            <div className="input-group">
-                                <textarea
-                                    placeholder={`Share your quote (min ${QUOTE_MIN_CHARS} characters)`}
-                                    value={quote}
-                                    onChange={handleQuoteChange}
-                                    required
-                                />
-                                {quoteError && <div className="error-text">{quoteError}</div>}
-                            </div>
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={API_URL}
+                defaultProfilePicture={defaultProfilePicture}
+            />
 
-                            <div className="input-group">
-                                <textarea
-                                    placeholder={REFLECTION_MIN_CHARS > 0 ? `Your reflection (min ${REFLECTION_MIN_CHARS} characters)` : "Your reflection"}
-                                    value={reflection}
-                                    onChange={handleReflectionChange}
-                                />
-                                {reflectionError && <div className="error-text">{reflectionError}</div>}
-                            </div>
+            <div className={`post-creation-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
+                <div className="container-content">
+                    <div className="form-toggle-buttons">
+                        <button
+                            className={`toggle-button ${activeForm==='experience'?'active':''}`}
+                            onClick={() => handleFormToggle('experience')}
+                            type="button"
+                        >
+                            <FaPhotoVideo size={18}/> <span>Experience</span>
+                        </button>
+                        <button
+                            className={`toggle-button ${activeForm==='suggestion'?'active':''}`}
+                            onClick={() => handleFormToggle('suggestion')}
+                            type="button"
+                        >
+                            <FaQuestion size={18}/> <span>Suggestion</span>
+                        </button>
+                    </div>
 
-                            <input
-                                type="text"
-                                placeholder="Tags (comma separated)"
-                                value={tags}
-                                onChange={e=>setTags(e.target.value)}
-                            />
-
-                            <input
-                                type="text"
-                                placeholder="Mentions (e.g. @user1, @user2)"
-                                value={mentions}
-                                onChange={e=>setMentions(e.target.value)}
-                            />
-
-                            <div className="style-controls">
-                                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                                    <FaPalette />
-                                    <span style={{fontWeight: '600', color: 'var(--text-primary)'}}>Style Options</span>
-                                </div>
-                                <select
-                                    value={fontFamily}
-                                    onChange={e=>setFontFamily(e.target.value)}
-                                >
-                                    <option value="Arial">Arial</option>
-                                    <option value="Times New Roman">Times New Roman</option>
-                                    <option value="Georgia">Georgia</option>
-                                    <option value="Helvetica">Helvetica</option>
-                                </select>
-
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
-                                    <input
-                                        type="number"
-                                        value={fontSize}
-                                        min={8}
-                                        max={30}
-                                        onChange={handleFontSizeChange}
+                    {activeForm==='experience' && (
+                        <>
+                            <h2>Create a New Experience</h2>
+                            <form onSubmit={handlePostSubmit} className="form-section">
+                                <div className="input-group">
+                                    <textarea
+                                        placeholder={`Share your quote (min ${QUOTE_MIN_CHARS} characters)`}
+                                        value={quote}
+                                        onChange={handleQuoteChange}
+                                        required
                                     />
-                                    {fontSizeError && (
-                                        <div className="error-text" style={{marginTop: '0.25rem'}}>{fontSizeError}</div>
-                                    )}
+                                    {quoteError && <div className="error-text">{quoteError}</div>}
                                 </div>
 
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center'}}>
-                                    <label style={{fontSize: '0.875rem', fontWeight: '500'}}>Text Color</label>
-                                    <input
-                                        type="color"
-                                        value={fontColor}
-                                        onChange={e=>setFontColor(e.target.value)}
+                                <div className="input-group">
+                                    <textarea
+                                        placeholder={REFLECTION_MIN_CHARS > 0 ? `Your reflection (min ${REFLECTION_MIN_CHARS} characters)` : "Your reflection"}
+                                        value={reflection}
+                                        onChange={handleReflectionChange}
                                     />
+                                    {reflectionError && <div className="error-text">{reflectionError}</div>}
                                 </div>
-                            </div>
 
-                            <div style={{position: 'relative'}}>
                                 <input
-                                    type="file"
-                                    accept="image/jpeg,video/mp4,video/webm,image/gif"
-                                    onChange={handleFileChange}
-                                    style={{
-                                        position: 'absolute',
-                                        opacity: 0,
-                                        width: '100%',
-                                        height: '100%',
-                                        cursor: 'pointer'
-                                    }}
+                                    type="text"
+                                    placeholder="Tags (comma separated)"
+                                    value={tags}
+                                    onChange={e=>setTags(e.target.value)}
                                 />
-                                <div style={{
-                                    padding: '2rem',
-                                    border: '2px dashed var(--border-color)',
-                                    borderRadius: 'var(--radius-lg)',
-                                    textAlign: 'center',
-                                    background: 'linear-gradient(135deg, var(--secondary-color), #e2e8f0)',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                }}>
-                                    <FaUpload size={24} style={{color: 'var(--primary-color)'}} />
-                                    <span style={{fontWeight: '500', color: 'var(--text-primary)'}}>
-                                        {fileName || 'Click to upload media'}
-                                    </span>
-                                    <span style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
-                                        JPEG, MP4, WebM, GIF supported
-                                    </span>
+
+                                <input
+                                    type="text"
+                                    placeholder="Mentions (e.g. @user1, @user2)"
+                                    value={mentions}
+                                    onChange={e=>setMentions(e.target.value)}
+                                />
+
+                                <div className="style-controls">
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                        <FaPalette />
+                                        <span style={{fontWeight: '600', color: 'var(--text-primary)'}}>Style Options</span>
+                                    </div>
+                                    <select
+                                        value={fontFamily}
+                                        onChange={e=>setFontFamily(e.target.value)}
+                                    >
+                                        <option value="Arial">Arial</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Georgia">Georgia</option>
+                                        <option value="Helvetica">Helvetica</option>
+                                    </select>
+
+                                    <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                                        <input
+                                            type="number"
+                                            value={fontSize}
+                                            min={8}
+                                            max={30}
+                                            onChange={handleFontSizeChange}
+                                        />
+                                        {fontSizeError && (
+                                            <div className="error-text" style={{marginTop: '0.25rem'}}>{fontSizeError}</div>
+                                        )}
+                                    </div>
+
+                                    <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center'}}>
+                                        <label style={{fontSize: '0.875rem', fontWeight: '500'}}>Text Color</label>
+                                        <input
+                                            type="color"
+                                            value={fontColor}
+                                            onChange={e=>setFontColor(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="checkbox-group">
-                                <label>
+                                <div style={{position: 'relative'}}>
                                     <input
-                                        type="checkbox"
-                                        checked={allowComments}
-                                        onChange={() => setAllowComments(c => !c)}
-                                    /> Comments
-                                </label>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={allowResonates}
-                                        onChange={() => setAllowResonates(r => !r)}
-                                    /> Resonates
-                                </label>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={allowForks}
-                                        onChange={() => setAllowForks(f => !f)}
-                                    /> Forks
-                                </label>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={allowSaves}
-                                        onChange={() => setAllowSaves(f => !f)}
-                                    /> Saves
-                                </label>
-                            </div>
+                                        type="file"
+                                        accept="image/jpeg,video/mp4,video/webm,image/gif"
+                                        onChange={handleFileChange}
+                                        style={{
+                                            position: 'absolute',
+                                            opacity: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            cursor: 'pointer'
+                                        }}
+                                    />
+                                    <div style={{
+                                        padding: '2rem',
+                                        border: '2px dashed var(--border-color)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        textAlign: 'center',
+                                        background: 'linear-gradient(135deg, var(--secondary-color), #e2e8f0)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}>
+                                        <FaUpload size={24} style={{color: 'var(--primary-color)'}} />
+                                        <span style={{fontWeight: '500', color: 'var(--text-primary)'}}>
+                                            {fileName || 'Click to upload media'}
+                                        </span>
+                                        <span style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                            JPEG, MP4, WebM, GIF supported
+                                        </span>
+                                    </div>
+                                </div>
 
-                            <div className="form-buttons">
-                                <button
-                                    type="submit"
-                                    className={`submit-btn ${isSubmitting ? 'loading' : ''}`}
-                                    disabled={!quote.trim() || !!quoteError || !!reflectionError || isSubmitting}
-                                >
-                                    {isSubmitting ? 'Sharing...' : 'Share Experience'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="cancel-btn"
-                                    onClick={handleCancel}
-                                    disabled={isSubmitting}
-                                >
-                                    <FaTimes /> Cancel
-                                </button>
-                            </div>
-                        </form>
-                    </>
-                )}
+                                <div className="checkbox-group">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={allowComments}
+                                            onChange={() => setAllowComments(c => !c)}
+                                        /> Comments
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={allowResonates}
+                                            onChange={() => setAllowResonates(r => !r)}
+                                        /> Resonates
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={allowForks}
+                                            onChange={() => setAllowForks(f => !f)}
+                                        /> Forks
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={allowSaves}
+                                            onChange={() => setAllowSaves(f => !f)}
+                                        /> Saves
+                                    </label>
+                                </div>
 
-                {activeForm==='suggestion' && (
-                    <>
-                        <h2>Submit a Suggestion</h2>
-                        <form onSubmit={handleSuggestionSubmit} className="form-section">
-                            <div className="input-group">
-                                <textarea
-                                    placeholder={`Write your suggestion (min ${SUGGESTION_MIN_CHARS} characters)`}
-                                    value={suggestionText}
-                                    onChange={handleSuggestionTextChange}
-                                    required
+                                <div className="form-buttons">
+                                    <button
+                                        type="submit"
+                                        className={`submit-btn ${isSubmitting ? 'loading' : ''}`}
+                                        disabled={!quote.trim() || !!quoteError || !!reflectionError || isSubmitting}
+                                    >
+                                        {isSubmitting ? 'Sharing...' : 'Share Experience'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="cancel-btn"
+                                        onClick={handleCancel}
+                                        disabled={isSubmitting}
+                                    >
+                                        <FaTimes /> Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </>
+                    )}
+
+                    {activeForm==='suggestion' && (
+                        <>
+                            <h2>Submit a Suggestion</h2>
+                            <form onSubmit={handleSuggestionSubmit} className="form-section">
+                                <div className="input-group">
+                                    <textarea
+                                        placeholder={`Write your suggestion (min ${SUGGESTION_MIN_CHARS} characters)`}
+                                        value={suggestionText}
+                                        onChange={handleSuggestionTextChange}
+                                        required
+                                    />
+                                    {suggestionTextError && <div className="error-text">{suggestionTextError}</div>}
+                                </div>
+
+                                <input
+                                    type="text"
+                                    placeholder="Tags (comma separated)"
+                                    value={suggestionTags}
+                                    onChange={e=>setSuggestionTags(e.target.value)}
                                 />
-                                {suggestionTextError && <div className="error-text">{suggestionTextError}</div>}
-                            </div>
 
-                            <input
-                                type="text"
-                                placeholder="Tags (comma separated)"
-                                value={suggestionTags}
-                                onChange={e=>setSuggestionTags(e.target.value)}
-                            />
+                                <div className="checkbox-group">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={suggestionAllowResonates}
+                                            onChange={() => setSuggestionAllowResonates(r => !r)}
+                                        /> Resonates
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={suggestionAllowSaves}
+                                            onChange={() => setSuggestionAllowSaves(s => !s)}
+                                        /> Saves
+                                    </label>
+                                </div>
 
-                            <div className="checkbox-group">
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={suggestionAllowResonates}
-                                        onChange={() => setSuggestionAllowResonates(r => !r)}
-                                    /> Resonates
-                                </label>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={suggestionAllowSaves}
-                                        onChange={() => setSuggestionAllowSaves(s => !s)}
-                                    /> Saves
-                                </label>
-                            </div>
-
-                            <div className="form-buttons">
-                                <button
-                                    type="submit"
-                                    className={`submit-btn ${isSubmitting ? 'loading' : ''}`}
-                                    disabled={!suggestionText.trim() || !!suggestionTextError || isSubmitting}
-                                >
-                                    {isSubmitting ? 'Submitting...' : 'Share Suggestion'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="cancel-btn"
-                                    onClick={handleCancel}
-                                    disabled={isSubmitting}
-                                >
-                                    <FaTimes /> Cancel
-                                </button>
-                            </div>
-                        </form>
-                    </>
-                )}
+                                <div className="form-buttons">
+                                    <button
+                                        type="submit"
+                                        className={`submit-btn ${isSubmitting ? 'loading' : ''}`}
+                                        disabled={!suggestionText.trim() || !!suggestionTextError || isSubmitting}
+                                    >
+                                        {isSubmitting ? 'Submitting...' : 'Share Suggestion'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="cancel-btn"
+                                        onClick={handleCancel}
+                                        disabled={isSubmitting}
+                                    >
+                                        <FaTimes /> Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );

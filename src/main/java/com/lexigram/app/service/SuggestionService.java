@@ -354,7 +354,7 @@ public class SuggestionService {
   }
 
   public String getSuggestionLink(UUID uuid) {
-    return URL + "/" + uuid.toString();
+    return URL + "/suggestion/" + uuid.toString();
   }
 
   public Set<SuggestionDTO> getSavedSuggestions(Long id) {

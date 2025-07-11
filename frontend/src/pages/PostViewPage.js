@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import HomePage from './HomePage';
 import PostPopupModal from '../components/PostPopUpModal';
+import { API_URL } from '../Api.js';
 
 const PostViewPage = ({ user, setUser }) => {
     const { uuid } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [showPostModal, setShowPostModal] = useState(false);
+
+    // Determine post type based on the current route
+    const getPostType = () => {
+        if (location.pathname.includes('/suggestion/')) {
+            return 'Suggestion';
+        } else if (location.pathname.includes('/experience/')) {
+            return 'Experience';
+        }
+        // Default fallback
+        return 'Experience';
+    };
 
     useEffect(() => {
         // Show the modal when component mounts
@@ -35,9 +48,11 @@ const PostViewPage = ({ user, setUser }) => {
                 isOpen={showPostModal}
                 onClose={handleCloseModal}
                 postUuid={uuid}
+                type={getPostType()}
                 user={user}
-                baseApiUrl="http://localhost:8080"
+                baseApiUrl={API_URL}
                 formatDate={formatDate}
+                enableFallback={true}
             />
         </>
     );

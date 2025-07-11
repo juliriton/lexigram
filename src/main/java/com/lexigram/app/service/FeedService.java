@@ -30,7 +30,8 @@ public class FeedService {
                      SuggestionService suggestionService,
                      ExperienceRepository experienceRepository,
                      SuggestionRepository suggestionRepository,
-                     TagRepository tagRepository, UserProfileRepository userProfileRepository,
+                     TagRepository tagRepository,
+                     UserProfileRepository userProfileRepository,
                      TagService tagService) {
     this.userRepository = userRepository;
     this.suggestionService = suggestionService;
@@ -92,10 +93,7 @@ public class FeedService {
     return Optional.of(new PostsDTO(filteredExperiences, filteredSuggestions));
   }
 
-
-
-  public PostsDTO getAllFollowingPosts(Long id){
-
+  public PostsDTO getAllFollowingPosts(Long id) {
     Set<ExperienceDTO> experiences = experienceService.getAllFollowingExperiences(id);
     Set<SuggestionDTO> suggestions = suggestionService.getAllFollowingSuggestions(id);
     Set<TagDTO> userTags = tagService.getAllFeedTags(id).orElse(new HashSet<>());
@@ -139,28 +137,86 @@ public class FeedService {
     return new PostsDTO(experiences, suggestions);
   }
 
-  public SearchDTO getSearchObject(String object, Long searcherId) {
+  public SearchDTO getSearchObject(String object, Long searcherId,
+                                   boolean searchUsers, boolean searchExperiences,
+                                   boolean searchSuggestions, boolean searchTags,
+                                   boolean exactMatch) {
+
     Map<UUID, Experience> uniqueExperiences = new HashMap<>();
     Map<UUID, Suggestion> uniqueSuggestions = new HashMap<>();
+    Set<Tag> tags = new HashSet<>();
+    Set<User> users = new HashSet<>();
 
-    Set<Experience> experiencesByQuote = experienceRepository.findByQuoteStartingWithIgnoreCase(object);
-    Set<Experience> experiencesByTag = experienceRepository.findByTagsNameStartingWithIgnoreCase(object);
-    Set<Experience> experiencesByUser = experienceRepository.findByUserUsernameStartingWithIgnoreCase(object);
+    if (searchExperiences) {
+      Set<Experience> experiencesByQuote = exactMatch ?
+          experienceRepository.findByQuoteContainingIgnoreCase(object) :
+          experienceRepository.findByQuoteStartingWithIgnoreCase(object);
 
-    for (Experience e : experiencesByQuote) {
-      if (isPostVisibleToUser(e.getUser(), searcherId)) {
-        uniqueExperiences.put(e.getUuid(), e);
+      Set<Experience> experiencesByTag = exactMatch ?
+          experienceRepository.findByTagsNameContainingIgnoreCase(object) :
+          experienceRepository.findByTagsNameStartingWithIgnoreCase(object);
+
+      Set<Experience> experiencesByUser = exactMatch ?
+          experienceRepository.findByUserUsernameContainingIgnoreCase(object) :
+          experienceRepository.findByUserUsernameStartingWithIgnoreCase(object);
+
+      for (Experience e : experiencesByQuote) {
+        if (isPostVisibleToUser(e.getUser(), searcherId)) {
+          uniqueExperiences.put(e.getUuid(), e);
+        }
+      }
+      for (Experience e : experiencesByTag) {
+        if (isPostVisibleToUser(e.getUser(), searcherId)) {
+          uniqueExperiences.put(e.getUuid(), e);
+        }
+      }
+      for (Experience e : experiencesByUser) {
+        if (isPostVisibleToUser(e.getUser(), searcherId)) {
+          uniqueExperiences.put(e.getUuid(), e);
+        }
       }
     }
-    for (Experience e : experiencesByTag) {
-      if (isPostVisibleToUser(e.getUser(), searcherId)) {
-        uniqueExperiences.put(e.getUuid(), e);
+
+    if (searchSuggestions) {
+      Set<Suggestion> suggestionsByBody = exactMatch ?
+          suggestionRepository.findByBodyContainingIgnoreCase(object) :
+          suggestionRepository.findByBodyStartingWithIgnoreCase(object);
+
+      Set<Suggestion> suggestionsByTag = exactMatch ?
+          suggestionRepository.findByTagsNameContainingIgnoreCase(object) :
+          suggestionRepository.findByTagsNameStartingWithIgnoreCase(object);
+
+      Set<Suggestion> suggestionsByUser = exactMatch ?
+          suggestionRepository.findByUserUsernameContainingIgnoreCase(object) :
+          suggestionRepository.findByUserUsernameStartingWithIgnoreCase(object);
+
+      for (Suggestion s : suggestionsByBody) {
+        if (isPostVisibleToUser(s.getUser(), searcherId)) {
+          uniqueSuggestions.put(s.getUuid(), s);
+        }
+      }
+      for (Suggestion s : suggestionsByTag) {
+        if (isPostVisibleToUser(s.getUser(), searcherId)) {
+          uniqueSuggestions.put(s.getUuid(), s);
+        }
+      }
+      for (Suggestion s : suggestionsByUser) {
+        if (isPostVisibleToUser(s.getUser(), searcherId)) {
+          uniqueSuggestions.put(s.getUuid(), s);
+        }
       }
     }
-    for (Experience e : experiencesByUser) {
-      if (isPostVisibleToUser(e.getUser(), searcherId)) {
-        uniqueExperiences.put(e.getUuid(), e);
-      }
+
+    if (searchTags) {
+      tags = exactMatch ?
+          tagRepository.findByNameContainingIgnoreCase(object) :
+          tagRepository.findByNameStartingWithIgnoreCase(object);
+    }
+
+    if (searchUsers) {
+      users = exactMatch ?
+          userRepository.findByUsernameContainingIgnoreCase(object) :
+          userRepository.findByUsernameStartingWithIgnoreCase(object);
     }
 
     Set<ExperienceDTO> experienceDTOs = new HashSet<>();
@@ -168,41 +224,18 @@ public class FeedService {
       experienceDTOs.add(new ExperienceDTO(e));
     }
 
-    Set<Suggestion> suggestionsByBody = suggestionRepository.findByBodyStartingWithIgnoreCase(object);
-    Set<Suggestion> suggestionsByTag = suggestionRepository.findByTagsNameStartingWithIgnoreCase(object);
-    Set<Suggestion> suggestionsByUser = suggestionRepository.findByUserUsernameStartingWithIgnoreCase(object);
-
-    for (Suggestion s : suggestionsByBody) {
-      if (isPostVisibleToUser(s.getUser(), searcherId)) {
-        uniqueSuggestions.put(s.getUuid(), s);
-      }
-    }
-    for (Suggestion s : suggestionsByTag) {
-      if (isPostVisibleToUser(s.getUser(), searcherId)) {
-        uniqueSuggestions.put(s.getUuid(), s);
-      }
-    }
-    for (Suggestion s : suggestionsByUser) {
-      if (isPostVisibleToUser(s.getUser(), searcherId)) {
-        uniqueSuggestions.put(s.getUuid(), s);
-      }
-    }
-
     Set<SuggestionDTO> suggestionDTOs = new HashSet<>();
     for (Suggestion s : uniqueSuggestions.values()) {
       suggestionDTOs.add(new SuggestionDTO(s));
     }
 
-    Set<User> users = userRepository.findByUsernameStartingWith(object);
     Set<ConnectionDTO> connectionDTOs = new HashSet<>();
-
     for (User u : users) {
-      connectionDTOs.add(new ConnectionDTO(u.getUuid(), u.getUsername(), u.getEmail(), u.getUserProfile().getProfilePictureUrl()));
+      connectionDTOs.add(new ConnectionDTO(u.getUuid(), u.getUsername(), u.getEmail(),
+          u.getUserProfile().getProfilePictureUrl()));
     }
 
-    Set<Tag> tags = tagRepository.findByNameStartingWith(object);
     Set<TagDTO> tagDTOs = new HashSet<>();
-
     for (Tag tag : tags) {
       tagDTOs.add(new TagDTO(tag.getUuid(), tag.getName()));
     }
@@ -264,7 +297,4 @@ public class FeedService {
 
     return new PostsDTO(filteredExperiences, filteredSuggestions);
   }
-
-
 }
-

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SettingsPage.css';
-import {FaArrowLeft, FaHome} from "react-icons/fa";
+import Sidebar from '../components/SideBar';
+import { API_URL } from '../Api.js';
 
-const SettingsPage = ({user}) => {
+const SettingsPage = ({ user, setUser }) => {
     const [privacy, setPrivacy] = useState(null);
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
@@ -14,13 +15,21 @@ const SettingsPage = ({user}) => {
     const [oldUsername, setOldUsername] = useState('');
     const [oldPassword, setOldPassword] = useState('');
     const [oldPrivacy, setOldPrivacy] = useState(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
     const navigate = useNavigate();
-    const baseApiUrl = 'http://localhost:8080';
+    const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
+
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+    const handleImageError = () => {
+        setProfilePicture(defaultProfilePicture);
+    };
 
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
@@ -34,22 +43,32 @@ const SettingsPage = ({user}) => {
     useEffect(() => {
         const fetchUserSettings = async () => {
             try {
+                const [resUser, resPrivacy, resProfile] = await Promise.all([
+                    fetch(`${API_URL}/api/auth/me`, {
+                        credentials: 'include',
+                    }),
+                    fetch(`${API_URL}/api/auth/me/privacy`, {
+                        credentials: 'include',
+                    }),
+                    fetch(`${API_URL}/api/auth/me/profile`, {
+                        credentials: 'include',
+                    })
+                ]);
 
-                const resUser = await fetch('http://localhost:8080/api/auth/me', {
-                    credentials: 'include',
-                });
-                const resPrivacy = await fetch('http://localhost:8080/api/auth/me/privacy', {
-                    credentials: 'include',
-                });
-
-                if (!resUser.ok || !resPrivacy.ok) throw new Error('Error loading data');
+                if (!resUser.ok || !resPrivacy.ok || !resProfile.ok) throw new Error('Error loading data');
 
                 const userData = await resUser.json();
                 const privacyData = await resPrivacy.json();
+                const profileData = await resProfile.json();
 
                 setOldEmail(userData.email);
                 setOldUsername(userData.username);
                 setOldPrivacy(privacyData.visibility);
+                setProfilePicture(
+                    profileData.profilePictureUrl
+                        ? `${API_URL}${profileData.profilePictureUrl}`
+                        : defaultProfilePicture
+                );
 
                 setPrivacy(privacyData.visibility);
             } catch (err) {
@@ -61,12 +80,12 @@ const SettingsPage = ({user}) => {
         };
 
         fetchUserSettings();
-    }, []);
+    }, [defaultProfilePicture]); // Added defaultProfilePicture to dependencies
 
     const updateUsername = async () => {
         if (username !== oldUsername) {
             try {
-                const res = await fetch('http://localhost:8080/api/auth/me/username', {
+                const res = await fetch(`${API_URL}/api/auth/me/username`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -84,7 +103,7 @@ const SettingsPage = ({user}) => {
     const updateEmail = async () => {
         if (email !== oldEmail) {
             try {
-                const res = await fetch('http://localhost:8080/api/auth/me/email', {
+                const res = await fetch(`${API_URL}/api/auth/me/email`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -92,7 +111,7 @@ const SettingsPage = ({user}) => {
                 });
                 if (!res.ok) throw new Error('Failed');
                 setMessage(`Email updated successfully. Old: ${oldEmail}, New: ${email}`);
-                setOldEmail(email); // Update old value to the new one
+                setOldEmail(email);
             } catch {
                 setMessage('Error updating email.');
             }
@@ -102,7 +121,7 @@ const SettingsPage = ({user}) => {
     const updatePassword = async () => {
         if (password !== oldPassword) {
             try {
-                const res = await fetch('http://localhost:8080/api/auth/me/password', {
+                const res = await fetch(`${API_URL}/api/auth/me/password`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -121,7 +140,7 @@ const SettingsPage = ({user}) => {
     const togglePrivacy = async () => {
         const newPrivacy = !privacy;
         try {
-            const res = await fetch('http://localhost:8080/api/auth/me/privacy', {
+            const res = await fetch(`${API_URL}/api/auth/me/privacy`, {
                 method: 'PUT',
                 credentials: 'include',
             });
@@ -136,9 +155,8 @@ const SettingsPage = ({user}) => {
     };
 
     const deleteAccount = async () => {
-
         try {
-            const res = await fetch('http://localhost:8080/api/auth/me', {
+            const res = await fetch(`${API_URL}/api/auth/me`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -157,6 +175,29 @@ const SettingsPage = ({user}) => {
 
     return (
         <div className="settings-page container mt-4">
+            {/* Burger menu for sidebar */}
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
+
+            {/* Sidebar component */}
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                API_URL={API_URL}
+                defaultProfilePicture={defaultProfilePicture}
+            />
+
             <h2 className="mb-4 text-center">Account Settings</h2>
 
             {message && <div className="alert alert-info">{message}</div>}
@@ -180,9 +221,7 @@ const SettingsPage = ({user}) => {
                         onChange={(e) => setUsername(e.target.value)}
                         placeholder="Enter new username"
                     />
-                    <button className="btn btn-primary w-100" onClick={updateUsername}>Save
-                        Changes
-                    </button>
+                    <button className="btn btn-primary w-100" onClick={updateUsername}>Save Changes</button>
                 </div>
             </div>
 
@@ -196,8 +235,7 @@ const SettingsPage = ({user}) => {
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter new email"
                     />
-                    <button className="btn btn-primary w-100" onClick={updateEmail}>Save Changes
-                    </button>
+                    <button className="btn btn-primary w-100" onClick={updateEmail}>Save Changes</button>
                 </div>
             </div>
 
@@ -210,9 +248,7 @@ const SettingsPage = ({user}) => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <button className="btn btn-primary w-100" onClick={updatePassword}>Save
-                        Changes
-                    </button>
+                    <button className="btn btn-primary w-100" onClick={updatePassword}>Save Changes</button>
                 </div>
             </div>
 
@@ -230,23 +266,8 @@ const SettingsPage = ({user}) => {
                 <div className="card-body">
                     <h5 className="card-title text-danger">Delete account</h5>
                     <p className="text-muted">This action is irreversible.</p>
-                    <button className="btn btn-danger w-100" onClick={deleteAccount}>Delete my
-                        account
-                    </button>
+                    <button className="btn btn-danger w-100" onClick={deleteAccount}>Delete my account</button>
                 </div>
-            </div>
-
-            <div className="text-center">
-                <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
-                    <FaArrowLeft/> Go back
-                </button>
-            </div>
-
-
-            <div className="text-center">
-                <button className="btn btn-success mt-3" onClick={() => navigate('/')}>
-                    <FaHome/> Home
-                </button>
             </div>
         </div>
     );

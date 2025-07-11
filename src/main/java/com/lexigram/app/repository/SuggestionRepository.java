@@ -18,4 +18,7 @@ public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
   Set<Suggestion> findByBodyStartingWithIgnoreCase(String prefix);
   Set<Suggestion> findByTagsNameStartingWithIgnoreCase(String prefix);
   Set<Suggestion> findByUserUsernameStartingWithIgnoreCase(String prefix);
+  Set<Suggestion> findByBodyContainingIgnoreCase(String object);
+  Set<Suggestion> findByTagsNameContainingIgnoreCase(String object);
+  Set<Suggestion> findByUserUsernameContainingIgnoreCase(String object);
 }

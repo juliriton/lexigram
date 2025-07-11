@@ -60,3 +60,21 @@
         padding: 0.25rem;
     }
 }
+
+.copied-message {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Make sure the share button has relative positioning */
+.interaction-button {
+    position: relative;
+}

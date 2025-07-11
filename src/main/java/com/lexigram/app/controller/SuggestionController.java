@@ -3,6 +3,7 @@ package com.lexigram.app.controller;
 import com.lexigram.app.dto.ExperienceDTO;
 import com.lexigram.app.dto.PostExperienceDTO;
 import com.lexigram.app.dto.SuggestionDTO;
+import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.service.SuggestionService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ public class SuggestionController {
 
   @GetMapping("/suggestion/{uuid}")
   public ResponseEntity<SuggestionDTO> getSuggestion(HttpSession session,
-                                                     @PathVariable UUID uuid) {
+                                                  @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
@@ -40,7 +41,7 @@ public class SuggestionController {
       return ResponseEntity.ok(suggestionDTO);
     }
 
-    return ResponseEntity.status(401).build();
+    return ResponseEntity.status(404).build();
   }
 
   @PostMapping("/suggestion/{uuid}/resonate")

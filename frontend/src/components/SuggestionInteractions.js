@@ -4,6 +4,7 @@ import '../styles/SuggestionInteractions.css';
 import {useNavigate} from "react-router-dom";
 
 const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete }) => {
+    const [showCopiedMessage, setShowCopiedMessage] = useState(false);
     const navigate = useNavigate();
 
     const [interactions, setInteractions] = useState({
@@ -122,24 +123,58 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
 
     const handleShare = async () => {
         try {
-            const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/share`;
-            const res = await fetch(endpoint, {
-                method: 'GET',
-                credentials: 'include',
-            });
+            let urlToShare = `${window.location.origin}/suggestion/${suggestion.uuid}`;
 
-            if (res.ok) {
-                const shareLink = await res.text();
-                navigator.clipboard.writeText(shareLink);
-                console.log('Share link copied:', shareLink);
+            if (user) {
+                // If user is logged in, try to get the share link from the API
+                const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/share`;
+                const res = await fetch(endpoint, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                if (res.ok) {
+                    urlToShare = await res.text();
+                }
+            }
+
+            await copyToClipboard(urlToShare);
+            setShowCopiedMessage(true);
+            setTimeout(() => setShowCopiedMessage(false), 2000); // Hide after 2 seconds
+        } catch (err) {
+            console.error('Error sharing:', err);
+            // Fallback to manual URL construction
+            const shareUrl = `${window.location.origin}/suggestion/${suggestion.uuid}`;
+            await copyToClipboard(shareUrl);
+            setShowCopiedMessage(true);
+            setTimeout(() => setShowCopiedMessage(false), 2000);
+        }
+    };
+
+    const copyToClipboard = async (url) => {
+        try {
+            // Try to use Web Share API if available
+            if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                await navigator.share({
+                });
+            } else {
+                // Fallback to clipboard
+                await navigator.clipboard.writeText(url);
             }
         } catch (err) {
-            console.error('Error getting share link:', err);
+            console.error('Error copying to clipboard:', err);
+            // Final fallback - create a temporary input
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
         }
     };
 
     return (
-        <div className="suggestion-interactions" style={{ display: 'flex', gap: '10px' }}>
+        <div className="suggestion-interactions" style={{display: 'flex', gap: '10px'}}>
             {allowResonates && (
                 <button
                     className={`interaction-button ${interactions.resonated ? 'active resonated' : ''}`}
@@ -157,7 +192,7 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
                         color: interactions.resonated ? '#e0245e' : '#333',
                     }}
                 >
-                    {interactions.resonated ? <FaHeart /> : <FaRegHeart />}
+                    {interactions.resonated ? <FaHeart/> : <FaRegHeart/>}
                     <span>{interactions.resonatesAmount}</span>
                 </button>
             )}
@@ -179,7 +214,7 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
                         color: interactions.saved ? '#0d6efd' : '#333',
                     }}
                 >
-                    {interactions.saved ? <FaBookmark /> : <FaRegBookmark />}
+                    {interactions.saved ? <FaBookmark/> : <FaRegBookmark/>}
                     <span>{interactions.saveAmount}</span>
                 </button>
             )}
@@ -198,7 +233,7 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
                     fontSize: '16px',
                 }}
             >
-                <FaReply />
+                <FaReply/>
                 <span>{interactions.replyAmount}</span>
             </button>
 
@@ -214,9 +249,26 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
                     background: 'none',
                     cursor: 'pointer',
                     fontSize: '16px',
+                    position: 'relative' // Add this for positioning the message
                 }}
             >
-                <FaShare />
+                <FaShare/>
+                {showCopiedMessage && (
+                    <span style={{
+                        position: 'absolute',
+                        top: '-25px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: '#333',
+                        color: '#fff',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        whiteSpace: 'nowrap'
+                    }}>
+            Copied!
+        </span>
+                )}
             </button>
         </div>
     );

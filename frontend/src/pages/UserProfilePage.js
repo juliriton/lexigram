@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaHome, FaArrowLeft, FaUser, FaUsers, FaBookmark, FaTimes, FaUserEdit, FaImage } from 'react-icons/fa';
+import { FaUser, FaUsers, FaBookmark, FaTimes, FaUserEdit, FaImage, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import '../styles/UserProfilePage.css';
 import ExperienceCard from '../components/ExperienceCard';
@@ -7,8 +7,10 @@ import SuggestionCard from '../components/SuggestionCard';
 import EditSuggestionModal from '../components/EditSuggestionModal';
 import EditExperienceModal from '../components/EditExperienceModal';
 import SavedContent from '../components/SavedContent';
+import Sidebar from '../components/SideBar';
+import { API_URL } from '../Api.js';
 
-const UserProfilePage = ({ user }) => {
+const UserProfilePage = ({ user, setUser }) => {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [username, setUsername] = useState('');
@@ -33,14 +35,54 @@ const UserProfilePage = ({ user }) => {
     const [followerCount, setFollowerCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
     const [removeFollowerConfirmation, setRemoveFollowerConfirmation] = useState(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
 
-    const defaultProfilePic = 'http://localhost:8080/images/default-profile-picture.jpg';
-    const baseApiUrl = 'http://localhost:8080';
+    // Pagination states
+    const [postsPage, setPostsPage] = useState(1);
+    const [savedPage, setSavedPage] = useState(1);
+    const [followersPage, setFollowersPage] = useState(1);
+    const [followingPage, setFollowingPage] = useState(1);
+    const [itemsPerPage] = useState(4);
+
+    const defaultProfilePic = `${API_URL}/images/default-profile-picture.jpg`;
+
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+    const handleImageError = () => {
+        setUsingDefaultImage(true);
+        setProfilePicture(defaultProfilePic);
+    };
+
+    // Pagination functions
+    const getPaginatedItems = (items, currentPage) => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return items.slice(startIndex, endIndex);
+    };
+
+    const totalPages = (items) => Math.ceil(items.length / itemsPerPage);
+
+    const handlePrevPage = (setPage, currentPage) => {
+        setPage(Math.max(currentPage - 1, 1));
+    };
+
+    const handleNextPage = (setPage, currentPage, items) => {
+        setPage(Math.min(currentPage + 1, totalPages(items)));
+    };
+
+    // Reset pagination when tab changes
+    useEffect(() => {
+        setPostsPage(1);
+        setSavedPage(1);
+        setFollowersPage(1);
+        setFollowingPage(1);
+    }, [activeTab]);
 
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const res = await fetch(`${baseApiUrl}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include',
                 });
                 if (!res.ok) navigate('/login');
@@ -55,10 +97,10 @@ const UserProfilePage = ({ user }) => {
         const loadProfile = async () => {
             try {
                 const [resUser, resProfile] = await Promise.all([
-                    fetch(`${baseApiUrl}/api/auth/me`, {
+                    fetch(`${API_URL}/api/auth/me`, {
                         credentials: 'include'
                     }),
-                    fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                    fetch(`${API_URL}/api/auth/me/profile`, {
                         credentials: 'include'
                     })
                 ]);
@@ -70,6 +112,11 @@ const UserProfilePage = ({ user }) => {
 
                 setUsername(userData.username);
                 setProfile(profileData);
+                setProfilePicture(
+                    profileData.profilePictureUrl
+                        ? `${API_URL}${profileData.profilePictureUrl}`
+                        : defaultProfilePic
+                );
                 setNewBio(profileData.biography || '');
             } catch (err) {
                 setError(err.message);
@@ -87,13 +134,13 @@ const UserProfilePage = ({ user }) => {
             let url;
             switch (postFilter) {
                 case 'suggestions':
-                    url = `${baseApiUrl}/api/auth/me/profile/posts/suggestions`;
+                    url = `${API_URL}/api/auth/me/profile/posts/suggestions`;
                     break;
                 case 'experiences':
-                    url = `${baseApiUrl}/api/auth/me/profile/posts/experiences`;
+                    url = `${API_URL}/api/auth/me/profile/posts/experiences`;
                     break;
                 default:
-                    url = `${baseApiUrl}/api/auth/me/profile/posts`;
+                    url = `${API_URL}/api/auth/me/profile/posts`;
             }
 
             try {
@@ -128,8 +175,8 @@ const UserProfilePage = ({ user }) => {
                     }
                 }
 
-                console.log("Processed posts:", processedPosts);
                 setPosts(processedPosts);
+                setPostsPage(1); // Reset to first page when posts change
             } catch (err) {
                 console.error("Error fetching posts:", err);
                 setPosts([]);
@@ -142,8 +189,7 @@ const UserProfilePage = ({ user }) => {
     useEffect(() => {
         const fetchConnections = async () => {
             try {
-                // Fetch follower count
-                const followerRes = await fetch(`${baseApiUrl}/api/auth/me/profile/followers`, {
+                const followerRes = await fetch(`${API_URL}/api/auth/me/profile/followers`, {
                     credentials: 'include'
                 });
 
@@ -153,8 +199,7 @@ const UserProfilePage = ({ user }) => {
                     setFollowerCount(followerData.length);
                 }
 
-                // Fetch following count
-                const followingRes = await fetch(`${baseApiUrl}/api/auth/me/profile/following`, {
+                const followingRes = await fetch(`${API_URL}/api/auth/me/profile/following`, {
                     credentials: 'include'
                 });
 
@@ -176,7 +221,7 @@ const UserProfilePage = ({ user }) => {
             if (!profile?.profilePictureUrl || attemptedLoad) return;
 
             setAttemptedLoad(true);
-            const imgUrl = `${baseApiUrl}${profile.profilePictureUrl}`;
+            const imgUrl = `${API_URL}${profile.profilePictureUrl}`;
             const img = new Image();
             img.onload = () => setUsingDefaultImage(false);
             img.onerror = () => setUsingDefaultImage(true);
@@ -191,7 +236,7 @@ const UserProfilePage = ({ user }) => {
             const previousBioValue = profile.biography || 'No bio yet — still searching for the right words.';
             const bioToUpdate = newBio.trim() || 'No bio yet — still searching for the right words.';
 
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/biography`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/edit/biography`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -227,7 +272,7 @@ New: "${bioToUpdate}"`);
         formData.append('file', selectedFile);
 
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/profile-picture`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/edit/profile-picture`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
@@ -235,13 +280,18 @@ New: "${bioToUpdate}"`);
 
             if (!res.ok) throw new Error('Upload failed');
 
-            const profileRes = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+            const profileRes = await fetch(`${API_URL}/api/auth/me/profile`, {
                 credentials: 'include'
             });
 
             if (profileRes.ok) {
                 const profileData = await profileRes.json();
                 setProfile(profileData);
+                setProfilePicture(
+                    profileData.profilePictureUrl
+                        ? `${API_URL}${profileData.profilePictureUrl}`
+                        : defaultProfilePic
+                );
             }
 
             setUsingDefaultImage(false);
@@ -263,8 +313,8 @@ New: "${bioToUpdate}"`);
 
         try {
             const endpoint = type === 'Experience'
-                ? `${baseApiUrl}/api/auth/me/profile/posts/delete/experiences/${uuid}`
-                : `${baseApiUrl}/api/auth/me/profile/posts/delete/suggestions/${uuid}`;
+                ? `${API_URL}/api/auth/me/profile/posts/delete/experiences/${uuid}`
+                : `${API_URL}/api/auth/me/profile/posts/delete/suggestions/${uuid}`;
 
             const res = await fetch(endpoint, {
                 method: 'DELETE',
@@ -285,14 +335,13 @@ New: "${bioToUpdate}"`);
         }
     };
 
-    // Nueva función para remover follower
     const handleRemoveFollower = async () => {
         if (!removeFollowerConfirmation) return;
 
         const { uuid, username } = removeFollowerConfirmation;
 
         try {
-            const res = await fetch(`${baseApiUrl}/api/auth/me/profile/followers/remove/${uuid}`, {
+            const res = await fetch(`${API_URL}/api/auth/me/profile/followers/remove/${uuid}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -301,7 +350,6 @@ New: "${bioToUpdate}"`);
                 throw new Error('Failed to remove follower');
             }
 
-            // Actualizar la lista de followers localmente
             setFollowers(followers.filter(follower => follower.uuid !== uuid));
             setFollowerCount(prevCount => prevCount - 1);
             setUpdateMessage(`${username} has been removed from your followers`);
@@ -313,7 +361,6 @@ New: "${bioToUpdate}"`);
         }
     };
 
-    // Nueva función para confirmar remover follower
     const confirmRemoveFollower = (follower) => {
         const uuid = follower?.uuid;
         const username = follower?.username;
@@ -363,7 +410,6 @@ New: "${bioToUpdate}"`);
     };
 
     const handleUpdateSuggestion = (updatedSuggestion, message) => {
-        // Actualizar en la lista de posts
         setPosts(prevPosts => prevPosts.map(post =>
             post.uuid === updatedSuggestion.uuid ? {
                 ...post,
@@ -380,19 +426,16 @@ New: "${bioToUpdate}"`);
     };
 
     const handleUpdateExperience = (updatedExperience, message) => {
-        // Actualizar en la lista de posts
         setPosts(prevPosts => prevPosts.map(post =>
             post.uuid === updatedExperience.uuid ? {
                 ...post,
                 ...updatedExperience,
-                type: 'Experience' // Asegurar que mantenga el tipo
+                type: 'Experience'
             } : post
         ));
 
-        // Mostrar mensaje de éxito
         setUpdateMessage(message || "Experience updated successfully!");
 
-        // Limpiar el mensaje después de 3 segundos
         setTimeout(() => {
             setUpdateMessage('');
         }, 3000);
@@ -402,7 +445,7 @@ New: "${bioToUpdate}"`);
         if (usingDefaultImage || !profile?.profilePictureUrl) {
             return defaultProfilePic;
         }
-        return `${baseApiUrl}${profile.profilePictureUrl}?t=${Date.now()}`;
+        return `${API_URL}${profile.profilePictureUrl}?t=${Date.now()}`;
     };
 
     const handleNavigateToUserProfile = (uuid) => {
@@ -413,7 +456,7 @@ New: "${bioToUpdate}"`);
         if (!connection?.profilePictureUrl) {
             return defaultProfilePic;
         }
-        return `${baseApiUrl}${connection.profilePictureUrl}`;
+        return `${API_URL}${connection.profilePictureUrl}`;
     };
 
     const formatDate = (timestamp) => new Date(timestamp).toLocaleDateString();
@@ -421,8 +464,8 @@ New: "${bioToUpdate}"`);
     const renderTags = (tags) =>
         Array.isArray(tags) && tags.map((tag, i) => (
             <span key={i} className="tag-badge">
-        {typeof tag === 'object' ? tag.name : tag}
-      </span>
+                {typeof tag === 'object' ? tag.name : tag}
+            </span>
         ));
 
     const toggleQuote = (postId) => {
@@ -455,8 +498,8 @@ New: "${bioToUpdate}"`);
                             onClick={() => handleMentionClick(mention.uuid)}
                             style={{cursor: 'pointer', color: '#0d6efd', textDecoration: 'underline'}}
                         >
-              @{mention.username}
-            </span>
+                            @{mention.username}
+                        </span>
                     ))}
                 </div>
             </div>
@@ -473,7 +516,7 @@ New: "${bioToUpdate}"`);
                     <ExperienceCard
                         user={user}
                         post={post}
-                        baseApiUrl={baseApiUrl}
+                        baseApiUrl={API_URL}
                         username={'Me'}
                         hiddenQuotes={hiddenQuotes}
                         toggleQuote={toggleQuote}
@@ -487,7 +530,7 @@ New: "${bioToUpdate}"`);
                         isOwner={true}
                         disableInteractions={true}
                         showEditOption={true}
-                        disablePopup={true} // ← Agregar esta línea
+                        disablePopup={true}
                     />
                 </div>
             );
@@ -498,7 +541,7 @@ New: "${bioToUpdate}"`);
                 <SuggestionCard
                     user={user}
                     post={post}
-                    baseApiUrl={baseApiUrl}
+                    baseApiUrl={API_URL}
                     username={'Me'}
                     hiddenQuotes={hiddenQuotes}
                     toggleQuote={toggleQuote}
@@ -508,16 +551,16 @@ New: "${bioToUpdate}"`);
                     renderTags={renderTags}
                     formatDate={formatDate}
                     onDelete={() => confirmDelete(post, 'Suggestion')}
-                    onEdit={() => handleEditSuggestion(post)} // Pasar la función de edición directamente
+                    onEdit={() => handleEditSuggestion(post)}
                     isOwner={true}
                     disableInteractions={true}
-                    disableInternalEdit={false} // Habilitar edición
+                    disableInternalEdit={false}
                 />
             </div>
         );
     };
 
-    const renderConnectionList = (connections, connectionType) => {
+    const renderConnectionList = (connections, connectionType, currentPage, setPage) => {
         if (connections.length === 0) {
             return (
                 <div className="no-connections">
@@ -526,43 +569,69 @@ New: "${bioToUpdate}"`);
             );
         }
 
+        const paginatedConnections = getPaginatedItems(connections, currentPage);
+        const totalPagesCount = totalPages(connections);
+
         return (
-            <div className="connections-list">
-                {connections.map(connection => (
-                    <div key={connection.uuid} className="connection-card">
-                        <div
-                            className="connection-info-clickable"
-                            onClick={() => handleNavigateToUserProfile(connection.uuid)}
-                        >
-                            <div className="connection-avatar">
-                                <img
-                                    src={getConnectionProfileImageUrl(connection)}
-                                    alt={connection.username}
-                                    onError={(e) => {
-                                        e.target.src = defaultProfilePic;
-                                    }}
-                                />
-                            </div>
-                            <div className="connection-info">
-                                <h4 className="connection-username">{connection.username}</h4>
-                                <p className="connection-email">{connection.email}</p>
-                            </div>
-                        </div>
-                        {/* Mostrar botón de remover solo para followers */}
-                        {connectionType === 'followers' && (
-                            <button
-                                className="remove-follower-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    confirmRemoveFollower(connection);
-                                }}
-                                title="Remove follower"
+            <div className="connections-container">
+                <div className="connections-list">
+                    {paginatedConnections.map(connection => (
+                        <div key={connection.uuid} className="connection-card">
+                            <div
+                                className="connection-info-clickable"
+                                onClick={() => handleNavigateToUserProfile(connection.uuid)}
                             >
-                                <FaTimes />
-                            </button>
-                        )}
+                                <div className="connection-avatar">
+                                    <img
+                                        src={getConnectionProfileImageUrl(connection)}
+                                        alt={connection.username}
+                                        onError={(e) => {
+                                            e.target.src = defaultProfilePic;
+                                        }}
+                                    />
+                                </div>
+                                <div className="connection-info">
+                                    <h4 className="connection-username">{connection.username}</h4>
+                                    <p className="connection-email">{connection.email}</p>
+                                </div>
+                            </div>
+                            {connectionType === 'followers' && (
+                                <button
+                                    className="remove-follower-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        confirmRemoveFollower(connection);
+                                    }}
+                                    title="Remove follower"
+                                >
+                                    <FaTimes />
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {connections.length > itemsPerPage && (
+                    <div className="pagination-controls">
+                        <button
+                            className="pagination-button"
+                            onClick={() => handlePrevPage(setPage, currentPage)}
+                            disabled={currentPage === 1}
+                        >
+                            <FaArrowLeft />
+                        </button>
+                        <span className="page-info">
+                            Page {currentPage} of {totalPagesCount}
+                        </span>
+                        <button
+                            className="pagination-button"
+                            onClick={() => handleNextPage(setPage, currentPage, connections)}
+                            disabled={currentPage >= totalPagesCount}
+                        >
+                            <FaArrowRight />
+                        </button>
                     </div>
-                ))}
+                )}
             </div>
         );
     };
@@ -582,13 +651,33 @@ New: "${bioToUpdate}"`);
                 <div className="error-icon"></div>
                 <h3>Error Loading Profile</h3>
                 <p>{error || "No profile data found"}</p>
-                <button className="btn-primary" onClick={() => navigate('/')}>Home</button>
             </div>
         );
     }
 
     return (
         <div className="profile-container">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
+
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={API_URL}
+                defaultProfilePicture={defaultProfilePic}
+            />
+
             <div className="profile-header">
                 <div className="profile-cover">
                     <div className="profile-avatar-container">
@@ -645,7 +734,6 @@ New: "${bioToUpdate}"`);
                 </div>
             )}
 
-            {/* Nuevo modal de confirmación para remover follower */}
             {removeFollowerConfirmation && (
                 <div className="modal-backdrop">
                     <div className="delete-confirmation-modal">
@@ -664,7 +752,7 @@ New: "${bioToUpdate}"`);
                     suggestion={editingSuggestion}
                     onClose={handleCloseSuggestionModal}
                     onUpdate={handleUpdateSuggestion}
-                    baseApiUrl={baseApiUrl}
+                    baseApiUrl={API_URL}
                 />
             )}
 
@@ -673,7 +761,7 @@ New: "${bioToUpdate}"`);
                     experience={editingExperience}
                     onClose={handleCloseExperienceModal}
                     onUpdate={handleUpdateExperience}
-                    baseApiUrl={baseApiUrl}
+                    baseApiUrl={API_URL}
                 />
             )}
 
@@ -716,7 +804,10 @@ New: "${bioToUpdate}"`);
                         <div className="filter-controls">
                             <select
                                 value={postFilter}
-                                onChange={(e) => setPostFilter(e.target.value)}
+                                onChange={(e) => {
+                                    setPostFilter(e.target.value);
+                                    setPostsPage(1);
+                                }}
                                 className="filter-select"
                             >
                                 <option value="all">All Posts</option>
@@ -731,10 +822,32 @@ New: "${bioToUpdate}"`);
                             <p>No posts found for this filter.</p>
                         </div>
                     ) : (
-                        <div className="post-carousel">
-                            <div className="carousel-track">
-                                {posts.map(renderPost)}
+                        <div className="posts-container">
+                            <div className="posts-grid">
+                                {getPaginatedItems(posts, postsPage).map(renderPost)}
                             </div>
+
+                            {posts.length > itemsPerPage && (
+                                <div className="pagination-controls">
+                                    <button
+                                        className="pagination-button"
+                                        onClick={() => handlePrevPage(setPostsPage, postsPage)}
+                                        disabled={postsPage === 1}
+                                    >
+                                        <FaArrowLeft />
+                                    </button>
+                                    <span className="page-info">
+                                        Page {postsPage} of {totalPages(posts)}
+                                    </span>
+                                    <button
+                                        className="pagination-button"
+                                        onClick={() => handleNextPage(setPostsPage, postsPage, posts)}
+                                        disabled={postsPage >= totalPages(posts)}
+                                    >
+                                        <FaArrowRight />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -743,9 +856,11 @@ New: "${bioToUpdate}"`);
             {activeTab === 'saved' && (
                 <div className="profile-content profile-saved">
                     <SavedContent
-                        key="saved-content"
                         user={user}
-                        baseApiUrl={baseApiUrl}
+                        baseApiUrl={API_URL}
+                        currentPage={savedPage}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setSavedPage}
                     />
                 </div>
             )}
@@ -753,14 +868,14 @@ New: "${bioToUpdate}"`);
             {activeTab === 'followers' && (
                 <div className="profile-content profile-connections">
                     <h3>People who follow you</h3>
-                    {renderConnectionList(followers, 'followers')}
+                    {renderConnectionList(followers, 'followers', followersPage, setFollowersPage)}
                 </div>
             )}
 
             {activeTab === 'following' && (
                 <div className="profile-content profile-connections">
                     <h3>People you follow</h3>
-                    {renderConnectionList(following, 'following')}
+                    {renderConnectionList(following, 'following', followingPage, setFollowingPage)}
                 </div>
             )}
 
@@ -791,18 +906,6 @@ New: "${bioToUpdate}"`);
                     </div>
                 </div>
             )}
-
-            <div className="text-center">
-                <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
-                    <FaArrowLeft /> Go back
-                </button>
-            </div>
-
-            <div className="text-center">
-                <button className="btn btn-success mt-3" onClick={() => navigate('/')}>
-                    <FaHome /> Home
-                </button>
-            </div>
         </div>
     );
 };

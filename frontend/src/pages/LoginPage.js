@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../styles/LoginPage.css';
+import {API_URL} from "../Api";
 
 const LoginPage = ({ setUser }) => {
     const [credential, setCredential] = useState('');
@@ -15,7 +16,7 @@ const LoginPage = ({ setUser }) => {
         const trimmedPassword = password.trim();
 
         try {
-            const response = await fetch('http://localhost:8080/api/auth/login', {
+            const response = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ credential: trimmedCredential, password: trimmedPassword }),
@@ -33,6 +34,10 @@ const LoginPage = ({ setUser }) => {
             setShowError(true);
             setTimeout(() => setShowError(false), 5000);
         }
+    };
+
+    const handleGoogleLogin = () => {
+        window.location.href = `${API_URL}/oauth2/authorization/google`;
     };
 
     return (
@@ -69,6 +74,11 @@ const LoginPage = ({ setUser }) => {
                     )}
                     <button type="submit" className="boton-elegante">Login</button>
                 </form>
+                <div className="oauth-buttons">
+                    <button onClick={handleGoogleLogin} className="google-login-button">
+                        Sign in with Google
+                    </button>
+                </div>
                 <p>
                     Don't have an account? <Link to="/signup">Sign up</Link>
                 </p>
