@@ -13,12 +13,16 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
 
   @Value("${lexigram.frontend.url:http://localhost:3000}")
   private String frontendUrl;
+
+  @Value("${lexigram.base-url:http://localhost:8080}")
+  private String baseUrl;
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -57,13 +61,16 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
 
-    // Allow both local and AWS frontend URLs
-    configuration.setAllowedOrigins(Arrays.asList(
-        "http://localhost:3000",
-        frontendUrl
-    ));
+    // Create a list of allowed origins that includes both local and production URLs
+    List<String> allowedOrigins = Arrays.asList(
+        "http://localhost:3000",           // Local development frontend
+        "http://localhost:8080",           // Local development backend
+        frontendUrl,                       // Production frontend URL
+        baseUrl                           // Production backend URL
+    );
 
-    configuration.setAllowedMethods(Arrays.asList("*"));
+    configuration.setAllowedOrigins(allowedOrigins);
+    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
     configuration.setMaxAge(3600L);
