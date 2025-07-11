@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim AS builder
 WORKDIR /app
 
 # Copy gradle files
-COPY build.gradle settings.gradle gradlew ./
+COPY build.gradle settings.gradle.kts gradlew ./
 COPY gradle gradle/
 
 # Copy source code
@@ -21,7 +21,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the built JAR from builder stage
-COPY --from=builder /app/build/libs/lexigram-*.jar app.jar
+COPY --from=builder /app/build/libs/*.jar app.jar
 
 # Expose port
 EXPOSE 8080
