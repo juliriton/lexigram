@@ -13,7 +13,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
 import java.util.Arrays;
 
-
 @Configuration
 public class SecurityConfig {
 
@@ -49,7 +48,7 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
-            .defaultSuccessUrl(frontendUrl + "/login/success", true)
+            .defaultSuccessUrl(frontendUrl + "/api/auth/oauth2/login/success", true)
         )
         .formLogin(form -> form.disable())
         .httpBasic(httpBasic -> httpBasic.disable());
@@ -64,8 +63,7 @@ public class SecurityConfig {
     configuration.setAllowedOrigins(Arrays.asList(
         "http://localhost:3000",           // Local development frontend
         "https://localhost:3000",          // Local development frontend with HTTPS
-        "https://lexigram-ydhn.onrender.com",  // Production frontend URL
-        frontendUrl                        // Production frontend URL from env
+        frontendUrl                        // Production frontend URL
     ));
 
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

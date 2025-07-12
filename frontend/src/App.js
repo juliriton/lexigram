@@ -77,7 +77,7 @@ function App() {
                 <Route path="/tags" element={<TagPage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/fork/:uuid" element={<ForkExperiencePage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/suggestion/:uuid/reply" element={<ReplySuggestionPage user={user} setUser={enhancedSetUser} />} />
-                <Route path="/login/success" element={<OAuthCallbackPage setUser={enhancedSetUser} />} />
+                <Route path="/api/auth/oauth2/login/success" element={<OAuthCallbackPage setUser={enhancedSetUser} />} />
             </Routes>
         </Router>
     );

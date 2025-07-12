@@ -9,6 +9,7 @@ import com.lexigram.app.repository.UserProfileRepository;
 import com.lexigram.app.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -19,6 +20,9 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/auth/oauth2")
 public class OAuth2Controller {
+
+  @Value("${lexigram.frontend.url:http://localhost:3000}")
+  private String frontendUrl;
 
   private final UserRepository userRepository;
   private final UserPrivacySettingsRepository userPrivacySettingsRepository;
