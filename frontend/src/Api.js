@@ -10,7 +10,7 @@ const getApiUrl = () => {
     }
 
     // Fallback (though you should always set the env var)
-    return 'https://your-backend-service.onrender.com';
+    return 'https://lexigram-backend.onrender.com';
 };
 
 export const API_URL = getApiUrl();
