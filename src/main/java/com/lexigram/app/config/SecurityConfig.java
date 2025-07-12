@@ -11,7 +11,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
+
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -63,7 +65,8 @@ public class SecurityConfig {
     configuration.setAllowedOrigins(Arrays.asList(
         "http://localhost:3000",           // Local development frontend
         "https://localhost:3000",          // Local development frontend with HTTPS
-        frontendUrl                        // Production frontend URL
+        "https://lexigram-ydhn.onrender.com",  // Production frontend URL
+        frontendUrl                        // Production frontend URL from env
     ));
 
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
