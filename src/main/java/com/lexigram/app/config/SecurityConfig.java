@@ -11,9 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
-
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -61,15 +59,13 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
 
-    // Create a list of allowed origins that includes both local and production URLs
-    List<String> allowedOrigins = Arrays.asList(
+    // Be more specific with allowed origins in production
+    configuration.setAllowedOrigins(Arrays.asList(
         "http://localhost:3000",           // Local development frontend
-        "http://localhost:8080",           // Local development backend
-        frontendUrl,                       // Production frontend URL
-        baseUrl                           // Production backend URL
-    );
+        "https://localhost:3000",          // Local development frontend with HTTPS
+        frontendUrl                        // Production frontend URL
+    ));
 
-    configuration.setAllowedOriginPatterns(Arrays.asList("*")); // More permissive for debugging
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
