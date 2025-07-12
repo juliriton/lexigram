@@ -81,10 +81,17 @@ public class OAuth2Controller {
         user.setPassword(""); // No password for OAuth users
         user = userRepository.save(user);
 
-        // Create profile
+        // Create profile - truncate picture URL if necessary
         UserProfile profile = new UserProfile(user);
         profile.setBiography("No bio yet — still searching for the right words.");
-        profile.setProfilePictureUrl(picture != null ? picture : "/images/default-profile.png");
+
+        // Handle potentially long profile picture URLs
+        String profilePictureUrl = "/images/default-profile.png";
+        if (picture != null && !picture.isEmpty()) {
+          profilePictureUrl = picture.length() > 255 ? picture.substring(0, 255) : picture;
+        }
+        profile.setProfilePictureUrl(profilePictureUrl);
+
         userProfileRepository.save(profile);
 
         // Create privacy settings
@@ -106,6 +113,7 @@ public class OAuth2Controller {
       return ResponseEntity.ok(userDTO);
 
     } catch (Exception e) {
+      e.printStackTrace(); // Add this for better error logging
       return ResponseEntity.internalServerError().build();
     }
   }
