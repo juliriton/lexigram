@@ -1,4 +1,3 @@
-// HomePage.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -58,6 +57,11 @@ const HomePage = ({ user, setUser }) => {
     };
 
     const fetchProfilePicture = useCallback(async () => {
+        if (!user) {
+            setProfilePicture(defaultProfilePicture);
+            return;
+        }
+
         try {
             const profileRes = await fetch(`${API_URL}/api/auth/me/profile`, {
                 credentials: 'include',
@@ -77,7 +81,38 @@ const HomePage = ({ user, setUser }) => {
             console.error('Error fetching profile picture:', err);
             setProfilePicture(defaultProfilePicture);
         }
-    }, [defaultProfilePicture]);
+    }, [user, defaultProfilePicture]);
+
+    const fetchFeed = useCallback(async () => {
+        if (!user) {
+            await fetchGuestFeed();
+            return;
+        }
+
+        try {
+            let feedUrl = `${API_URL}/api/auth/me/feed`;
+            if (feedType === 'following') {
+                feedUrl += '/following';
+            } else if (feedType === 'discover') {
+                feedUrl += '/discover';
+            }
+
+            const feedRes = await fetch(feedUrl, { credentials: 'include' });
+            if (feedRes.ok) {
+                const feedData = await feedRes.json();
+                setExperiences(feedData.experiences || []);
+                setSuggestions(feedData.suggestions || []);
+            } else {
+                // If feed fetch fails, user might be logged out
+                if (feedRes.status === 401) {
+                    setUser(null);
+                    await fetchGuestFeed();
+                }
+            }
+        } catch (err) {
+            console.error('Error loading feed:', err);
+        }
+    }, [user, feedType, setUser]);
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -171,44 +206,20 @@ const HomePage = ({ user, setUser }) => {
         return result;
     };
 
+    // Load initial data
     useEffect(() => {
-        const fetchUserAndFeed = async () => {
-            try {
-                const res = await fetch(`${API_URL}/api/auth/me`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    setUser(data);
-
-                    fetchProfilePicture();
-
-                    let feedUrl = `${API_URL}/api/auth/me/feed`;
-                    if (feedType === 'following') {
-                        feedUrl += '/following';
-                    } else if (feedType === 'discover') {
-                        feedUrl += '/discover';
-                    }
-
-                    const feedRes = await fetch(feedUrl, { credentials: 'include' });
-                    if (feedRes.ok) {
-                        const feedData = await feedRes.json();
-                        setExperiences(feedData.experiences || []);
-                        setSuggestions(feedData.suggestions || []);
-                        setCurrentPage(1);
-                    }
-                } else {
-                    setUser(null);
-                    await fetchGuestFeed();
-                    setCurrentPage(1);
-                }
-            } catch (err) {
-                console.error('Error loading user or feed:', err);
-                setUser(null);
-            } finally {
-                setLoading(false);
-            }
+        const loadData = async () => {
+            setLoading(true);
+            await Promise.all([
+                fetchProfilePicture(),
+                fetchFeed()
+            ]);
+            setCurrentPage(1);
+            setLoading(false);
         };
-        fetchUserAndFeed();
-    }, [setUser, feedType, fetchProfilePicture]);
+
+        loadData();
+    }, [user, feedType, fetchProfilePicture, fetchFeed]);
 
     const handleImageError = () => setProfilePicture(defaultProfilePicture);
 

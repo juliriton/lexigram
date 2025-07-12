@@ -11,9 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
-
 import java.util.Arrays;
-import java.util.List;
+
 
 @Configuration
 public class SecurityConfig {

@@ -23,12 +23,15 @@ import java.util.*;
 @Service
 public class ExperienceService {
 
-  private final SuggestionRepository suggestionRepository;
-  private final NotificationRepository notificationRepository;
-  private final NotificationService notificationService;
   @Value("${lexigram.upload.dir}")
   private String uploadDir;
 
+  @Value("${lexigram.frontend.url}")
+  private static String URL;
+
+  private final SuggestionRepository suggestionRepository;
+  private final NotificationRepository notificationRepository;
+  private final NotificationService notificationService;
   private final UserRepository userRepository;
   private final ExperienceRepository experienceRepository;
   private final TagRepository tagRepository;
@@ -637,7 +640,7 @@ public class ExperienceService {
   }
 
   public String getExperienceLink(UUID uuid) {
-    return "http://localhost:3000/experience/" + uuid.toString();
+    return URL + uuid.toString();
   }
 
   public Set<ExperienceDTO> getSavedExperiences(Long id) {
