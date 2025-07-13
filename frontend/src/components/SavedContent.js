@@ -46,15 +46,6 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
         fetchSavedContent();
     }, [fetchSavedContent]);
 
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setSavedExperiences(prev => [...prev]);
-            setSavedSuggestions(prev => [...prev]);
-        }, 100);
-
-        return () => clearTimeout(timeoutId);
-    }, [activeTab]);
-
     const toggleQuote = (postId) => {
         setHiddenQuotes(prev => ({
             ...prev,
@@ -74,30 +65,22 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
     };
 
     const handleExperienceActionComplete = useCallback((updatedExperience) => {
-        setSavedExperiences(prev => {
-            if (updatedExperience.saved === false) {
-                const newExperiences = prev.filter(exp => exp.uuid !== updatedExperience.uuid);
-                return newExperiences;
-            } else {
-                return prev.map(exp => exp.uuid === updatedExperience.uuid ? updatedExperience : exp);
-            }
-        });
+        // Immediately remove from saved list if unsaved
+        setSavedExperiences(prev =>
+            prev.filter(exp => exp.uuid !== updatedExperience.uuid)
+        );
     }, []);
 
     const handleSuggestionActionComplete = useCallback((updatedSuggestion) => {
-        setSavedSuggestions(prev => {
-            if (updatedSuggestion.saved === false) {
-                const newSuggestions = prev.filter(sug => sug.uuid !== updatedSuggestion.uuid);
-                return newSuggestions;
-            } else {
-                return prev.map(sug => sug.uuid === updatedSuggestion.uuid ? updatedSuggestion : sug);
-            }
-        });
+        // Immediately remove from saved list if unsaved
+        setSavedSuggestions(prev =>
+            prev.filter(sug => sug.uuid !== updatedSuggestion.uuid)
+        );
     }, []);
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
-        onPageChange(1); // Reset to first page when tab changes
+        onPageChange(1);
     };
 
     const getPaginatedItems = (items) => {
@@ -182,6 +165,7 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
                                 renderTags={renderTags}
                                 onActionComplete={handleExperienceActionComplete}
                                 isOwner={false}
+                                isSavedView={true}  // Add this prop
                             />
                         ))}
 
@@ -201,6 +185,7 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
                                 formatDate={formatDate}
                                 onActionComplete={handleSuggestionActionComplete}
                                 isOwner={false}
+                                isSavedView={true}  // Add this prop
                             />
                         ))}
                     </div>

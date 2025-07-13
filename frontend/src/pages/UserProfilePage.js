@@ -431,7 +431,7 @@ New: "${bioToUpdate}"`);
             } : post
         ));
 
-        // Also update the editingExperience state if it's the same one
+        // Force a refresh of the editing experience if it exists
         if (editingExperience && editingExperience.uuid === updatedExperience.uuid) {
             setEditingExperience(updatedExperience);
         }
@@ -513,6 +513,7 @@ New: "${bioToUpdate}"`);
             return (
                 <div key={postId} className="post-wrapper">
                     <ExperienceCard
+                        key={postId}
                         user={user}
                         post={post}
                         baseApiUrl={API_URL}
@@ -526,8 +527,9 @@ New: "${bioToUpdate}"`);
                         formatDate={formatDate}
                         onDelete={() => confirmDelete(post, 'Experience')}
                         onEdit={() => handleEditExperience(post)}
+                        onActionComplete={handleUpdateExperience}
                         isOwner={true}
-                        disableInteractions={true}
+                        disableInteractions={false}
                         showEditOption={true}
                         disablePopup={true}
                     />

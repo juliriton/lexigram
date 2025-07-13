@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, {useState, useMemo, useEffect} from 'react';
 import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
 import {useLocation, useNavigate} from 'react-router-dom';
@@ -99,12 +99,16 @@ const ExperienceCard = ({
         }
     };
 
-    const handlePostUpdate = (updatedExperience) => {
+    useEffect(() => {
+        setUpdatedPost(post);
+    }, [post]);
+
+    const handlePostUpdate = (updatedExperience, message) => {
         setUpdatedPost(updatedExperience);
-        // Si hay callback del padre, llamarlo también
         if (onActionComplete) {
-            onActionComplete(updatedExperience);
+            onActionComplete(updatedExperience, message);
         }
+        setShowEditModal(false);
     };
 
     const navigateToUserProfile = () => {
