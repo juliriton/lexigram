@@ -27,7 +27,7 @@ import java.util.UUID;
 public class SuggestionService {
 
   @Value("${lexigram.frontend.url}")
-  private static String URL;
+  private String URL;
 
   private final UserRepository userRepository;
   private final ExperienceService experienceService;
@@ -162,14 +162,29 @@ public class SuggestionService {
     return followingSuggestions;
   }
 
+  @Transactional
   public boolean deleteSuggestion(UUID suggestionUuid, Long userId) {
-    Optional<Suggestion> suggestion = suggestionRepository.findByUuid(suggestionUuid);
-    if (suggestion.isEmpty()){
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(suggestionUuid);
+    if (suggestionOptional.isEmpty()){
       return false;
     }
-    suggestionRepository.deleteById(suggestion.get().getId());
-    User user = userRepository.findById(userId).get();
-    userRepository.save(user);
+
+    Suggestion suggestion = suggestionOptional.get();
+
+    if (!suggestion.getUser().getId().equals(userId)) {
+      throw new SecurityException("User does not have permission to delete this suggestion");
+    }
+    notificationRepository.deleteBySuggestionId(suggestion.getId());
+
+    if (suggestion.getReplies() != null && !suggestion.getReplies().isEmpty()) {
+      for (Experience reply : suggestion.getReplies()) {
+        reply.setSuggestion(null);
+        experienceRepository.save(reply);
+      }
+    }
+
+    suggestionRepository.deleteById(suggestion.getId());
+
     return true;
   }
 
@@ -219,8 +234,11 @@ public class SuggestionService {
 
     Resonate resonate = new Resonate(user, suggestion);
 
+    // Only create notification if it's not null (not self-resonating)
     Notification notification = notificationService.resonateSuggestionNotification(user, suggestion);
-    notificationRepository.save(notification);
+    if (notification != null) {
+      notificationRepository.save(notification);
+    }
 
     suggestion.addResonate(resonate);
     resonateRepository.save(resonate);
@@ -229,7 +247,6 @@ public class SuggestionService {
 
     return Optional.of(new SuggestionDTO(suggestion));
   }
-
   @Transactional
   public Optional<SuggestionDTO> unResonateSuggestion(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);

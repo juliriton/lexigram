@@ -445,12 +445,40 @@ const HomePage = ({ user, setUser }) => {
                                 <h4>Tags</h4>
                                 <div className="tags-grid">
                                     {searchResults.tags.map(tag => (
-                                        <div
-                                            key={tag.uuid}
-                                            className="tag-result"
-                                            onClick={() => navigate(`/tag/${tag.name}`)}
-                                        >
+                                        <div key={tag.uuid} className="tag-result">
                                             #{tag.name}
+                                            {user && (
+                                                <button
+                                                    className="btn btn-sm btn-primary ms-2"
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        try {
+                                                            const endpoint = tag.inFeed ? "remove" : "add";
+                                                            const response = await fetch(`${API_URL}/api/auth/me/tags/feed/${endpoint}/${tag.uuid}`, {
+                                                                method: 'POST',
+                                                                credentials: 'include'
+                                                            });
+                                                            if (response.ok) {
+                                                                alert(`Tag #${tag.name} ${tag.inFeed ? 'removed from' : 'added to'} your feed!`);
+                                                                // Update the UI
+                                                                setSearchResults(prev => ({
+                                                                    ...prev,
+                                                                    tags: prev.tags.map(t =>
+                                                                        t.uuid === tag.uuid ? {...t, inFeed: !t.inFeed} : t
+                                                                    )
+                                                                }));
+                                                            } else {
+                                                                alert('Failed to update tag feed');
+                                                            }
+                                                        } catch (err) {
+                                                            console.error('Error updating tag feed:', err);
+                                                            alert('Error updating tag feed');
+                                                        }
+                                                    }}
+                                                >
+                                                    {tag.inFeed ? 'Remove from Feed' : 'Add to Feed'}
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

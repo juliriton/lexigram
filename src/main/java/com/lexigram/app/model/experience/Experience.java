@@ -16,7 +16,6 @@ public class Experience {
   protected void onCreate() {
     this.creationDate = System.currentTimeMillis();
     this.uuid = UUID.randomUUID();
-    this.mentions = new HashSet<>();
   }
 
   @Id
@@ -98,7 +97,7 @@ public class Experience {
       joinColumns = @JoinColumn(name = "experience_id"),
       inverseJoinColumns = @JoinColumn(name = "user_id")
   )
-  private Set<User> mentions;
+  private Set<User> mentions = new HashSet<>();
 
   public Experience() {}
 

@@ -182,7 +182,7 @@ const NotificationsPage = ({ user, setUser }) => {
     };
 
     const deleteAllNotifications = async () => {
-        if (!window.confirm('Are you sure you want to delete all notifications? This action cannot be undone.')) {
+        if (!window.confirm('Are you sure you want to delete all notifications? Follow requests will not be deleted.')) {
             return;
         }
 
@@ -414,7 +414,7 @@ const NotificationsPage = ({ user, setUser }) => {
                                             }}
                                             title="Mark as read"
                                         >
-                                            <FaCheck />
+                                            <FaCheck/>
                                         </button>
                                     )}
                                     <button
@@ -424,8 +424,10 @@ const NotificationsPage = ({ user, setUser }) => {
                                             deleteNotification(notification.uuid);
                                         }}
                                         title="Delete notification"
+                                        disabled={notification.type === 'FOLLOW_REQUEST'} // Add this line
+                                        style={notification.type === 'FOLLOW_REQUEST' ? {display: 'none'} : {}} // Or hide it completely
                                     >
-                                        <FaTrash />
+                                        <FaTrash/>
                                     </button>
                                 </div>
                             </div>

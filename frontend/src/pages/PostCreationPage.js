@@ -173,7 +173,7 @@ const PostCreationPage = ({ user, setUser }) => {
         setIsSubmitting(true);
 
         const tagArray = tags.split(',').map(t => t.trim()).filter(t => t);
-        const mentionArray = mentions.split(',').map(m => m.trim().replace('@','')).filter(m => m);
+        const mentionArray = mentions.split(',').map(m => m.trim()).filter(m => m);
 
         const trimmedQuote = quote.trim();
         const trimmedReflection = reflection.trim();

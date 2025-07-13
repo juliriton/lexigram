@@ -127,7 +127,7 @@ const UserProfilePage = ({ user, setUser }) => {
         };
 
         loadProfile();
-    }, []);
+    }, [defaultProfilePic]);
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -403,42 +403,41 @@ New: "${bioToUpdate}"`);
 
     const handleCloseSuggestionModal = () => {
         setEditingSuggestion(null);
+        setTimeout(() => {}, 50);
     };
 
     const handleCloseExperienceModal = () => {
         setEditingExperience(null);
+        setTimeout(() => {}, 50);
     };
 
     const handleUpdateSuggestion = (updatedSuggestion, message) => {
         setPosts(prevPosts => prevPosts.map(post =>
             post.uuid === updatedSuggestion.uuid ? {
-                ...post,
                 ...updatedSuggestion,
-                type: 'Suggestion'
+                type: 'Suggestion'  // Ensure type is preserved
             } : post
         ));
 
         setUpdateMessage(message || "Suggestion updated successfully!");
-
-        setTimeout(() => {
-            setUpdateMessage('');
-        }, 3000);
+        setTimeout(() => setUpdateMessage(''), 3000);
     };
 
     const handleUpdateExperience = (updatedExperience, message) => {
         setPosts(prevPosts => prevPosts.map(post =>
             post.uuid === updatedExperience.uuid ? {
-                ...post,
                 ...updatedExperience,
-                type: 'Experience'
+                type: 'Experience'  // Ensure type is preserved
             } : post
         ));
 
-        setUpdateMessage(message || "Experience updated successfully!");
+        // Also update the editingExperience state if it's the same one
+        if (editingExperience && editingExperience.uuid === updatedExperience.uuid) {
+            setEditingExperience(updatedExperience);
+        }
 
-        setTimeout(() => {
-            setUpdateMessage('');
-        }, 3000);
+        setUpdateMessage(message || "Experience updated successfully!");
+        setTimeout(() => setUpdateMessage(''), 3000);
     };
 
     const getProfileImageUrl = () => {

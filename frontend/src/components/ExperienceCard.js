@@ -141,22 +141,32 @@ const ExperienceCard = ({
         setUpdatedPost(updatedExperience);
     };
 
+    const getMentionsCount = (mentions) => {
+        if (!mentions) return 0;
+        return Array.isArray(mentions) ? mentions.length : mentions.size || 0;
+    };
+
     const renderMentions = (mentions) => {
-        if (!Array.isArray(mentions) || mentions.length === 0) {
+        // Handle both array and Set data types
+        if (!mentions) return null;
+
+        const mentionsArray = Array.isArray(mentions) ? mentions : Array.from(mentions);
+
+        if (mentionsArray.length === 0) {
             return null;
         }
 
         return (
             <div className="post-mentions">
                 <div className="mentions-list">
-                    {mentions.map((mention, i) => (
+                    {mentionsArray.map((mention, i) => (
                         <span
                             key={i}
                             className="mention clickable"
                             onClick={() => handleMentionClick(mention.uuid)}
                         >
-                            @{mention.username}
-                        </span>
+                        @{mention.username}
+                    </span>
                     ))}
                 </div>
             </div>
@@ -352,7 +362,7 @@ const ExperienceCard = ({
                         >
                             {isQuoteHidden ? 'Show Quote' : 'Hide Quote'}
                         </button>
-                        {updatedPost.mentions?.length > 0 && (
+                        {updatedPost.mentions && getMentionsCount(updatedPost.mentions) > 0 && (
                             <button
                                 className="btn btn-sm btn-outline-secondary"
                                 onClick={(e) => {
@@ -365,7 +375,7 @@ const ExperienceCard = ({
                         )}
                     </div>
 
-                    {updatedPost.mentions?.length > 0 && showMentions[postId] && (
+                    {updatedPost.mentions && getMentionsCount(updatedPost.mentions) > 0 && showMentions[postId] && (
                         <div className="mentions">
                             <div className="mentions-header">
                                 <FaUserTag className="mention-icon" />

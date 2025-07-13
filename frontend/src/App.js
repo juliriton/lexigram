@@ -22,7 +22,6 @@ function App() {
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
 
-    // Function to fetch current user from server
     const fetchCurrentUser = async () => {
         try {
             const res = await fetch(`${API_URL}/api/auth/me`, {
@@ -42,12 +41,10 @@ function App() {
         }
     };
 
-    // Fetch user on app initialization
     useEffect(() => {
         fetchCurrentUser();
     }, []);
 
-    // Enhanced setUser function that also updates the server session
     const enhancedSetUser = (userData) => {
         setUser(userData);
     };

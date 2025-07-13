@@ -27,7 +27,7 @@ public class ExperienceService {
   private String uploadDir;
 
   @Value("${lexigram.frontend.url}")
-  private static String URL;
+  private String URL;
 
   private final SuggestionRepository suggestionRepository;
   private final NotificationRepository notificationRepository;
@@ -66,33 +66,55 @@ public class ExperienceService {
     this.notificationService = notificationService;
   }
 
+  // In ExperienceService.java - Updated createExperience method
+
   public ExperienceDTO createExperience(Long id, PostExperienceDTO postExperienceDTO, MultipartFile file) throws IOException {
     User user = userRepository.findById(id).get();
     Set<User> mentions = new HashSet<>();
     Set<Tag> tags = new HashSet<>();
 
-    if (postExperienceDTO.getMentions() != null) {
+    // Handle mentions - improved logic
+    if (postExperienceDTO.getMentions() != null && !postExperienceDTO.getMentions().isEmpty()) {
+      System.out.println("Processing mentions: " + postExperienceDTO.getMentions());
+
       for (String username : postExperienceDTO.getMentions()) {
-        if (username.equals(user.getUsername())) {
+        // Skip empty usernames
+        if (username == null || username.trim().isEmpty()) {
+          continue;
+        }
+
+        String cleanUsername = username.trim().replaceAll("^@", ""); // Remove @ if present
+        System.out.println("Processing mention: '" + cleanUsername + "'");
+
+        // Check if user is trying to mention themselves
+        if (cleanUsername.equals(user.getUsername())) {
           throw new InvalidObjectException("Cannot mention yourself in a post!");
         }
-        Optional<User> mention = userRepository.findByUsername(username);
+
+        Optional<User> mention = userRepository.findByUsername(cleanUsername);
         if (mention.isPresent()) {
           mentions.add(mention.get());
+          System.out.println("Found and added mention: " + cleanUsername);
         } else {
-          throw new UserNotFoundException();
+          System.out.println("User not found: " + cleanUsername);
+          throw new UserNotFoundException("User @" + cleanUsername + " not found");
         }
       }
     }
 
-    for (String t : postExperienceDTO.getTags()) {
-      Optional<Tag> tagOptional = tagRepository.findByName(t);
-      if (tagOptional.isPresent()) {
-        tags.add(tagOptional.get());
-      } else {
-        Tag tag = new Tag(t);
-        tagRepository.save(tag);
-        tags.add(tag);
+    // Process tags
+    if (postExperienceDTO.getTags() != null) {
+      for (String t : postExperienceDTO.getTags()) {
+        if (t != null && !t.trim().isEmpty()) {
+          Optional<Tag> tagOptional = tagRepository.findByName(t.trim());
+          if (tagOptional.isPresent()) {
+            tags.add(tagOptional.get());
+          } else {
+            Tag tag = new Tag(t.trim());
+            tagRepository.save(tag);
+            tags.add(tag);
+          }
+        }
       }
     }
 
@@ -102,19 +124,26 @@ public class ExperienceService {
     Boolean isOrigin = true;
     Boolean isReply = postExperienceDTO.getIsReply();
 
+    System.out.println("Final mentions to be saved: " + mentions);
+
     experience = new Experience(user, mentions, tags, quote, reflection, isOrigin, isReply);
     experience = experienceRepository.save(experience);
     experience.setOrigin(experience);
     experience = experienceRepository.save(experience);
 
+    // Create notifications for mentions - only if notification is not null
     for (User mention : mentions) {
+      System.out.println("Creating notification for mention: " + mention.getUsername()); // Debug log
       Notification notification = notificationService.mentionExperienceNotification(user, experience, mention);
-      notificationRepository.save(notification);
+      if (notification != null) {
+        notificationRepository.save(notification);
+      }
     }
 
     PostExperienceStyleDTO styleDTO = postExperienceDTO.getStyle();
     PostExperiencePrivacySettingsDTO privacySettingsDTO = postExperienceDTO.getPrivacySettings();
 
+    // Handle file upload
     if (file != null && !file.isEmpty()) {
       String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
       File destination = new File(uploadDir + File.separator + fileName);
@@ -136,6 +165,7 @@ public class ExperienceService {
       experience.setStyle(style);
     }
 
+    // Create privacy settings
     ExperiencePrivacySettings privacy = new ExperiencePrivacySettings(
         experience,
         privacySettingsDTO.getAllowComments(),
@@ -198,12 +228,16 @@ public class ExperienceService {
     return followingExperiences;
   }
 
+  @Transactional
   public boolean deleteExperience(UUID experienceUuid, Long userId) {
     Optional<Experience> experienceOptional = experienceRepository.findByUuid(experienceUuid);
     if (experienceOptional.isEmpty()){
       return false;
     }
     Experience experience = experienceOptional.get();
+
+    // Delete associated notifications first to avoid foreign key constraint violation
+    notificationRepository.deleteByExperienceId(experience.getId());
 
     if (experience.isReply()) {
       Suggestion suggestion = experience.getSuggestion();
@@ -222,7 +256,6 @@ public class ExperienceService {
     userRepository.save(user);
     return true;
   }
-
   public Optional<ExperienceDTO> updateExperienceQuote(UUID uuid, UpdateExperienceQuoteDTO experienceDTO) {
     Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
     if (experienceOptional.isPresent()) {
@@ -366,8 +399,11 @@ public class ExperienceService {
 
     Resonate resonate = new Resonate(user, experience);
 
+    // Only create notification if it's not null (not self-resonating)
     Notification notification = notificationService.resonateExperienceNotification(user, experience);
-    notificationRepository.save(notification);
+    if (notification != null) {
+      notificationRepository.save(notification);
+    }
 
     resonateRepository.save(resonate);
     experience.addResonate(resonate);
@@ -376,7 +412,6 @@ public class ExperienceService {
 
     return Optional.of(new ExperienceDTO(experience));
   }
-
   @Transactional
   public Optional<ExperienceDTO> unResonateExperience(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
@@ -640,7 +675,7 @@ public class ExperienceService {
   }
 
   public String getExperienceLink(UUID uuid) {
-    return URL + uuid.toString();
+    return URL + "/experience/" + uuid.toString();
   }
 
   public Set<ExperienceDTO> getSavedExperiences(Long id) {

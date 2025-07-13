@@ -85,7 +85,7 @@ public class CommentService {
       commentRepository.save(comment);
 
       System.out.println("Reply saved successfully");
-      return Optional.of(new CommentDTO(reply));  // ✅ DEVOLVER EL REPLY
+      return Optional.of(new CommentDTO(reply));
     } catch (Exception e) {
       System.err.println("Error in replyToComment: " + e.getMessage());
       e.printStackTrace();
@@ -305,7 +305,13 @@ public class CommentService {
       Experience savedExperience = experienceRepository.save(experience);
       System.out.println("Experience updated. New comment count: " + savedExperience.getCommentAmount());
 
-      Notification notification = notificationService.commentExperienceNotification(user, experience);
+      // Only send notification if the commenter is not the experience owner
+      if (!user.equals(experience.getUser())) {
+        Notification notification = notificationService.commentExperienceNotification(user, experience);
+        System.out.println("Notification sent to experience owner");
+      } else {
+        System.out.println("Skipping notification - user commented on their own experience");
+      }
 
       // Retornar la experiencia completa actualizada
       return new ExperienceDTO(savedExperience);

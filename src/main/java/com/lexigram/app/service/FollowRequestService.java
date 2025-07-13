@@ -2,6 +2,7 @@ package com.lexigram.app.service;
 
 import com.lexigram.app.model.FollowRequest;
 import com.lexigram.app.model.user.User;
+import com.lexigram.app.model.Notification;
 import com.lexigram.app.repository.FollowRequestRepository;
 import com.lexigram.app.repository.NotificationRepository;
 import com.lexigram.app.repository.UserRepository;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.transaction.annotation.Transactional;
-
 
 @Service
 public class FollowRequestService {
@@ -45,7 +45,11 @@ public class FollowRequestService {
 
     followRequestRepository.save(followRequest);
 
-    notificationService.createFollowRequestNotification(requester.get(), requested.get(), followRequest);
+    // Only create notification if it's not null (not self-following)
+    Notification notification = notificationService.createFollowRequestNotification(requester.get(), requested.get(), followRequest);
+    if (notification != null) {
+      notificationRepository.save(notification);
+    }
 
     return true;
   }
@@ -67,9 +71,17 @@ public class FollowRequestService {
     userRepository.save(requester);
     userRepository.save(requested);
 
+    // Delete associated notification
     notificationRepository.deleteByFollowRequest(request);
 
+    // Delete the follow request
     followRequestRepository.delete(request);
+
+    // Create follow notification (if not self-following)
+    Notification followNotification = notificationService.createFollowNotification(requester, requested);
+    if (followNotification != null) {
+      notificationRepository.save(followNotification);
+    }
 
     return true;
   }
@@ -83,8 +95,10 @@ public class FollowRequestService {
 
     FollowRequest request = followRequest.get();
 
+    // Delete associated notification
     notificationRepository.deleteByFollowRequest(request);
 
+    // Delete the follow request
     followRequestRepository.delete(request);
     return true;
   }

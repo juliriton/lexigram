@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import '../styles/SignUpPage.css';
 import { API_URL } from '../Api.js';
 
-const SignUpPage = () => {
+const SignUpPage = ({ setUser }) => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -53,6 +53,10 @@ const SignUpPage = () => {
                 return;
             }
 
+            // Update user state before navigation
+            if (setUser) {
+                setUser(data);
+            }
             navigate('/');
         } catch (err) {
             setError('An error occurred');

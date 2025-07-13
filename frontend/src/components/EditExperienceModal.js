@@ -35,7 +35,6 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
-        // Clear success message when changing tabs
         setSuccess(null);
     };
 
@@ -43,7 +42,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         if (tagInput.trim() !== '' && !tags.includes(tagInput.trim())) {
             setTags([...tags, tagInput.trim()]);
             setTagInput('');
-            setErrors({ ...errors, tags: null }); // Clear any tag errors
+            setErrors({ ...errors, tags: null });
         }
     };
 
@@ -54,23 +53,17 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         ));
     };
 
-    // Add direct mention from input
     const handleAddDirectMention = () => {
         if (mentionInput.trim() === '') return;
 
-        // Clear any previous errors
         setErrors({ ...errors, mentions: null });
-
-        // Cleanup the username (remove @ if present)
         const username = mentionInput.trim().replace(/^@/, '');
 
-        // Check if already mentioned by username
         if (mentions.some(m => m.username === username)) {
             setMentionInput('');
             return;
         }
 
-        // Fetch the user by username
         fetch(`${baseApiUrl}/api/auth/me/users/username/${encodeURIComponent(username)}`, {
             credentials: 'include'
         })
@@ -131,17 +124,27 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             let updateErrors = {};
             let changesList = [];
 
+            // Create updated experience object early to use in API calls
+            const updatedExperience = {
+                ...experience,
+                quote: quote,
+                reflection: reflection,
+                tags: tags.map(tag => typeof tag === 'string' ? { name: tag } : tag),
+                mentions: mentions,
+                updatedAt: new Date().toISOString()
+            };
+
             // Update quote if changed
             if (quote !== experience.quote) {
                 try {
-                    const quoteRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/quote`, {
+                    const response = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/quote`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify({ uuid: experience.uuid, quote: quote })
                     });
 
-                    if (!quoteRes.ok) {
+                    if (!response.ok) {
                         updateErrors.quote = 'Failed to update quote';
                     } else {
                         hasUpdated = true;
@@ -159,14 +162,14 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             // Update reflection if changed
             if (reflection !== experience.reflection) {
                 try {
-                    const reflectionRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/reflection`, {
+                    const response = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/reflection`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify({ uuid: experience.uuid, reflection: reflection })
                     });
 
-                    if (!reflectionRes.ok) {
+                    if (!response.ok) {
                         updateErrors.reflection = 'Failed to update reflection';
                     } else {
                         hasUpdated = true;
@@ -185,14 +188,14 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             const currentTags = experience.tags?.map(tag => typeof tag === 'string' ? tag : tag.name) || [];
             if (JSON.stringify(tags.sort()) !== JSON.stringify(currentTags.sort())) {
                 try {
-                    const tagsRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/tags`, {
+                    const response = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/tags`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify({ tags: tags })
                     });
 
-                    if (!tagsRes.ok) {
+                    if (!response.ok) {
                         updateErrors.tags = 'Failed to update tags';
                     } else {
                         hasUpdated = true;
@@ -213,14 +216,14 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
 
             if (JSON.stringify(newMentionUuids.sort()) !== JSON.stringify(currentMentionUuids.sort())) {
                 try {
-                    const mentionsRes = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/mentions`, {
+                    const response = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/mentions`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify({ mentions: mentions.map(m => m.username) })
                     });
 
-                    if (!mentionsRes.ok) {
+                    if (!response.ok) {
                         updateErrors.mentions = 'Failed to update mentions';
                     } else {
                         hasUpdated = true;
@@ -237,7 +240,6 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 }
             }
 
-            // Set any errors that occurred
             if (Object.keys(updateErrors).length > 0) {
                 setErrors({ ...errors, ...updateErrors });
             }
@@ -246,14 +248,8 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 setChanges(changesList);
                 setSuccess("Experience updated successfully!");
 
-                // Update the experience in the parent component
-                onUpdate({
-                    ...experience,
-                    quote: quote,
-                    reflection: reflection,
-                    tags: tags.map(tag => typeof tag === 'string' ? { name: tag } : tag),
-                    mentions: mentions
-                }, "Experience updated successfully!");
+                // Call onUpdate with the complete updated experience
+                onUpdate(updatedExperience, "Experience updated successfully!");
 
                 // Close modal after short delay to show success message
                 setTimeout(() => {
@@ -438,7 +434,6 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             </div>
         </div>
     );
-
 };
 
 export default EditExperienceModal;

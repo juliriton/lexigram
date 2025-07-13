@@ -27,4 +27,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
   @Query("DELETE FROM Notification n WHERE n.followRequest = :followRequest")
   void deleteByFollowRequest(@Param("followRequest") FollowRequest followRequest);
 
+  void deleteByExperienceId(Long id);
+  void deleteBySuggestionId(Long id);
 }

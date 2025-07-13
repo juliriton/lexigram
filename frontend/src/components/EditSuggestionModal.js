@@ -64,9 +64,7 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({
-                            tags: tags
-                        })
+                        body: JSON.stringify({ tags: tags })
                     });
 
                     if (!tagsRes.ok) {
@@ -84,7 +82,6 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
                 }
             }
 
-            // Set any errors that occurred
             if (Object.keys(updateErrors).length > 0) {
                 setErrors({...errors, ...updateErrors});
             }
@@ -93,20 +90,20 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
                 setChanges(changesList);
                 setSuccess("Suggestion updated successfully!");
 
-                onUpdate({
+                // Create the complete updated suggestion object
+                const updatedSuggestion = {
                     ...suggestion,
                     tags: tags.map(tag => typeof tag === 'string' ? { name: tag } : tag),
-                });
+                    updatedAt: new Date().toISOString() // Add current timestamp
+                };
 
-                // Close modal after short delay to show success message
-                setTimeout(() => {
-                    onClose();
-                }, 2000);
+                // Pass the complete updated suggestion to the parent
+                onUpdate(updatedSuggestion, "Suggestion updated successfully!");
+
+                setTimeout(() => onClose(), 2000);
             } else if (Object.keys(updateErrors).length === 0) {
                 setSuccess("No changes detected.");
-                setTimeout(() => {
-                    onClose();
-                }, 1000);
+                setTimeout(() => onClose(), 1000);
             }
         } catch (err) {
             console.error("Error updating suggestion:", err);

@@ -85,6 +85,30 @@ const SuggestionCard = ({
         }
     };
 
+    const handleAddTagToFeed = async (tagUuid, isInFeed, e) => {
+        e.stopPropagation();
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        try {
+            const endpoint = isInFeed ? "remove" : "add";
+            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed/${endpoint}/${tagUuid}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            if (response.ok) {
+                alert(`Tag ${isInFeed ? 'removed from' : 'added to'} your feed!`);
+            } else {
+                alert('Failed to update tag feed');
+            }
+        } catch (err) {
+            console.error('Error updating tag feed:', err);
+            alert('Error updating tag feed');
+        }
+    };
+
     // Function to render suggestion stats based on privacy settings
     const renderSuggestionStats = () => {
         const stats = [];
@@ -203,7 +227,18 @@ const SuggestionCard = ({
                     <div className="tags-section">
                         <div className="tags-inline">
                             {post.tags.slice(0, 5).map((tag, index) => (
-                                <span key={index} className="tag">#{tag.name || tag}</span>
+                                <span key={index} className="tag">
+    #{tag.name}
+                                    {user && (
+                                        <button
+                                            className="tag-add-btn"
+                                            onClick={(e) => handleAddTagToFeed(tag.uuid, tag.inFeed, e)}
+                                            title={tag.inFeed ? "Remove from feed" : "Add to feed"}
+                                        >
+                                            {tag.inFeed ? '-' : '+'}
+                                        </button>
+                                    )}
+  </span>
                             ))}
                             {showAllTags && post.tags.slice(5).map((tag, index) => (
                                 <span key={index + 5} className="tag">#{tag.name || tag}</span>

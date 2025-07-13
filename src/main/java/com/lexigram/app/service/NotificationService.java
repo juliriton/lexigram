@@ -72,7 +72,11 @@ public class NotificationService {
     Optional<Notification> optionalNotification = notificationRepository.findByUuid(uuid);
 
     if (optionalNotification.isPresent()) {
-      notificationRepository.delete(optionalNotification.get());
+      Notification notification = optionalNotification.get();
+      if (notification.getType() == NotificationType.FOLLOW_REQUEST) {
+        return false;
+      }
+      notificationRepository.delete(notification);
       return true;
     }
 
@@ -132,11 +136,26 @@ public class NotificationService {
 
     if (notifications.isEmpty()) return false;
 
-    notificationRepository.deleteAll(notifications);
+    List<Notification> notificationsToDelete = new ArrayList<>();
+    for (Notification notification : notifications) {
+      if (notification.getType() != NotificationType.FOLLOW_REQUEST) {
+        notificationsToDelete.add(notification);
+      }
+    }
+
+    if (!notificationsToDelete.isEmpty()) {
+      notificationRepository.deleteAll(notificationsToDelete);
+    }
+
     return true;
   }
 
   public Notification createFollowNotification(User actor, User recipient) {
+    // Don't create notification if user is following themselves
+    if (actor.getId().equals(recipient.getId())) {
+      return null;
+    }
+
     return createNotification(
         recipient,
         actor,
@@ -148,8 +167,12 @@ public class NotificationService {
     );
   }
 
-
   public Notification resonateExperienceNotification(User actor, Experience experience) {
+    // Don't create notification if user is resonating with their own experience
+    if (actor.getId().equals(experience.getUser().getId())) {
+      return null;
+    }
+
     return createNotification(
         experience.getUser(),
         actor,
@@ -162,6 +185,11 @@ public class NotificationService {
   }
 
   public Notification resonateSuggestionNotification(User actor, Suggestion suggestion) {
+    // Don't create notification if user is resonating with their own suggestion
+    if (actor.getId().equals(suggestion.getUser().getId())) {
+      return null;
+    }
+
     return createNotification(
         suggestion.getUser(),
         actor,
@@ -174,6 +202,11 @@ public class NotificationService {
   }
 
   public Notification commentExperienceNotification(User actor, Experience experience) {
+    // Don't create notification if user is commenting on their own experience
+    if (actor.getId().equals(experience.getUser().getId())) {
+      return null;
+    }
+
     return createNotification(
         experience.getUser(),
         actor,
@@ -186,6 +219,11 @@ public class NotificationService {
   }
 
   public Notification mentionExperienceNotification(User actor, Experience experience, User mentionedUser) {
+    // Don't create notification if user is mentioning themselves
+    if (actor.getId().equals(mentionedUser.getId())) {
+      return null;
+    }
+
     return createNotification(
         mentionedUser,
         actor,
@@ -220,6 +258,11 @@ public class NotificationService {
   }
 
   public Notification createFollowRequestNotification(User actor, User recipient, FollowRequest followRequest) {
+    // Don't create notification if user is sending follow request to themselves
+    if (actor.getId().equals(recipient.getId())) {
+      return null;
+    }
+
     Notification notification = new Notification();
     notification.setTitle("Follow Request");
     notification.setText(actor.getUsername() + " wants to follow you.");
@@ -231,8 +274,4 @@ public class NotificationService {
 
     return notificationRepository.save(notification);
   }
-
-
-
-
 }

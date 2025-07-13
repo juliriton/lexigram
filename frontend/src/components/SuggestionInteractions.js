@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaBookmark, FaRegBookmark, FaReply, FaShare, FaHeart, FaRegHeart } from 'react-icons/fa';
 import '../styles/SuggestionInteractions.css';
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete }) => {
     const [showCopiedMessage, setShowCopiedMessage] = useState(false);
@@ -39,7 +39,7 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
 
     const handleSaveToggle = async () => {
         if (!user) {
-            window.location.href = '/login';
+            navigate('/login');
             return;
         }
         if (processingAction) return;
@@ -77,7 +77,7 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
 
     const handleResonateToggle = async () => {
         if (!user) {
-            window.location.href = '/login';
+            navigate('/login');
             return;
         }
         if (processingAction) return;
@@ -126,7 +126,6 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
             let urlToShare = `${window.location.origin}/suggestion/${suggestion.uuid}`;
 
             if (user) {
-                // If user is logged in, try to get the share link from the API
                 const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/share`;
                 const res = await fetch(endpoint, {
                     method: 'GET',
@@ -140,10 +139,9 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
 
             await copyToClipboard(urlToShare);
             setShowCopiedMessage(true);
-            setTimeout(() => setShowCopiedMessage(false), 2000); // Hide after 2 seconds
+            setTimeout(() => setShowCopiedMessage(false), 2000);
         } catch (err) {
             console.error('Error sharing:', err);
-            // Fallback to manual URL construction
             const shareUrl = `${window.location.origin}/suggestion/${suggestion.uuid}`;
             await copyToClipboard(shareUrl);
             setShowCopiedMessage(true);
@@ -153,17 +151,14 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
 
     const copyToClipboard = async (url) => {
         try {
-            // Try to use Web Share API if available
             if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                 await navigator.share({
                 });
             } else {
-                // Fallback to clipboard
                 await navigator.clipboard.writeText(url);
             }
         } catch (err) {
             console.error('Error copying to clipboard:', err);
-            // Final fallback - create a temporary input
             const tempInput = document.createElement('input');
             tempInput.value = url;
             document.body.appendChild(tempInput);
@@ -249,7 +244,7 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
                     background: 'none',
                     cursor: 'pointer',
                     fontSize: '16px',
-                    position: 'relative' // Add this for positioning the message
+                    position: 'relative'
                 }}
             >
                 <FaShare/>
@@ -266,8 +261,8 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
                         fontSize: '12px',
                         whiteSpace: 'nowrap'
                     }}>
-            Copied!
-        </span>
+                        Copied!
+                    </span>
                 )}
             </button>
         </div>
