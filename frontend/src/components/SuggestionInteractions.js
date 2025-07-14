@@ -70,7 +70,7 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
             if (onActionComplete) {
                 onActionComplete({
                     ...updatedSuggestion,
-                    saved: checkUserInteraction(updatedSuggestion.savedBy, userUuid)  // Make sure this is included
+                    saved: checkUserInteraction(updatedSuggestion.savedBy, userUuid)
                 });
             }
         } catch (err) {
@@ -110,7 +110,13 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
                 resonatesAmount: updatedSuggestion.resonatesAmount
             });
 
-            if (onActionComplete) onActionComplete(updatedSuggestion);
+            if (onActionComplete) {
+                onActionComplete({
+                    ...updatedSuggestion,
+                    saved: checkUserInteraction(updatedSuggestion.savedBy, userUuid)
+                });
+            }
+
         } catch (err) {
             console.error('Error toggling resonate:', err);
         } finally {

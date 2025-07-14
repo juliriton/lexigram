@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
-import {useLocation, useNavigate} from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
 import CommentModal from './CommentModal';
 import ExperienceInteractions from './ExperienceInteractions';
@@ -32,11 +32,9 @@ const ExperienceCard = ({
     const fullMediaUrl = mediaUrl ? `${baseApiUrl}${mediaUrl}` : null;
     const isVideo = url => url && /\.(mp4|webm|ogg)$/i.test(url);
 
-    // Get privacy settings from experience
     const privacySettings = post.privacySettings || {};
     const allowComments = privacySettings.allowComments !== false;
 
-    // Estados para la UI
     const [isQuoteModalOpen, setQuoteModalOpen] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -44,47 +42,41 @@ const ExperienceCard = ({
     const [showFullRefl, setShowFullRefl] = useState(false);
     const [showAllTags, setShowAllTags] = useState(false);
     const [showCommentsModal, setShowCommentsModal] = useState(false);
+    const [feedTags, setFeedTags] = useState(new Set());
 
-    // New state to track if tag feed status has been verified
-    const [tagFeedStatusVerified, setTagFeedStatusVerified] = useState(false);
+    // Fetch user's feed tags to check which tags are in feed
+    const fetchFeedTags = async () => {
+        if (!user) {
+            setFeedTags(new Set());
+            return;
+        }
 
-    // Effect to verify tag feed status on mount
+        try {
+            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed`, {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const feedTagsData = await response.json();
+                const feedTagUuids = new Set(feedTagsData.map(tag => tag.uuid));
+                setFeedTags(feedTagUuids);
+            } else {
+                setFeedTags(new Set());
+            }
+        } catch (err) {
+            console.error('Error fetching feed tags:', err);
+            setFeedTags(new Set());
+        }
+    };
+
     useEffect(() => {
-        const verifyTagFeedStatus = async () => {
-            if (!user || !updatedPost.tags || updatedPost.tags.length === 0 || tagFeedStatusVerified) {
-                return;
-            }
+        setUpdatedPost(post);
+    }, [post]);
 
-            try {
-                // Get user's current feed tags
-                const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed`, {
-                    credentials: 'include'
-                });
+    useEffect(() => {
+        fetchFeedTags();
+    }, [user, baseApiUrl]);
 
-                if (response.ok) {
-                    const feedTags = await response.json();
-                    const feedTagUuids = new Set(feedTags.map(tag => tag.uuid));
-
-                    // Update post tags with correct inFeed status
-                    setUpdatedPost(prevPost => ({
-                        ...prevPost,
-                        tags: prevPost.tags.map(tag => ({
-                            ...tag,
-                            inFeed: feedTagUuids.has(tag.uuid)
-                        }))
-                    }));
-
-                    setTagFeedStatusVerified(true);
-                }
-            } catch (err) {
-                console.error('Error verifying tag feed status:', err);
-            }
-        };
-
-        verifyTagFeedStatus();
-    }, [user, baseApiUrl, updatedPost.tags, tagFeedStatusVerified]);
-
-    // Cálculos para el texto
     const quoteFontSize = useMemo(() => {
         const f = updatedPost.style?.fontSize || 20;
         return Math.min(Math.max(f, 8), 30);
@@ -100,12 +92,10 @@ const ExperienceCard = ({
     const needsReflTruncate = reflectionText.length > reflPreviewLen;
     const reflPreview = reflectionText.slice(0, reflPreviewLen) + (needsReflTruncate ? '…' : '');
 
-    // Manejo de tags
     const allTags = (updatedPost.tags || []).slice(0, 20);
     const inlineTags = allTags.slice(0, 5);
     const extraTags = allTags.slice(5);
 
-    // Manejadores de eventos
     const toggleMentions = () => {
         setShowMentions(prev => ({
             ...prev,
@@ -121,8 +111,6 @@ const ExperienceCard = ({
     const handleEdit = (e) => {
         e.stopPropagation();
         setShowOptions(false);
-
-        // Si hay una función onEdit del padre, usarla; si no, usar la lógica interna
         if (onEdit && typeof onEdit === 'function') {
             onEdit(updatedPost);
         } else {
@@ -138,60 +126,16 @@ const ExperienceCard = ({
         }
     };
 
-    const handlePostUpdate = (updatedExperience) => {
+    const handlePostUpdate = (updatedExperience, message) => {
         setUpdatedPost(updatedExperience);
-        // Si hay callback del padre, llamarlo también
         if (onActionComplete) {
-            onActionComplete(updatedExperience);
+            onActionComplete(updatedExperience, message);
         }
-    };
-
-    const handleAddTagToFeed = async (tagUuid, isInFeed, e) => {
-        e.stopPropagation();
-        if (!user) {
-            navigate('/login');
-            return;
-        }
-
-        try {
-            const endpoint = isInFeed ? "remove" : "add";
-            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed/${endpoint}/${tagUuid}`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-
-            if (response.ok) {
-                // Update the local state to reflect the change
-                setUpdatedPost(prevPost => ({
-                    ...prevPost,
-                    tags: prevPost.tags.map(tag =>
-                        tag.uuid === tagUuid ? { ...tag, inFeed: !isInFeed } : tag
-                    )
-                }));
-
-                // Also update the parent component if callback exists
-                if (onActionComplete) {
-                    const updatedPostWithTag = {
-                        ...updatedPost,
-                        tags: updatedPost.tags.map(tag =>
-                            tag.uuid === tagUuid ? { ...tag, inFeed: !isInFeed } : tag
-                        )
-                    };
-                    onActionComplete(updatedPostWithTag);
-                }
-
-                alert(`Tag ${isInFeed ? 'removed from' : 'added to'} your feed!`);
-            } else {
-                alert('Failed to update tag feed');
-            }
-        } catch (err) {
-            console.error('Error updating tag feed:', err);
-            alert('Error updating tag feed');
-        }
+        setShowEditModal(false);
     };
 
     const navigateToUserProfile = () => {
-        const targetUuid = post.user.uuid;
+        const targetUuid = updatedPost.user.uuid;
         if (!user) {
             if (location.pathname === `/profile/${targetUuid}`) {
                 return;
@@ -224,15 +168,51 @@ const ExperienceCard = ({
         setUpdatedPost(updatedExperience);
     };
 
+    const handleAddTagToFeed = async (tagUuid, isInFeed, e) => {
+        e.stopPropagation();
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        try {
+            const endpoint = isInFeed ? "remove" : "add";
+            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed/${endpoint}/${tagUuid}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                // Update the feedTags state
+                setFeedTags(prev => {
+                    const newSet = new Set(prev);
+                    if (isInFeed) {
+                        newSet.delete(tagUuid);
+                    } else {
+                        newSet.add(tagUuid);
+                    }
+                    return newSet;
+                });
+
+                if (onActionComplete) {
+                    onActionComplete(updatedPost);
+                }
+            } else {
+                alert('Failed to update tag feed');
+            }
+        } catch (err) {
+            console.error('Error updating tag feed:', err);
+            alert('Error updating tag feed');
+        }
+    };
+
     const getMentionsCount = (mentions) => {
         if (!mentions) return 0;
         return Array.isArray(mentions) ? mentions.length : mentions.size || 0;
     };
 
     const renderMentions = (mentions) => {
-        // Handle both array and Set data types
         if (!mentions) return null;
-
         const mentionsArray = Array.isArray(mentions) ? mentions : Array.from(mentions);
 
         if (mentionsArray.length === 0) {
@@ -248,8 +228,8 @@ const ExperienceCard = ({
                             className="mention clickable"
                             onClick={() => handleMentionClick(mention.uuid)}
                         >
-                        @{mention.username}
-                    </span>
+                            @{mention.username}
+                        </span>
                     ))}
                 </div>
             </div>
@@ -260,7 +240,6 @@ const ExperienceCard = ({
         <>
             <div className="experience-card"
                  style={{ cursor: disablePopup ? 'default' : 'pointer' }}>
-                {/* Modal de edición interno - solo se muestra si no hay onEdit del padre */}
                 {showEditModal && !onEdit && (
                     <EditExperienceModal
                         experience={updatedPost}
@@ -345,7 +324,6 @@ const ExperienceCard = ({
 
                                 {showOptions && (
                                     <div className="options-dropdown">
-                                        {/* Solo mostrar botón de editar si showEditOption es true O si hay onEdit */}
                                         {(showEditOption || onEdit) && (
                                             <button onClick={handleEdit} className="option-item edit">
                                                 <FaEdit size={14} /> <span>Edit</span>
@@ -414,10 +392,10 @@ const ExperienceCard = ({
                                         {user && (
                                             <button
                                                 className="tag-add-btn"
-                                                onClick={(e) => handleAddTagToFeed(t.uuid, t.inFeed, e)}
-                                                title={t.inFeed ? "Remove from feed" : "Add to feed"}
+                                                onClick={(e) => handleAddTagToFeed(t.uuid, feedTags.has(t.uuid), e)}
+                                                title={feedTags.has(t.uuid) ? "Remove from feed" : "Add to feed"}
                                             >
-                                                {t.inFeed ? '-' : '+'}
+                                                {feedTags.has(t.uuid) ? '-' : '+'}
                                             </button>
                                         )}
                                     </span>
@@ -428,10 +406,10 @@ const ExperienceCard = ({
                                         {user && (
                                             <button
                                                 className="tag-add-btn"
-                                                onClick={(e) => handleAddTagToFeed(t.uuid, t.inFeed, e)}
-                                                title={t.inFeed ? "Remove from feed" : "Add to feed"}
+                                                onClick={(e) => handleAddTagToFeed(t.uuid, feedTags.has(t.uuid), e)}
+                                                title={feedTags.has(t.uuid) ? "Remove from feed" : "Add to feed"}
                                             >
-                                                {t.inFeed ? '-' : '+'}
+                                                {feedTags.has(t.uuid) ? '-' : '+'}
                                             </button>
                                         )}
                                     </span>
@@ -506,7 +484,6 @@ const ExperienceCard = ({
                 </div>
             </div>
 
-            {/* Original Quote Modal */}
             {isQuoteModalOpen && (
                 <div className="modal-overlay" onClick={() => setQuoteModalOpen(false)}>
                     <div className="quote-modal-content" onClick={e => e.stopPropagation()}>

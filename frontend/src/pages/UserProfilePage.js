@@ -37,8 +37,6 @@ const UserProfilePage = ({ user, setUser }) => {
     const [removeFollowerConfirmation, setRemoveFollowerConfirmation] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
-    const [savedExperiences, setSavedExperiences] = useState([]);
-    const [savedSuggestions, setSavedSuggestions] = useState([]);
 
     // Pagination states
     const [postsPage, setPostsPage] = useState(1);
@@ -414,15 +412,25 @@ New: "${bioToUpdate}"`);
     };
 
     const handleUpdateSuggestion = (updatedSuggestion, message) => {
-        setPosts(prevPosts => prevPosts.map(post =>
-            post.uuid === updatedSuggestion.uuid ? {
-                ...updatedSuggestion,
-                type: 'Suggestion'  // Ensure type is preserved
-            } : post
-        ));
+        setPosts(prevPosts =>
+            prevPosts.map(post => {
+                if (post.uuid === updatedSuggestion.uuid) {
+                    // Ensure we maintain all existing properties and only update the changed ones
+                    return {
+                        ...post,
+                        ...updatedSuggestion,
+                        type: 'Suggestion'  // Ensure type is preserved
+                    };
+                }
+                return post;
+            })
+        );
 
         setUpdateMessage(message || "Suggestion updated successfully!");
         setTimeout(() => setUpdateMessage(''), 3000);
+
+        // Close the modal after successful update
+        setEditingSuggestion(null);
     };
 
     const handleUpdateExperience = (updatedExperience, message) => {
@@ -439,40 +447,6 @@ New: "${bioToUpdate}"`);
         }
 
         setUpdateMessage(message || "Experience updated successfully!");
-        setTimeout(() => setUpdateMessage(''), 3000);
-    };
-
-    const handleContentUnsaved = (uuid, type) => {
-        // Force a refresh of the saved content
-        const fetchSavedContent = async () => {
-            try {
-                const [experiencesRes, suggestionsRes] = await Promise.all([
-                    fetch(`${API_URL}/api/auth/me/profile/saved/experiences`, {
-                        credentials: 'include',
-                    }),
-                    fetch(`${API_URL}/api/auth/me/profile/saved/suggestions`, {
-                        credentials: 'include',
-                    })
-                ]);
-
-                if (experiencesRes.ok && suggestionsRes.ok) {
-                    const experiences = await experiencesRes.json();
-                    const suggestions = await suggestionsRes.json();
-                    setSavedExperiences(experiences);
-                    setSavedSuggestions(suggestions);
-                }
-            } catch (err) {
-                console.error('Error refreshing saved content:', err);
-            }
-        };
-
-        fetchSavedContent();
-
-        // Update the post count
-        setPostCount(prevCount => prevCount - 1);
-
-        // Show a message to the user
-        setUpdateMessage(`${type === 'experience' ? 'Experience' : 'Suggestion'} removed from saved content`);
         setTimeout(() => setUpdateMessage(''), 3000);
     };
 
@@ -898,11 +872,6 @@ New: "${bioToUpdate}"`);
                         currentPage={savedPage}
                         itemsPerPage={itemsPerPage}
                         onPageChange={setSavedPage}
-                        onContentUnsaved={handleContentUnsaved}
-                        savedExperiences={savedExperiences}
-                        setSavedExperiences={setSavedExperiences}
-                        savedSuggestions={savedSuggestions}
-                        setSavedSuggestions={setSavedSuggestions}
                     />
                 </div>
             )}

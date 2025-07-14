@@ -4,18 +4,9 @@ import ExperienceCard from './ExperienceCard';
 import SuggestionCard from './SuggestionCard';
 import '../styles/SavedContent.css';
 
-const SavedContent = ({
-                          user,
-                          baseApiUrl,
-                          currentPage,
-                          itemsPerPage,
-                          onPageChange,
-                          onContentUnsaved,
-                          savedExperiences,
-                          setSavedExperiences,
-                          savedSuggestions,
-                          setSavedSuggestions
-                      }) => {
+const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChange }) => {
+    const [savedExperiences, setSavedExperiences] = useState([]);
+    const [savedSuggestions, setSavedSuggestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('experiences');
     const [hiddenQuotes, setHiddenQuotes] = useState({});
@@ -49,7 +40,7 @@ const SavedContent = ({
         } finally {
             setLoading(false);
         }
-    }, [baseApiUrl, setSavedExperiences, setSavedSuggestions]);
+    }, [baseApiUrl]);
 
     useEffect(() => {
         fetchSavedContent();
@@ -68,36 +59,24 @@ const SavedContent = ({
         if (!Array.isArray(tags)) return null;
         return tags.map((tag, i) => (
             <span key={i} className="tag-badge">
-        #{typeof tag === 'object' ? tag.name : tag}
-      </span>
+                #{typeof tag === 'object' ? tag.name : tag}
+            </span>
         ));
     };
 
     const handleExperienceActionComplete = useCallback((updatedExperience) => {
-        if (updatedExperience.saved === false) {
-            setSavedExperiences(prev => prev.filter(exp => exp.uuid !== updatedExperience.uuid));
-            if (onContentUnsaved) {
-                onContentUnsaved(updatedExperience.uuid, 'experience');
-            }
-        } else {
-            setSavedExperiences(prev => prev.map(exp =>
-                exp.uuid === updatedExperience.uuid ? updatedExperience : exp
-            ));
-        }
-    }, [onContentUnsaved, setSavedExperiences]);
+        // Immediately remove from saved list if unsaved
+        setSavedExperiences(prev =>
+            prev.filter(exp => exp.uuid !== updatedExperience.uuid)
+        );
+    }, []);
 
     const handleSuggestionActionComplete = useCallback((updatedSuggestion) => {
-        if (updatedSuggestion.saved === false) {
-            setSavedSuggestions(prev => prev.filter(sug => sug.uuid !== updatedSuggestion.uuid));
-            if (onContentUnsaved) {
-                onContentUnsaved(updatedSuggestion.uuid, 'suggestion');
-            }
-        } else {
-            setSavedSuggestions(prev => prev.map(sug =>
-                sug.uuid === updatedSuggestion.uuid ? updatedSuggestion : sug
-            ));
-        }
-    }, [onContentUnsaved, setSavedSuggestions]);
+        // Immediately remove from saved list if unsaved
+        setSavedSuggestions(prev =>
+            prev.filter(sug => sug.uuid !== updatedSuggestion.uuid)
+        );
+    }, []);
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
@@ -112,20 +91,6 @@ const SavedContent = ({
 
     const getTotalPages = (items) => Math.ceil(items.length / itemsPerPage);
 
-    // Handle navigation when current page becomes invalid after removing items
-    const adjustPageIfNeeded = useCallback((items) => {
-        const totalPagesCount = getTotalPages(items);
-        if (currentPage > totalPagesCount && totalPagesCount > 0) {
-            onPageChange(totalPagesCount);
-        }
-    }, [currentPage, onPageChange]);
-
-    // Adjust page when items are removed
-    useEffect(() => {
-        const currentItems = activeTab === 'experiences' ? savedExperiences : savedSuggestions;
-        adjustPageIfNeeded(currentItems);
-    }, [savedExperiences, savedSuggestions, activeTab, adjustPageIfNeeded]);
-
     if (loading) {
         return (
             <div className="saved-content-loading">
@@ -139,9 +104,6 @@ const SavedContent = ({
         return (
             <div className="saved-content-error">
                 <p>Error loading saved content: {error}</p>
-                <button onClick={fetchSavedContent} className="retry-button">
-                    Retry
-                </button>
             </div>
         );
     }
@@ -155,6 +117,7 @@ const SavedContent = ({
         <div className="saved-content-container">
             <div className="saved-content-header">
                 <h2><FaBookmark /> Saved Content</h2>
+
                 {!noSavedContent && (
                     <div className="saved-content-tabs">
                         <button
@@ -202,7 +165,7 @@ const SavedContent = ({
                                 renderTags={renderTags}
                                 onActionComplete={handleExperienceActionComplete}
                                 isOwner={false}
-                                isSavedView={true}
+                                isSavedView={true}  // Add this prop
                             />
                         ))}
 
@@ -222,7 +185,7 @@ const SavedContent = ({
                                 formatDate={formatDate}
                                 onActionComplete={handleSuggestionActionComplete}
                                 isOwner={false}
-                                isSavedView={true}
+                                isSavedView={true}  // Add this prop
                             />
                         ))}
                     </div>
@@ -237,8 +200,8 @@ const SavedContent = ({
                                 <FaArrowLeft />
                             </button>
                             <span className="page-info">
-                Page {currentPage} of {totalPages}
-              </span>
+                                Page {currentPage} of {totalPages}
+                            </span>
                             <button
                                 className="pagination-button"
                                 onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}

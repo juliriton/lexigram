@@ -109,8 +109,8 @@ public class OAuth2Controller {
       // Set session
       session.setAttribute("user", user.getId());
 
-      // Redirect to frontend callback page
-      response.sendRedirect(frontendUrl + "/oauth-callback");
+      // Redirect to frontend home page with success parameter
+      response.sendRedirect(frontendUrl + "/?oauth=success");
 
     } catch (Exception e) {
       e.printStackTrace(); // Add this for better error logging

@@ -132,7 +132,10 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
             setInteractions(updatedInteractions);
 
             if (onActionComplete) {
-                onActionComplete(updatedExperience);
+                onActionComplete({
+                    ...updatedExperience,
+                    saved: userStatus.saved
+                });
             }
         } catch (err) {
             console.error('Error toggling resonate:', err);
