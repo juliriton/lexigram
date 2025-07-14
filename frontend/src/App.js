@@ -66,8 +66,11 @@ function App() {
                 <Route path="/login" element={<LoginPage setUser={enhancedSetUser} />} />
                 <Route path="/signup" element={<SignUpPage setUser={enhancedSetUser} />} />
                 <Route path="/post/create" element={<PostCreationPage user={user} setUser={enhancedSetUser} />} />
+
+                {/* Post view routes - make sure these match your URLs exactly */}
                 <Route path="/experience/:uuid" element={<PostViewPage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/suggestion/:uuid" element={<PostViewPage user={user} setUser={enhancedSetUser} />} />
+
                 <Route path="/settings" element={<SettingsPage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/profile/:userId" element={<RelationshipProfilePage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/notifications" element={<NotificationsPage user={user} setUser={enhancedSetUser} />} />
@@ -75,6 +78,9 @@ function App() {
                 <Route path="/fork/:uuid" element={<ForkExperiencePage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/suggestion/:uuid/reply" element={<ReplySuggestionPage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/api/auth/oauth2/login/success" element={<OAuthCallbackPage setUser={enhancedSetUser} />} />
+
+                {/* Catch-all route for 404s - redirect to home */}
+                <Route path="*" element={<HomePage user={user} setUser={enhancedSetUser} />} />
             </Routes>
         </Router>
     );

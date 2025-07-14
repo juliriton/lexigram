@@ -10,6 +10,17 @@ const PostViewPage = ({ user, setUser }) => {
     const location = useLocation();
     const [showPostModal, setShowPostModal] = useState(false);
 
+    // Add debugging
+    useEffect(() => {
+        console.log('PostViewPage mounted with:', {
+            uuid,
+            pathname: location.pathname,
+            search: location.search,
+            hash: location.hash,
+            user: user?.id || 'not logged in'
+        });
+    }, [uuid, location, user]);
+
     // Determine post type based on the current route
     const getPostType = () => {
         if (location.pathname.includes('/suggestion/')) {
@@ -24,11 +35,15 @@ const PostViewPage = ({ user, setUser }) => {
     useEffect(() => {
         // Show the modal when component mounts
         if (uuid) {
+            console.log('Setting showPostModal to true for UUID:', uuid);
             setShowPostModal(true);
+        } else {
+            console.log('No UUID found, not showing modal');
         }
     }, [uuid]);
 
     const handleCloseModal = () => {
+        console.log('Closing modal and navigating to home');
         setShowPostModal(false);
         // Navigate back to home page after closing modal
         navigate('/', { replace: true });
@@ -37,6 +52,13 @@ const PostViewPage = ({ user, setUser }) => {
     const formatDate = (timestamp) => {
         return new Date(timestamp).toLocaleDateString();
     };
+
+    // Add a fallback if uuid is missing
+    if (!uuid) {
+        console.log('No UUID provided, redirecting to home');
+        navigate('/', { replace: true });
+        return null;
+    }
 
     return (
         <>
