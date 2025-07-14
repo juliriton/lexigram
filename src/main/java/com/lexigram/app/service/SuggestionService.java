@@ -393,28 +393,28 @@ public class SuggestionService {
 
   public Set<ExperienceDTO> getAllReplies(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
-
     if (userOptional.isEmpty()) {
       throw new UserNotFoundException();
     }
 
     Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
-
     if (suggestionOptional.isEmpty()) {
       throw new UnsupportedOperationException();
     }
 
     Suggestion suggestion = suggestionOptional.get();
-
     Set<ExperienceDTO> replies = new HashSet<>();
 
     for (Experience e : suggestion.getReplies()) {
-      replies.add(new ExperienceDTO(e));
+      if (e.getUser().getUserPrivacySettings().getVisibility() ||
+          e.getUser().getId().equals(id) ||
+          userOptional.get().getFollowing().contains(e.getUser())) {
+        replies.add(new ExperienceDTO(e));
+      }
     }
 
     return replies;
   }
-
   public Optional<SuggestionDTO> getSuggestionFromUuid(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
 

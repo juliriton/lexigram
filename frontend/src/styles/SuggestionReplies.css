@@ -1,0 +1,123 @@
+.replies-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.replies-modal {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.replies-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.replies-header h3 {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.close-replies-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #666;
+    padding: 4px;
+}
+
+.replies-content {
+    padding: 16px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.replies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.replies-footer {
+    padding: 12px 20px;
+    border-top: 1px solid #eaeaea;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+}
+
+.replies-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #666;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.replies-error {
+    text-align: center;
+    padding: 20px;
+    color: #dc3545;
+}
+
+.retry-btn {
+    margin-top: 10px;
+    padding: 5px 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.no-replies {
+    text-align: center;
+    padding: 30px 20px;
+    color: #666;
+}
+
+.no-replies-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.no-replies p {
+    margin: 5px 0;
+    font-weight: bold;
+}
+
+.no-replies span {
+    font-size: 14px;
+}
