@@ -694,23 +694,24 @@ public class ExperienceService {
 
   public Set<ExperienceDTO> getAllBranches(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
-
     if (userOptional.isEmpty()) {
       throw new UserNotFoundException();
     }
 
     Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
-
     if (experienceOptional.isEmpty()) {
       throw new UnsupportedOperationException();
     }
 
     Experience experience = experienceOptional.get();
-
     Set<ExperienceDTO> branches = new HashSet<>();
 
     for (Experience e : experience.getBranches()) {
-      branches.add(new ExperienceDTO(e));
+      if (e.getUser().getUserPrivacySettings().getVisibility() ||
+          e.getUser().getId().equals(id) ||
+          userOptional.get().getFollowing().contains(e.getUser())) {
+        branches.add(new ExperienceDTO(e));
+      }
     }
 
     return branches;

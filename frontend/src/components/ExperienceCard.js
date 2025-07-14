@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-icons/fa';
+import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag, FaCodeBranch } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
@@ -43,6 +43,7 @@ const ExperienceCard = ({
     const [showAllTags, setShowAllTags] = useState(false);
     const [showCommentsModal, setShowCommentsModal] = useState(false);
     const [feedTags, setFeedTags] = useState(new Set());
+    const [forksCount, setForksCount] = useState(0);
 
     // Fetch user's feed tags to check which tags are in feed
     const fetchFeedTags = async () => {
@@ -69,13 +70,32 @@ const ExperienceCard = ({
         }
     };
 
+    // Fetch forks count for this experience
+    const fetchForksCount = async () => {
+        if (!user) return;
+
+        try {
+            const response = await fetch(`${baseApiUrl}/api/auth/me/experience/${postId}/branches`, {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const forksData = await response.json();
+                setForksCount(Array.isArray(forksData) ? forksData.length : 0);
+            }
+        } catch (err) {
+            console.error('Error fetching forks count:', err);
+        }
+    };
+
     useEffect(() => {
         setUpdatedPost(post);
     }, [post]);
 
     useEffect(() => {
         fetchFeedTags();
-    }, [user, baseApiUrl]);
+        fetchForksCount();
+    }, [user, baseApiUrl, postId]);
 
     const quoteFontSize = useMemo(() => {
         const f = updatedPost.style?.fontSize || 20;
@@ -124,6 +144,15 @@ const ExperienceCard = ({
         if (onDelete && typeof onDelete === 'function') {
             onDelete();
         }
+    };
+
+    const handleShowForks = (e) => {
+        e.stopPropagation();
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        navigate(`/experience/${postId}/forks`);
     };
 
     const handlePostUpdate = (updatedExperience, message) => {
@@ -453,6 +482,18 @@ const ExperienceCard = ({
                                 }}
                             >
                                 {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
+                            </button>
+                        )}
+                        {user && (
+                            <button
+                                className="btn btn-sm btn-outline-info"
+                                onClick={handleShowForks}
+                                title="View all forks of this experience"
+                            >
+                                <FaCodeBranch /> Show Forks
+                                {forksCount > 0 && (
+                                    <span className="forks-count-badge">{forksCount}</span>
+                                )}
                             </button>
                         )}
                     </div>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FaQuestion, FaTrash, FaEdit, FaEllipsisH } from 'react-icons/fa';
+import { FaQuestion, FaTrash, FaEdit, FaEllipsisH, FaComment } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SuggestionInteractions from './SuggestionInteractions';
+import SuggestionReplies from './SuggestionReplies';
 import '../styles/SuggestionCard.css';
 
 const SuggestionCard = ({
@@ -32,6 +33,7 @@ const SuggestionCard = ({
     const [showOptions, setShowOptions] = useState(false);
     const [updatedPost, setUpdatedPost] = useState(post);
     const [feedTags, setFeedTags] = useState(new Set());
+    const [showReplies, setShowReplies] = useState(false);
 
     useEffect(() => {
         setUpdatedPost(post);
@@ -73,6 +75,18 @@ const SuggestionCard = ({
         setShowOptions(!showOptions);
     };
 
+    const handleViewReplies = () => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        setShowReplies(true);
+    };
+
+    const handleCloseReplies = () => {
+        setShowReplies(false);
+    };
+
     const suggestionText = updatedPost.body || '';
     const suggestionPreviewLen = 30;
     const needsSuggestionTruncate = suggestionText.length > suggestionPreviewLen;
@@ -99,6 +113,9 @@ const SuggestionCard = ({
 
     const handleSuggestionInteractionComplete = (updatedSuggestion) => {
         setUpdatedPost(updatedSuggestion);
+        if (onActionComplete) {
+            onActionComplete(updatedSuggestion);
+        }
     };
 
     const handleEdit = (e) => {
@@ -146,6 +163,8 @@ const SuggestionCard = ({
                 if (onActionComplete) {
                     onActionComplete(updatedPost);
                 }
+
+                alert(`Tag ${isInFeed ? 'removed from' : 'added to'} your feed!`);
             } else {
                 alert('Failed to update tag feed');
             }
@@ -155,168 +174,159 @@ const SuggestionCard = ({
         }
     };
 
-    const renderSuggestionStats = () => {
-        const stats = [];
-
-        if (allowResonates) {
-            stats.push(
-                <div key="resonates" className="stat-item">
-                    <span className="stat-label">Resonates:</span>
-                    <span className="stat-value">{updatedPost.resonatesAmount || 0}</span>
-                </div>
-            );
-        }
-
-        if (allowSaves) {
-            stats.push(
-                <div key="saves" className="stat-item">
-                    <span className="stat-label">Saved:</span>
-                    <span className="stat-value">{updatedPost.savesAmount || 0}</span>
-                </div>
-            );
-        }
-
-        stats.push(
-            <div key="replies" className="stat-item">
-                <span className="stat-label">Replies:</span>
-                <span className="stat-value">{updatedPost.replyAmount || 0}</span>
-            </div>
-        );
-
-        return stats;
-    };
 
     return (
-        <div className={`suggestion-card ${isExpanded ? 'expanded' : ''}`}>
-            {fullMediaUrl && (
-                <div className="suggestion-media-wrapper">
-                    <div
-                        className="suggestion-media"
-                        style={{
-                            backgroundImage: `url(${fullMediaUrl})`,
-                            filter: isExpanded ? 'blur(3px)' : 'none',
-                        }}
-                    />
-                </div>
-            )}
-
-            <div className="suggestion-card-content">
-                <div className="badges-container">
-                    <div className="badge suggestion-badge">
-                        <FaQuestion className="badge-icon" />
-                        <span>{updatedPost.type || "Suggestion"}</span>
-                    </div>
-                </div>
-
-                {isOwner && (
-                    <div className="post-options">
-                        <button
-                            className="options-btn"
-                            onClick={toggleOptions}
-                            aria-label="Post options"
-                        >
-                            <FaEllipsisH />
-                        </button>
-
-                        {showOptions && (
-                            <div className="options-dropdown">
-                                {(showEditOption || onEdit) && (
-                                    <button onClick={handleEdit} className="option-item edit">
-                                        <FaEdit size={14} /> <span>Edit</span>
-                                    </button>
-                                )}
-                                <button onClick={handleDelete} className="option-item delete">
-                                    <FaTrash size={14} /> <span>Delete</span>
-                                </button>
-                            </div>
-                        )}
+        <>
+            <div className={`suggestion-card ${isExpanded ? 'expanded' : ''}`}>
+                {fullMediaUrl && (
+                    <div className="suggestion-media-wrapper">
+                        <div
+                            className="suggestion-media"
+                            style={{
+                                backgroundImage: `url(${fullMediaUrl})`,
+                                filter: isExpanded ? 'blur(3px)' : 'none',
+                            }}
+                        />
                     </div>
                 )}
 
-                <div className="suggestion-text-container">
-                    <span className="suggestion-prompt">{promptText}</span>
-                    <h3 className="suggestion-card-title">
-                        {isExpanded ? suggestionText : suggestionPreview}
-                    </h3>
-                    {needsSuggestionTruncate && (
-                        <button className="show-more-btn" onClick={toggleExpanded}>
-                            {isExpanded ? 'Show Less' : 'Show More'}
-                        </button>
-                    )}
-                </div>
-
-                <div className="meta">
-                    <button
-                        className="username-link-btn"
-                        onClick={() => navigateToUserProfile()}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            padding: 0,
-                            color: '#0d6efd',
-                            textDecoration: 'underline',
-                            cursor: 'pointer',
-                            fontWeight: 'normal',
-                            fontSize: 'inherit'
-                        }}
-                    >
-                        @{username}
-                    </button>
-                    {updatedPost.creationDate && (
-                        <span className="date">{formatDate(updatedPost.creationDate)}</span>
-                    )}
-                </div>
-
-                {updatedPost.tags && updatedPost.tags.length > 0 && (
-                    <div className="tags-section">
-                        <div className="tags-inline">
-                            {updatedPost.tags.slice(0, 5).map((tag, index) => (
-                                <span key={index} className="tag">
-                                    #{tag.name}
-                                    {user && (
-                                        <button
-                                            className="tag-add-btn"
-                                            onClick={(e) => handleAddTagToFeed(tag.uuid, feedTags.has(tag.uuid), e)}
-                                            title={feedTags.has(tag.uuid) ? "Remove from feed" : "Add to feed"}
-                                        >
-                                            {feedTags.has(tag.uuid) ? '-' : '+'}
-                                        </button>
-                                    )}
-                                </span>
-                            ))}
-                            {showAllTags && updatedPost.tags.slice(5).map((tag, index) => (
-                                <span key={index + 5} className="tag">
-                                    #{tag.name}
-                                    {user && (
-                                        <button
-                                            className="tag-add-btn"
-                                            onClick={(e) => handleAddTagToFeed(tag.uuid, feedTags.has(tag.uuid), e)}
-                                            title={feedTags.has(tag.uuid) ? "Remove from feed" : "Add to feed"}
-                                        >
-                                            {feedTags.has(tag.uuid) ? '-' : '+'}
-                                        </button>
-                                    )}
-                                </span>
-                            ))}
+                <div className="suggestion-card-content">
+                    <div className="badges-container">
+                        <div className="badge suggestion-badge">
+                            <FaQuestion className="badge-icon" />
+                            <span>{updatedPost.type || "Suggestion"}</span>
                         </div>
-                        {updatedPost.tags.length > 5 && (
-                            <button className="show-more-btn" onClick={toggleTags}>
-                                {showAllTags ? 'Show less' : `+${updatedPost.tags.length - 5} more`}
+                    </div>
+
+                    {isOwner && (
+                        <div className="post-options">
+                            <button
+                                className="options-btn"
+                                onClick={toggleOptions}
+                                aria-label="Post options"
+                            >
+                                <FaEllipsisH />
+                            </button>
+
+                            {showOptions && (
+                                <div className="options-dropdown">
+                                    {(showEditOption || onEdit) && (
+                                        <button onClick={handleEdit} className="option-item edit">
+                                            <FaEdit size={14} /> <span>Edit</span>
+                                        </button>
+                                    )}
+                                    <button onClick={handleDelete} className="option-item delete">
+                                        <FaTrash size={14} /> <span>Delete</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="suggestion-text-container">
+                        <span className="suggestion-prompt">{promptText}</span>
+                        <h3 className="suggestion-card-title">
+                            {isExpanded ? suggestionText : suggestionPreview}
+                        </h3>
+                        {needsSuggestionTruncate && (
+                            <button className="show-more-btn" onClick={toggleExpanded}>
+                                {isExpanded ? 'Show Less' : 'Show More'}
                             </button>
                         )}
                     </div>
-                )}
 
-                <SuggestionInteractions
-                    user={user}
+                    <div className="meta">
+                        <button
+                            className="username-link-btn"
+                            onClick={() => navigateToUserProfile()}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                padding: 0,
+                                color: '#0d6efd',
+                                textDecoration: 'underline',
+                                cursor: 'pointer',
+                                fontWeight: 'normal',
+                                fontSize: 'inherit'
+                            }}
+                        >
+                            @{username}
+                        </button>
+                        {updatedPost.creationDate && (
+                            <span className="date">{formatDate(updatedPost.creationDate)}</span>
+                        )}
+                    </div>
+
+                    {updatedPost.tags && updatedPost.tags.length > 0 && (
+                        <div className="tags-section">
+                            <div className="tags-inline">
+                                {updatedPost.tags.slice(0, 5).map((tag, index) => (
+                                    <span key={index} className="tag">
+                                        #{tag.name}
+                                        {user && (
+                                            <button
+                                                className="tag-add-btn"
+                                                onClick={(e) => handleAddTagToFeed(tag.uuid, feedTags.has(tag.uuid), e)}
+                                                title={feedTags.has(tag.uuid) ? "Remove from feed" : "Add to feed"}
+                                            >
+                                                {feedTags.has(tag.uuid) ? '-' : '+'}
+                                            </button>
+                                        )}
+                                    </span>
+                                ))}
+                                {showAllTags && updatedPost.tags.slice(5).map((tag, index) => (
+                                    <span key={index + 5} className="tag">
+                                        #{tag.name}
+                                        {user && (
+                                            <button
+                                                className="tag-add-btn"
+                                                onClick={(e) => handleAddTagToFeed(tag.uuid, feedTags.has(tag.uuid), e)}
+                                                title={feedTags.has(tag.uuid) ? "Remove from feed" : "Add to feed"}
+                                            >
+                                                {feedTags.has(tag.uuid) ? '-' : '+'}
+                                            </button>
+                                        )}
+                                    </span>
+                                ))}
+                            </div>
+                            {updatedPost.tags.length > 5 && (
+                                <button className="show-more-btn" onClick={toggleTags}>
+                                    {showAllTags ? 'Show less' : `+${updatedPost.tags.length - 5} more`}
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    <SuggestionInteractions
+                        user={user}
+                        suggestion={updatedPost}
+                        baseApiUrl={baseApiUrl}
+                        onActionComplete={handleSuggestionInteractionComplete}
+                    />
+
+                    <div className="replies-section">
+                        <button
+                            className="view-replies-btn"
+                            onClick={handleViewReplies}
+                            disabled={!user}
+                        >
+                            <FaComment className="replies-btn-icon" />
+                            <span>View Replies</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {showReplies && (
+                <SuggestionReplies
                     suggestion={updatedPost}
                     baseApiUrl={baseApiUrl}
-                    onActionComplete={handleSuggestionInteractionComplete}
+                    user={user}
+                    formatDate={formatDate}
+                    onClose={handleCloseReplies}
                 />
-
-                {renderSuggestionStats()}
-            </div>
-        </div>
+            )}
+        </>
     );
 };
 

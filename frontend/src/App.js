@@ -10,6 +10,7 @@ import RelationshipProfilePage from './pages/RelationshipProfilePage';
 import NotificationsPage from "./pages/NotificationsPage";
 import TagPage from "./pages/TagPage";
 import ForkExperiencePage from "./pages/ForkExperiencePage";
+import ExperienceForksPage from "./pages/ExperienceForksPage";
 import ReplySuggestionPage from "./pages/ReplySuggestionPage";
 import PostViewPage from "./pages/PostViewPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
@@ -41,6 +42,9 @@ function AppContent({ user, setUser, userLoading, authChecked, fetchCurrentUser 
             {/* Post view routes - these should work even without authentication */}
             <Route path="/experience/:uuid" element={<PostViewPage user={user} setUser={setUser} />} />
             <Route path="/suggestion/:uuid" element={<PostViewPage user={user} setUser={setUser} />} />
+
+            {/* Experience forks route */}
+            <Route path="/experience/:uuid/forks" element={<ExperienceForksPage user={user} setUser={setUser} />} />
 
             <Route path="/settings" element={<SettingsPage user={user} setUser={setUser} />} />
             <Route path="/profile/:userId" element={<RelationshipProfilePage user={user} setUser={setUser} />} />
