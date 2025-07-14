@@ -105,7 +105,8 @@ public class UserProfileController {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
-    Optional<ExperienceDTO> updated = experienceService.updateExperienceTag(uuid, dto);
+    // Pass the userId to the service method
+    Optional<ExperienceDTO> updated = experienceService.updateExperienceTag(uuid, dto, id);
     if (updated.isEmpty()) return ResponseEntity.notFound().build();
     return ResponseEntity.ok(updated.get());
   }

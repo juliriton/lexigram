@@ -35,7 +35,8 @@ const HomePage = ({ user, setUser }) => {
     const [itemsPerPage] = useState(8);
     const [searchFilters, setSearchFilters] = useState({
         users: true,
-        experiences: true,
+        experiences: true, // Master switch for experiences
+        experienceType: 'all', // 'all', 'forks', 'replies', 'origins'
         suggestions: true,
         tags: true,
         exactMatch: false
@@ -135,14 +136,21 @@ const HomePage = ({ user, setUser }) => {
 
         setSearching(true);
         try {
+            const params = {
+                users: searchFilters.users,
+                suggestions: searchFilters.suggestions,
+                tags: searchFilters.tags,
+                exact: searchFilters.exactMatch
+            };
+
+            // Only add experience filters if experiences are enabled
+            if (searchFilters.experiences) {
+                params.experiences = true;
+                params.experienceType = searchFilters.experienceType;
+            }
+
             const response = await fetch(`${API_URL}/api/auth/me/feed/search/${encodeURIComponent(cleanedQuery)}?` +
-                new URLSearchParams({
-                    users: searchFilters.users,
-                    experiences: searchFilters.experiences,
-                    suggestions: searchFilters.suggestions,
-                    tags: searchFilters.tags,
-                    exact: searchFilters.exactMatch
-                }), {
+                new URLSearchParams(params), {
                 credentials: 'include'
             });
 
@@ -206,6 +214,27 @@ const HomePage = ({ user, setUser }) => {
         return result;
     };
 
+// Helper function to filter experiences based on type
+    const filterExperiencesByType = (experiences, experienceType) => {
+        if (!experiences || experienceType === 'all') {
+            return experiences;
+        }
+
+        switch (experienceType) {
+            case 'forks':
+                // A fork is an experience that is NOT an origin (origin === false)
+                return experiences.filter(exp => exp.origin === false);
+            case 'replies':
+                // A reply is an experience that has isReply === true
+                return experiences.filter(exp => exp.isReply === true);
+            case 'origins':
+                // An origin is an experience that has origin === true
+                return experiences.filter(exp => exp.origin === true);
+            default:
+                return experiences;
+        }
+    };
+
     // Load initial data
     useEffect(() => {
         const loadData = async () => {
@@ -242,11 +271,16 @@ const HomePage = ({ user, setUser }) => {
         const allSearchExperiences = searchResults.experiences || [];
         const allSearchSuggestions = searchResults.suggestions || [];
 
+        // Apply experience type filtering to search results
+        const filteredSearchExperiences = searchFilters.experiences
+            ? filterExperiencesByType(allSearchExperiences, searchFilters.experienceType)
+            : [];
+
         if (postFilter === 'all') {
-            displayExperiences = allSearchExperiences;
+            displayExperiences = filteredSearchExperiences;
             displaySuggestions = allSearchSuggestions;
         } else if (postFilter === 'experiences') {
-            displayExperiences = allSearchExperiences;
+            displayExperiences = filteredSearchExperiences;
             displaySuggestions = [];
         } else if (postFilter === 'suggestions') {
             displayExperiences = [];
@@ -339,13 +373,68 @@ const HomePage = ({ user, setUser }) => {
                                     onChange={() => setSearchFilters({...searchFilters, users: !searchFilters.users})}
                                 /> Users
                             </label>
+
                             <label>
                                 <input
                                     type="checkbox"
                                     checked={searchFilters.experiences}
-                                    onChange={() => setSearchFilters({...searchFilters, experiences: !searchFilters.experiences})}
+                                    onChange={(e) => setSearchFilters({
+                                        ...searchFilters,
+                                        experiences: e.target.checked,
+                                        experienceType: e.target.checked ? 'all' : 'none'
+                                    })}
                                 /> Experiences
                             </label>
+
+                            {searchFilters.experiences && (
+                                <div className="experience-subfilters">
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="experienceType"
+                                            checked={searchFilters.experienceType === 'all'}
+                                            onChange={() => setSearchFilters({
+                                                ...searchFilters,
+                                                experienceType: 'all'
+                                            })}
+                                        /> All Experiences
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="experienceType"
+                                            checked={searchFilters.experienceType === 'forks'}
+                                            onChange={() => setSearchFilters({
+                                                ...searchFilters,
+                                                experienceType: 'forks'
+                                            })}
+                                        /> Only Forks
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="experienceType"
+                                            checked={searchFilters.experienceType === 'replies'}
+                                            onChange={() => setSearchFilters({
+                                                ...searchFilters,
+                                                experienceType: 'replies'
+                                            })}
+                                        /> Only Replies
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="experienceType"
+                                            checked={searchFilters.experienceType === 'origins'}
+                                            onChange={() => setSearchFilters({
+                                                ...searchFilters,
+                                                experienceType: 'origins'
+                                            })}
+                                        /> Origins Only
+                                    </label>
+                                </div>
+                            )}
+
                             <label>
                                 <input
                                     type="checkbox"

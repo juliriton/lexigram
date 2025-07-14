@@ -124,7 +124,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             let updateErrors = {};
             let changesList = [];
 
-            // Create updated experience object
+            // Create updated experience object early to use in API calls
             const updatedExperience = {
                 ...experience,
                 quote: quote,
@@ -248,17 +248,13 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 setChanges(changesList);
                 setSuccess("Experience updated successfully!");
 
-                // Create a complete updated experience object with all fields
-                const completeUpdatedExperience = {
-                    ...experience,
-                    quote: quote,
-                    reflection: reflection,
-                    tags: tags.map(tag => typeof tag === 'string' ? { name: tag } : tag),
-                    mentions: mentions,
-                    updatedAt: new Date().toISOString()
-                };
+                // Call onUpdate with the complete updated experience
+                onUpdate(updatedExperience, "Experience updated successfully!");
 
-                onUpdate(completeUpdatedExperience, "Experience updated successfully!");
+                // Close modal after short delay to show success message
+                setTimeout(() => {
+                    onClose();
+                }, 2000);
             } else if (Object.keys(updateErrors).length === 0) {
                 setSuccess("No changes detected.");
                 setTimeout(() => {

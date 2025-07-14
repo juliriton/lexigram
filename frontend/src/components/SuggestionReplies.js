@@ -23,13 +23,6 @@ const SuggestionReplies = ({
         }));
     };
 
-    const toggleMentions = (postId) => {
-        setShowMentions(prev => ({
-            ...prev,
-            [postId]: !prev[postId]
-        }));
-    };
-
     const fetchReplies = async () => {
         try {
             setLoading(true);
@@ -107,7 +100,12 @@ const SuggestionReplies = ({
                             {replies.map((reply) => (
                                 <ExperienceCard
                                     key={reply.uuid}
-                                    post={reply}
+                                    post={{
+                                        ...reply,
+                                        // Ensure mentions is always an array
+                                        mentions: Array.isArray(reply.mentions) ? reply.mentions : [],
+                                        user: reply.user || { uuid: '', username: 'Unknown' }
+                                    }}
                                     user={user}
                                     username={reply.user?.username || 'Unknown'}
                                     baseApiUrl={baseApiUrl}
@@ -116,7 +114,7 @@ const SuggestionReplies = ({
                                     hiddenQuotes={hiddenQuotes}
                                     toggleQuote={toggleQuote}
                                     showMentions={showMentions}
-                                    setShowMentions={toggleMentions}
+                                    setShowMentions={setShowMentions}
                                     disablePopup={false}
                                     onActionComplete={(updatedExp) => {
                                         setReplies(prev => prev.map(r =>

@@ -9,6 +9,7 @@ import com.lexigram.app.model.experience.ExperienceStyle;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.suggestion.Suggestion;
 import com.lexigram.app.model.user.User;
+import com.lexigram.app.model.user.UserProfile;
 import com.lexigram.app.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ExperienceService {
 
+  private final UserProfileRepository userProfileRepository;
   @Value("${lexigram.upload.dir}")
   private String uploadDir;
 
@@ -52,7 +55,7 @@ public class ExperienceService {
                            SaveRepository saveRepository,
                            SuggestionRepository suggestionRepository,
                            NotificationRepository notificationRepository,
-                           NotificationService notificationService) {
+                           NotificationService notificationService, UserProfileRepository userProfileRepository) {
     this.experienceRepository = experienceRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
@@ -64,6 +67,7 @@ public class ExperienceService {
     this.suggestionRepository = suggestionRepository;
     this.notificationRepository = notificationRepository;
     this.notificationService = notificationService;
+    this.userProfileRepository = userProfileRepository;
   }
 
   // In ExperienceService.java - Updated createExperience method
@@ -289,27 +293,68 @@ public class ExperienceService {
     return Optional.empty();
   }
 
-  public Optional<ExperienceDTO> updateExperienceTag(UUID uuid, UpdateExperienceTagDTO updateTagDTO) {
+  // Updated Experience Service Method
+  public Optional<ExperienceDTO> updateExperienceTag(UUID uuid, UpdateExperienceTagDTO updateTagDTO, Long userId) {
     Set<Tag> tags = new HashSet<>();
     Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+
     if (experienceOptional.isPresent()) {
       Experience experience = experienceOptional.get();
 
       for (String t : updateTagDTO.getTags()) {
         Optional<Tag> tagOptional = tagRepository.findByName(t);
+        Tag tag;
+
         if (tagOptional.isPresent()) {
-          tags.add(tagOptional.get());
+          tag = tagOptional.get();
         } else {
-          Tag tag = new Tag(t);
-          tagRepository.save(tag);
-          tags.add(tag);
+          tag = new Tag(t);
+          tag = tagRepository.save(tag); // Save the tag first
         }
+
+        // Don't set inFeed here - it will be calculated in the DTO creation
+        tags.add(tag);
       }
+
       experience.setTags(tags);
-      experienceRepository.save(experience);
-      return Optional.of(new ExperienceDTO(experience));
+      experience = experienceRepository.save(experience);
+
+      // Refresh the experience to ensure all relationships are loaded
+      experience = experienceRepository.findByUuid(uuid).orElse(experience);
+
+      // Create ExperienceDTO with correct inFeed status for each tag
+      return Optional.of(createExperienceDTOWithCorrectTagStatus(experience, userId));
     }
+
     return Optional.empty();
+  }
+
+  // Add this helper method
+  private ExperienceDTO createExperienceDTOWithCorrectTagStatus(Experience experience, Long userId) {
+    // Get user's feed tags
+    Optional<UserProfile> userProfileOptional = userProfileRepository.findById(userId);
+    Set<UUID> feedTagUuids;
+
+    if (userProfileOptional.isPresent()) {
+      UserProfile userProfile = userProfileOptional.get();
+      feedTagUuids = userProfile.getFeedTags().stream()
+          .map(Tag::getUuid)
+          .collect(Collectors.toSet());
+    } else {
+      feedTagUuids = new HashSet<>();
+    }
+
+    // Create the DTO
+    ExperienceDTO dto = new ExperienceDTO(experience);
+
+    // Set correct inFeed status for each tag in the DTO
+    if (dto.getTags() != null) {
+      dto.getTags().forEach(tagDTO -> {
+        tagDTO.setInFeed(feedTagUuids.contains(tagDTO.getUuid()));
+      });
+    }
+
+    return dto;
   }
 
   @Transactional
