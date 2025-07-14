@@ -172,6 +172,13 @@ const ExperienceCard = ({
             return;
         }
 
+        // Add validation
+        if (!tagUuid || typeof tagUuid !== 'string') {
+            console.error("Invalid tag UUID:", tagUuid);
+            alert("Error: Invalid tag");
+            return;
+        }
+
         try {
             const endpoint = isInFeed ? "remove" : "add";
             const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed/${endpoint}/${tagUuid}`, {
@@ -180,26 +187,19 @@ const ExperienceCard = ({
             });
 
             if (response.ok) {
-                // Update the feedTags state
-                setFeedTags(prev => {
-                    const newSet = new Set(prev);
-                    if (isInFeed) {
-                        newSet.delete(tagUuid);
-                    } else {
-                        newSet.add(tagUuid);
-                    }
-                    return newSet;
-                });
+                // Refresh feed tags after successful operation
+                await fetchFeedTags();
 
                 if (onActionComplete) {
                     onActionComplete(updatedPost);
                 }
             } else {
-                alert('Failed to update tag feed');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update tag feed');
             }
         } catch (err) {
             console.error('Error updating tag feed:', err);
-            alert('Error updating tag feed');
+            alert(`Error updating tag feed: ${err.message}`);
         }
     };
 

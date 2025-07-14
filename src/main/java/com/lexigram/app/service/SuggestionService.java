@@ -10,6 +10,7 @@ import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.resonate.Resonate;
 import com.lexigram.app.model.suggestion.SuggestionPrivacySettings;
 import com.lexigram.app.model.user.User;
+import com.lexigram.app.model.user.UserProfile;
 import com.lexigram.app.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,7 @@ public class SuggestionService {
   private TagRepository tagRepository;
   private SaveRepository saveRepository;
   private ResonateRepository resonateRepository;
+  private final UserProfileRepository userProfileRepository;
 
   @Autowired
   public SuggestionService(SuggestionRepository suggestionRepository,
@@ -50,7 +52,8 @@ public class SuggestionService {
                            ResonateRepository resonateRepository,
                            SuggestionPrivacySettingsRepository suggestionPrivacySettingsRepository,
                            NotificationService notificationService,
-                           NotificationRepository notificationRepository) {
+                           NotificationRepository notificationRepository,
+                           UserProfileRepository userProfileRepository) {
     this.suggestionRepository = suggestionRepository;
     this.userRepository = userRepository;
     this.tagRepository = tagRepository;
@@ -61,6 +64,7 @@ public class SuggestionService {
     this.suggestionPrivacySettingsRepository = suggestionPrivacySettingsRepository;
     this.notificationService = notificationService;
     this.notificationRepository = notificationRepository;
+    this.userProfileRepository = userProfileRepository;
   }
 
   public SuggestionDTO createSuggestion(Long id, PostSuggestionDTO postSuggestionDTO) {
@@ -188,9 +192,10 @@ public class SuggestionService {
     return true;
   }
 
-  public Optional<SuggestionDTO> updateSuggestionTag(UUID uuid, UpdateSuggestionTagDTO updateTagDTO) {
+  public Optional<SuggestionDTO> updateSuggestionTag(UUID uuid, UpdateSuggestionTagDTO updateTagDTO, Long userId) {
     Set<Tag> tags = new HashSet<>();
     Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+
     if (suggestionOptional.isPresent()) {
       Suggestion suggestion = suggestionOptional.get();
 
@@ -200,15 +205,47 @@ public class SuggestionService {
           tags.add(tagOptional.get());
         } else {
           Tag tag = new Tag(t);
-          tagRepository.save(tag);
+          // Save the tag first to ensure it gets a UUID and is properly persisted
+          tag = tagRepository.save(tag);
           tags.add(tag);
         }
       }
+
       suggestion.setTags(tags);
-      suggestionRepository.save(suggestion);
-      return Optional.of(new SuggestionDTO(suggestion));
+      suggestion = suggestionRepository.save(suggestion);
+
+      // Refresh the suggestion from database to ensure all relationships are loaded
+      suggestion = suggestionRepository.findByUuid(uuid).orElse(suggestion);
+
+      // Ensure privacy settings are loaded
+      if (suggestion.getPrivacySettings() == null) {
+        SuggestionPrivacySettings settings = suggestionPrivacySettingsRepository
+            .findBySuggestionId(suggestion.getId()).orElse(null);
+        suggestion.setPrivacySettings(settings);
+      }
+
+      // Create SuggestionDTO with correct inFeed status for each tag
+      return Optional.of(createSuggestionDTOWithCorrectTagStatus(suggestion, userId));
     }
+
     return Optional.empty();
+  }
+
+  // Add this helper method to create SuggestionDTO with correct tag status
+  private SuggestionDTO createSuggestionDTOWithCorrectTagStatus(Suggestion suggestion, Long userId) {
+    // Get user's feed tags
+    Set<Tag> userFeedTags = new HashSet<>();
+    Optional<UserProfile> userProfileOptional = userProfileRepository.findByUserId(userId);
+    if (userProfileOptional.isPresent()) {
+      userFeedTags = userProfileOptional.get().getFeedTags();
+    }
+
+    // Create a temporary suggestion with tags that have correct inFeed status
+    for (Tag tag : suggestion.getTags()) {
+      tag.setInFeed(userFeedTags.contains(tag));
+    }
+
+    return new SuggestionDTO(suggestion);
   }
 
   public Optional<SuggestionDTO> resonateSuggestion(Long id, UUID uuid) {

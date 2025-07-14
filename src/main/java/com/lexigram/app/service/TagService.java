@@ -63,44 +63,45 @@ public class TagService {
     return false;
   }
 
-
-  public Optional<List<TagDTO>> getAllTags(Long id) {
-    Optional<User> user = userRepository.findById(id);
-    if (user.isEmpty()) {
+  public Optional<TagDTO> getTagByUuid(Long userId, UUID uuid) {
+    Optional<Tag> tagOptional = tagRepository.findByUuid(uuid);
+    if (tagOptional.isEmpty()) {
       return Optional.empty();
     }
 
-    Optional<UserProfile> profileOpt = userProfileRepository.findByUserId(id);
-    Set<Tag> feedTags = profileOpt.map(UserProfile::getFeedTags).orElse(Collections.emptySet());
+    Tag tag = tagOptional.get();
 
-    List<Tag> tags = tagRepository.findAll();
-    List<TagDTO> result = new ArrayList<>();
+    // Check if this tag is in the user's feed
+    Optional<UserProfile> userProfileOptional = userProfileRepository.findByUserId(userId);
+    boolean isInFeed = false;
 
-    for (Tag tag : tags) {
-      TagDTO dto = new TagDTO(tag.getUuid(), tag.getName(), feedTags.contains(tag));
-      result.add(dto);
+    if (userProfileOptional.isPresent()) {
+      UserProfile userProfile = userProfileOptional.get();
+      isInFeed = userProfile.getFeedTags().contains(tag);
     }
 
-    return Optional.of(result);
+    return Optional.of(new TagDTO(tag.getUuid(), tag.getName(), isInFeed));
   }
 
+  public Optional<List<TagDTO>> getAllTags(Long userId) {
+    Optional<UserProfile> userProfileOptional = userProfileRepository.findByUserId(userId);
 
-  public Optional<TagDTO> getTagByUuid(Long id, UUID uuid) {
-    Optional<User> user = userRepository.findById(id);
-    if (user.isEmpty()) {
+    if (userProfileOptional.isEmpty()) {
       return Optional.empty();
     }
 
-    Optional<UserProfile> profileOpt = userProfileRepository.findByUserId(id);
-    Set<Tag> feedTags = profileOpt.map(UserProfile::getFeedTags).orElse(Collections.emptySet());
+    UserProfile userProfile = userProfileOptional.get();
+    Set<Tag> feedTags = userProfile.getFeedTags();
 
-    Optional<Tag> tagOpt = tagRepository.findByUuid(uuid);
-    if (tagOpt.isPresent()) {
-      Tag tag = tagOpt.get();
-      return Optional.of(new TagDTO(tag.getUuid(), tag.getName(), feedTags.contains(tag)));
+    List<Tag> allTags = tagRepository.findAll();
+    List<TagDTO> tagDTOs = new ArrayList<>();
+
+    for (Tag tag : allTags) {
+      boolean isInFeed = feedTags.contains(tag);
+      tagDTOs.add(new TagDTO(tag.getUuid(), tag.getName(), isInFeed));
     }
 
-    return Optional.empty();
+    return Optional.of(tagDTOs);
   }
 
   public Optional<Set<TagDTO>> getAllFeedTags(Long id) {
@@ -152,6 +153,10 @@ public class TagService {
     return true;
   }
 
+
+
 }
+
+
 
 
