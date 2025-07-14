@@ -12,11 +12,6 @@ import java.util.UUID;
 @Entity(name = "tags")
 public class Tag {
 
-  @PrePersist
-  public void onCreate() {
-    uuid = UUID.randomUUID();
-  }
-
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -39,9 +34,12 @@ public class Tag {
   @Transient
   private boolean isInFeed; // Transient field to track if tag is in user's feed
 
-  public Tag(){}
+  public Tag(){
+    this.uuid = UUID.randomUUID(); // Generate UUID in default constructor
+  }
 
   public Tag(String name){
+    this.uuid = UUID.randomUUID(); // Generate UUID in parameterized constructor
     this.name = name;
   }
 

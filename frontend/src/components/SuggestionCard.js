@@ -134,10 +134,18 @@ const SuggestionCard = ({
         }
     };
 
-    const handleAddTagToFeed = async (tagUuid, isInFeed, e) => {
+    const handleAddTagToFeed = async (tag, isInFeed, e) => {
         e.stopPropagation();
         if (!user) {
             navigate('/login');
+            return;
+        }
+
+        // Enhanced validation - check both uuid and tag structure
+        const tagUuid = tag?.uuid || tag?.id;
+        if (!tagUuid || typeof tagUuid !== 'string') {
+            console.error("Invalid tag or missing UUID:", tag);
+            alert("Error: Invalid tag or missing UUID");
             return;
         }
 
@@ -149,7 +157,7 @@ const SuggestionCard = ({
             });
 
             if (response.ok) {
-                // Update the feedTags state
+                // Update local state immediately for better UX
                 setFeedTags(prev => {
                     const newSet = new Set(prev);
                     if (isInFeed) {
@@ -160,20 +168,29 @@ const SuggestionCard = ({
                     return newSet;
                 });
 
+                // Also refresh feed tags to ensure consistency
+                await fetchFeedTags();
+
                 if (onActionComplete) {
                     onActionComplete(updatedPost);
                 }
 
                 alert(`Tag ${isInFeed ? 'removed from' : 'added to'} your feed!`);
             } else {
-                alert('Failed to update tag feed');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to update tag feed');
             }
         } catch (err) {
             console.error('Error updating tag feed:', err);
-            alert('Error updating tag feed');
+            alert(`Error updating tag feed: ${err.message}`);
         }
     };
 
+    // Helper function to determine if a tag is in feed
+    const isTagInFeed = (tag) => {
+        const tagUuid = tag?.uuid || tag?.id;
+        return tagUuid && feedTags.has(tagUuid);
+    };
 
     return (
         <>
@@ -257,45 +274,51 @@ const SuggestionCard = ({
                         )}
                     </div>
 
-                    {updatedPost.tags && updatedPost.tags.length > 0 && (
-                        <div className="tags-section">
-                            <div className="tags-inline">
-                                {updatedPost.tags.slice(0, 5).map((tag, index) => (
+                {updatedPost.tags && updatedPost.tags.length > 0 && (
+                    <div className="tags-section">
+                        <div className="tags-inline">
+                            {updatedPost.tags.slice(0, 5).map((tag, index) => {
+                                const tagInFeed = isTagInFeed(tag);
+                                return (
                                     <span key={index} className="tag">
                                         #{tag.name}
                                         {user && (
                                             <button
                                                 className="tag-add-btn"
-                                                onClick={(e) => handleAddTagToFeed(tag.uuid, feedTags.has(tag.uuid), e)}
-                                                title={feedTags.has(tag.uuid) ? "Remove from feed" : "Add to feed"}
+                                                onClick={(e) => handleAddTagToFeed(tag, tagInFeed, e)}
+                                                title={tagInFeed ? "Remove from feed" : "Add to feed"}
                                             >
-                                                {feedTags.has(tag.uuid) ? '-' : '+'}
+                                                {tagInFeed ? '-' : '+'}
                                             </button>
                                         )}
                                     </span>
-                                ))}
-                                {showAllTags && updatedPost.tags.slice(5).map((tag, index) => (
+                                );
+                            })}
+                            {showAllTags && updatedPost.tags.slice(5).map((tag, index) => {
+                                const tagInFeed = isTagInFeed(tag);
+                                return (
                                     <span key={index + 5} className="tag">
                                         #{tag.name}
                                         {user && (
                                             <button
                                                 className="tag-add-btn"
-                                                onClick={(e) => handleAddTagToFeed(tag.uuid, feedTags.has(tag.uuid), e)}
-                                                title={feedTags.has(tag.uuid) ? "Remove from feed" : "Add to feed"}
+                                                onClick={(e) => handleAddTagToFeed(tag, tagInFeed, e)}
+                                                title={tagInFeed ? "Remove from feed" : "Add to feed"}
                                             >
-                                                {feedTags.has(tag.uuid) ? '-' : '+'}
+                                                {tagInFeed ? '-' : '+'}
                                             </button>
                                         )}
                                     </span>
-                                ))}
-                            </div>
-                            {updatedPost.tags.length > 5 && (
-                                <button className="show-more-btn" onClick={toggleTags}>
-                                    {showAllTags ? 'Show less' : `+${updatedPost.tags.length - 5} more`}
-                                </button>
-                            )}
+                                );
+                            })}
                         </div>
-                    )}
+                        {updatedPost.tags.length > 5 && (
+                            <button className="show-more-btn" onClick={toggleTags}>
+                                {showAllTags ? 'Show less' : `+${updatedPost.tags.length - 5} more`}
+                            </button>
+                        )}
+                    </div>
+                )}
 
                     <SuggestionInteractions
                         user={user}

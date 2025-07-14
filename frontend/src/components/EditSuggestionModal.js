@@ -70,12 +70,19 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
                     if (!tagsRes.ok) {
                         updateErrors.tags = 'Failed to update tags';
                     } else {
+                        const updatedSuggestionData = await tagsRes.json();
                         hasUpdated = true;
                         changesList.push({
                             field: 'Tags',
                             previous: currentTags.join(', ') || '(none)',
                             new: tags.join(', ') || '(none)'
                         });
+
+                        // Pass the complete updated suggestion from the backend response
+                        // This ensures the tags have the correct UUIDs and inFeed status
+                        if (onUpdate) {
+                            onUpdate(updatedSuggestionData, "Suggestion updated successfully!");
+                        }
                     }
                 } catch (err) {
                     updateErrors.tags = 'Error updating tags';
@@ -89,17 +96,6 @@ const EditSuggestionModal = ({ suggestion, onClose, onUpdate, baseApiUrl }) => {
             if (hasUpdated) {
                 setChanges(changesList);
                 setSuccess("Suggestion updated successfully!");
-
-                // Create the complete updated suggestion object
-                const updatedSuggestion = {
-                    ...suggestion,
-                    tags: tags.map(tag => typeof tag === 'string' ? { name: tag } : tag),
-                    updatedAt: new Date().toISOString() // Add current timestamp
-                };
-
-                // Pass the complete updated suggestion to the parent
-                onUpdate(updatedSuggestion, "Suggestion updated successfully!");
-
                 setTimeout(() => onClose(), 2000);
             } else if (Object.keys(updateErrors).length === 0) {
                 setSuccess("No changes detected.");

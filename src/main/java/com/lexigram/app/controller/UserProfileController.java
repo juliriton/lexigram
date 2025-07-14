@@ -158,17 +158,16 @@ public class UserProfileController {
   }
 
   @PutMapping("/edit/suggestion/{uuid}/tags")
-  public ResponseEntity<SuggestionDTO> updateSuggestionTags(
-      HttpSession session,
-      @PathVariable UUID uuid,
-      @Valid @RequestBody UpdateSuggestionTagDTO dto) {
+  public ResponseEntity<SuggestionDTO> updateSuggestionTag(@PathVariable UUID uuid,
+                                                           @RequestBody UpdateSuggestionTagDTO updateTagDTO,
+                                                           HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+    if (userId == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
-    Long id = (Long) session.getAttribute("user");
-    if (id == null) return ResponseEntity.status(401).build();
-
-    Optional<SuggestionDTO> updated = suggestionService.updateSuggestionTag(uuid, dto);
-    if (updated.isEmpty()) return ResponseEntity.notFound().build();
-    return ResponseEntity.ok(updated.get());
+    Optional<SuggestionDTO> suggestionOptional = suggestionService.updateSuggestionTag(uuid, updateTagDTO, userId);
+    return suggestionOptional.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/posts")
