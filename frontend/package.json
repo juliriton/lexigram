@@ -48,5 +48,13 @@
   },
   "resolutions": {
     "postcss": "^8.4.31"
-  }
+  },
+  "homepage": "https://lexigram-ydhn.onrender.com",
+  "redirects": [
+    {
+      "source": "/*",
+      "destination": "/index.html",
+      "type": 200
+    }
+  ]
 }
