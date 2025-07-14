@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FaQuestion, FaTrash, FaEdit, FaEllipsisH } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SuggestionInteractions from './SuggestionInteractions';
@@ -31,6 +31,46 @@ const SuggestionCard = ({
     const [isExpanded, setIsExpanded] = React.useState(false);
     const [showAllTags, setShowAllTags] = React.useState(false);
     const [showOptions, setShowOptions] = React.useState(false);
+    const [updatedPost, setUpdatedPost] = React.useState(post);
+
+    // New state to track if tag feed status has been verified
+    const [tagFeedStatusVerified, setTagFeedStatusVerified] = React.useState(false);
+
+    // Effect to verify tag feed status on mount
+    useEffect(() => {
+        const verifyTagFeedStatus = async () => {
+            if (!user || !updatedPost.tags || updatedPost.tags.length === 0 || tagFeedStatusVerified) {
+                return;
+            }
+
+            try {
+                // Get user's current feed tags
+                const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed`, {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const feedTags = await response.json();
+                    const feedTagUuids = new Set(feedTags.map(tag => tag.uuid));
+
+                    // Update post tags with correct inFeed status
+                    setUpdatedPost(prevPost => ({
+                        ...prevPost,
+                        tags: prevPost.tags.map(tag => ({
+                            ...tag,
+                            inFeed: feedTagUuids.has(tag.uuid)
+                        }))
+                    }));
+
+                    setTagFeedStatusVerified(true);
+                }
+            } catch (err) {
+                console.error('Error verifying tag feed status:', err);
+            }
+        };
+
+        verifyTagFeedStatus();
+    }, [user, baseApiUrl, updatedPost.tags, tagFeedStatusVerified]);
 
     const toggleExpanded = () => setIsExpanded(!isExpanded);
     const toggleTags = () => setShowAllTags(!showAllTags);
@@ -39,13 +79,13 @@ const SuggestionCard = ({
         setShowOptions(!showOptions);
     };
 
-    const suggestionText = post.body || '';
+    const suggestionText = updatedPost.body || '';
     const suggestionPreviewLen = 30;
     const needsSuggestionTruncate = suggestionText.length > suggestionPreviewLen;
     const suggestionPreview = suggestionText.slice(0, suggestionPreviewLen) + (needsSuggestionTruncate ? '…' : '');
 
     const navigateToUserProfile = () => {
-        const targetUuid = post.user.uuid;
+        const targetUuid = updatedPost.user.uuid;
         if (!user) {
             if (location.pathname === `/profile/${targetUuid}`) {
                 return;
@@ -64,6 +104,7 @@ const SuggestionCard = ({
     };
 
     const handleSuggestionInteractionComplete = (updatedSuggestion) => {
+        setUpdatedPost(updatedSuggestion);
         if (onActionComplete) {
             onActionComplete(updatedSuggestion);
         }
@@ -73,7 +114,7 @@ const SuggestionCard = ({
         e.stopPropagation();
         setShowOptions(false);
         if (onEdit && typeof onEdit === 'function') {
-            onEdit(post);
+            onEdit(updatedPost);
         }
     };
 
@@ -98,7 +139,27 @@ const SuggestionCard = ({
                 method: 'POST',
                 credentials: 'include'
             });
+
             if (response.ok) {
+                // Update the local state to reflect the change
+                setUpdatedPost(prevPost => ({
+                    ...prevPost,
+                    tags: prevPost.tags.map(tag =>
+                        tag.uuid === tagUuid ? { ...tag, inFeed: !isInFeed } : tag
+                    )
+                }));
+
+                // Also update the parent component if callback exists
+                if (onActionComplete) {
+                    const updatedPostWithTag = {
+                        ...updatedPost,
+                        tags: updatedPost.tags.map(tag =>
+                            tag.uuid === tagUuid ? { ...tag, inFeed: !isInFeed } : tag
+                        )
+                    };
+                    onActionComplete(updatedPostWithTag);
+                }
+
                 alert(`Tag ${isInFeed ? 'removed from' : 'added to'} your feed!`);
             } else {
                 alert('Failed to update tag feed');
@@ -117,7 +178,7 @@ const SuggestionCard = ({
             stats.push(
                 <div key="resonates" className="stat-item">
                     <span className="stat-label">Resonates:</span>
-                    <span className="stat-value">{post.resonatesAmount || 0}</span>
+                    <span className="stat-value">{updatedPost.resonatesAmount || 0}</span>
                 </div>
             );
         }
@@ -126,7 +187,7 @@ const SuggestionCard = ({
             stats.push(
                 <div key="saves" className="stat-item">
                     <span className="stat-label">Saved:</span>
-                    <span className="stat-value">{post.savesAmount || 0}</span>
+                    <span className="stat-value">{updatedPost.savesAmount || 0}</span>
                 </div>
             );
         }
@@ -135,7 +196,7 @@ const SuggestionCard = ({
         stats.push(
             <div key="replies" className="stat-item">
                 <span className="stat-label">Replies:</span>
-                <span className="stat-value">{post.replyAmount || 0}</span>
+                <span className="stat-value">{updatedPost.replyAmount || 0}</span>
             </div>
         );
 
@@ -160,7 +221,7 @@ const SuggestionCard = ({
                 <div className="badges-container">
                     <div className="badge suggestion-badge">
                         <FaQuestion className="badge-icon" />
-                        <span>{post.type || "Suggestion"}</span>
+                        <span>{updatedPost.type || "Suggestion"}</span>
                     </div>
                 </div>
 
@@ -218,17 +279,17 @@ const SuggestionCard = ({
                     >
                         @{username}
                     </button>
-                    {post.creationDate && (
-                        <span className="date">{formatDate(post.creationDate)}</span>
+                    {updatedPost.creationDate && (
+                        <span className="date">{formatDate(updatedPost.creationDate)}</span>
                     )}
                 </div>
 
-                {post.tags && post.tags.length > 0 && (
+                {updatedPost.tags && updatedPost.tags.length > 0 && (
                     <div className="tags-section">
                         <div className="tags-inline">
-                            {post.tags.slice(0, 5).map((tag, index) => (
+                            {updatedPost.tags.slice(0, 5).map((tag, index) => (
                                 <span key={index} className="tag">
-    #{tag.name}
+                                    #{tag.name}
                                     {user && (
                                         <button
                                             className="tag-add-btn"
@@ -238,15 +299,26 @@ const SuggestionCard = ({
                                             {tag.inFeed ? '-' : '+'}
                                         </button>
                                     )}
-  </span>
+                                </span>
                             ))}
-                            {showAllTags && post.tags.slice(5).map((tag, index) => (
-                                <span key={index + 5} className="tag">#{tag.name || tag}</span>
+                            {showAllTags && updatedPost.tags.slice(5).map((tag, index) => (
+                                <span key={index + 5} className="tag">
+                                    #{tag.name}
+                                    {user && (
+                                        <button
+                                            className="tag-add-btn"
+                                            onClick={(e) => handleAddTagToFeed(tag.uuid, tag.inFeed, e)}
+                                            title={tag.inFeed ? "Remove from feed" : "Add to feed"}
+                                        >
+                                            {tag.inFeed ? '-' : '+'}
+                                        </button>
+                                    )}
+                                </span>
                             ))}
                         </div>
-                        {post.tags.length > 5 && (
+                        {updatedPost.tags.length > 5 && (
                             <button className="show-more-btn" onClick={toggleTags}>
-                                {showAllTags ? 'Show less' : `+${post.tags.length - 5} more`}
+                                {showAllTags ? 'Show less' : `+${updatedPost.tags.length - 5} more`}
                             </button>
                         )}
                     </div>
@@ -254,7 +326,7 @@ const SuggestionCard = ({
 
                 <SuggestionInteractions
                     user={user}
-                    suggestion={post}
+                    suggestion={updatedPost}
                     baseApiUrl={baseApiUrl}
                     onActionComplete={handleSuggestionInteractionComplete}
                 />

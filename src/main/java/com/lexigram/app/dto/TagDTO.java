@@ -3,15 +3,16 @@ package com.lexigram.app.dto;
 import java.util.UUID;
 
 public class TagDTO {
-
   private UUID uuid;
   private String name;
+  private boolean inFeed;
 
   public TagDTO() {}
 
-  public TagDTO(UUID uuid, String name) {
+  public TagDTO(UUID uuid, String name, boolean inFeed) {
     this.uuid = uuid;
     this.name = name;
+    this.inFeed = inFeed;
   }
 
   public String getName() {
@@ -20,6 +21,14 @@ public class TagDTO {
 
   public UUID getUuid() {
     return uuid;
+  }
+
+  public boolean isInFeed() {
+    return inFeed;
+  }
+
+  public void setInFeed(boolean inFeed) {
+    this.inFeed = inFeed;
   }
 
   @Override
@@ -34,5 +43,4 @@ public class TagDTO {
   public int hashCode() {
     return uuid != null ? uuid.hashCode() : 0;
   }
-
 }

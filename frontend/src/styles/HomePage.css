@@ -496,3 +496,39 @@ body {
     accent-color: #4a90e2;
     cursor: pointer;
 }
+
+.tags-section {
+    margin-bottom: 20px;
+}
+
+.tags-section h4 {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+}
+
+.tags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.tag-result {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    transition: var(--transition);
+    border: 1px solid var(--glass-border);
+    font-weight: 500;
+}
+
+.tag-result:hover {
+    background: rgba(74, 144, 226, 0.1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-light);
+}

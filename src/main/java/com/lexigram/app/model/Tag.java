@@ -2,6 +2,7 @@ package com.lexigram.app.model;
 
 import com.lexigram.app.model.experience.Experience;
 import com.lexigram.app.model.suggestion.Suggestion;
+import com.lexigram.app.model.user.UserProfile;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -32,6 +33,12 @@ public class Tag {
   @ManyToMany(mappedBy = "tags")
   private List<Experience> experiences = new ArrayList<>();
 
+  @ManyToMany(mappedBy = "feedTags")
+  private List<UserProfile> userProfiles = new ArrayList<>();
+
+  @Transient
+  private boolean isInFeed; // Transient field to track if tag is in user's feed
+
   public Tag(){}
 
   public Tag(String name){
@@ -40,6 +47,14 @@ public class Tag {
 
   public String getName(){
     return name;
+  }
+
+  public boolean isInFeed() {
+    return isInFeed;
+  }
+
+  public void setInFeed(boolean inFeed) {
+    isInFeed = inFeed;
   }
 
   public UUID getUuid() {

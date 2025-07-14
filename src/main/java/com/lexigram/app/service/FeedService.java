@@ -236,8 +236,12 @@ public class FeedService {
     }
 
     Set<TagDTO> tagDTOs = new HashSet<>();
+    Optional<UserProfile> profileOpt = searcherId != null ?
+        userProfileRepository.findByUserId(searcherId) : Optional.empty();
+    Set<Tag> feedTags = profileOpt.map(UserProfile::getFeedTags).orElse(Collections.emptySet());
+
     for (Tag tag : tags) {
-      tagDTOs.add(new TagDTO(tag.getUuid(), tag.getName()));
+      tagDTOs.add(new TagDTO(tag.getUuid(), tag.getName(), feedTags.contains(tag)));
     }
 
     return new SearchDTO(experienceDTOs, connectionDTOs, suggestionDTOs, tagDTOs);
