@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
 import {useLocation, useNavigate} from 'react-router-dom';
@@ -44,6 +44,45 @@ const ExperienceCard = ({
     const [showFullRefl, setShowFullRefl] = useState(false);
     const [showAllTags, setShowAllTags] = useState(false);
     const [showCommentsModal, setShowCommentsModal] = useState(false);
+
+    // New state to track if tag feed status has been verified
+    const [tagFeedStatusVerified, setTagFeedStatusVerified] = useState(false);
+
+    // Effect to verify tag feed status on mount
+    useEffect(() => {
+        const verifyTagFeedStatus = async () => {
+            if (!user || !updatedPost.tags || updatedPost.tags.length === 0 || tagFeedStatusVerified) {
+                return;
+            }
+
+            try {
+                // Get user's current feed tags
+                const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed`, {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const feedTags = await response.json();
+                    const feedTagUuids = new Set(feedTags.map(tag => tag.uuid));
+
+                    // Update post tags with correct inFeed status
+                    setUpdatedPost(prevPost => ({
+                        ...prevPost,
+                        tags: prevPost.tags.map(tag => ({
+                            ...tag,
+                            inFeed: feedTagUuids.has(tag.uuid)
+                        }))
+                    }));
+
+                    setTagFeedStatusVerified(true);
+                }
+            } catch (err) {
+                console.error('Error verifying tag feed status:', err);
+            }
+        };
+
+        verifyTagFeedStatus();
+    }, [user, baseApiUrl, updatedPost.tags, tagFeedStatusVerified]);
 
     // Cálculos para el texto
     const quoteFontSize = useMemo(() => {
@@ -104,6 +143,50 @@ const ExperienceCard = ({
         // Si hay callback del padre, llamarlo también
         if (onActionComplete) {
             onActionComplete(updatedExperience);
+        }
+    };
+
+    const handleAddTagToFeed = async (tagUuid, isInFeed, e) => {
+        e.stopPropagation();
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        try {
+            const endpoint = isInFeed ? "remove" : "add";
+            const response = await fetch(`${baseApiUrl}/api/auth/me/tags/feed/${endpoint}/${tagUuid}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                // Update the local state to reflect the change
+                setUpdatedPost(prevPost => ({
+                    ...prevPost,
+                    tags: prevPost.tags.map(tag =>
+                        tag.uuid === tagUuid ? { ...tag, inFeed: !isInFeed } : tag
+                    )
+                }));
+
+                // Also update the parent component if callback exists
+                if (onActionComplete) {
+                    const updatedPostWithTag = {
+                        ...updatedPost,
+                        tags: updatedPost.tags.map(tag =>
+                            tag.uuid === tagUuid ? { ...tag, inFeed: !isInFeed } : tag
+                        )
+                    };
+                    onActionComplete(updatedPostWithTag);
+                }
+
+                alert(`Tag ${isInFeed ? 'removed from' : 'added to'} your feed!`);
+            } else {
+                alert('Failed to update tag feed');
+            }
+        } catch (err) {
+            console.error('Error updating tag feed:', err);
+            alert('Error updating tag feed');
         }
     };
 
@@ -325,10 +408,34 @@ const ExperienceCard = ({
                     {allTags.length > 0 && (
                         <div className="tags-section">
                             <div className="tags-inline">
-                                {inlineTags.map((t, i) => <span key={i} className="tag">#{t.name}</span>)}
-                                {showAllTags && extraTags.map((t, i) =>
-                                    <span key={i + 5} className="tag">#{t.name}</span>
-                                )}
+                                {inlineTags.map((t, i) => (
+                                    <span key={i} className="tag">
+                                        #{t.name}
+                                        {user && (
+                                            <button
+                                                className="tag-add-btn"
+                                                onClick={(e) => handleAddTagToFeed(t.uuid, t.inFeed, e)}
+                                                title={t.inFeed ? "Remove from feed" : "Add to feed"}
+                                            >
+                                                {t.inFeed ? '-' : '+'}
+                                            </button>
+                                        )}
+                                    </span>
+                                ))}
+                                {showAllTags && extraTags.map((t, i) => (
+                                    <span key={i + 5} className="tag">
+                                        #{t.name}
+                                        {user && (
+                                            <button
+                                                className="tag-add-btn"
+                                                onClick={(e) => handleAddTagToFeed(t.uuid, t.inFeed, e)}
+                                                title={t.inFeed ? "Remove from feed" : "Add to feed"}
+                                            >
+                                                {t.inFeed ? '-' : '+'}
+                                            </button>
+                                        )}
+                                    </span>
+                                ))}
                             </div>
                             {extraTags.length > 0 && (
                                 <button

@@ -67,7 +67,12 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
                 saveAmount: updatedSuggestion.savesAmount
             });
 
-            if (onActionComplete) onActionComplete(updatedSuggestion);
+            if (onActionComplete) {
+                onActionComplete({
+                    ...updatedSuggestion,
+                    saved: checkUserInteraction(updatedSuggestion.savedBy, userUuid)  // Make sure this is included
+                });
+            }
         } catch (err) {
             console.error('Error toggling save:', err);
         } finally {

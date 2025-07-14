@@ -4,9 +4,18 @@ import ExperienceCard from './ExperienceCard';
 import SuggestionCard from './SuggestionCard';
 import '../styles/SavedContent.css';
 
-const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChange }) => {
-    const [savedExperiences, setSavedExperiences] = useState([]);
-    const [savedSuggestions, setSavedSuggestions] = useState([]);
+const SavedContent = ({
+                          user,
+                          baseApiUrl,
+                          currentPage,
+                          itemsPerPage,
+                          onPageChange,
+                          onContentUnsaved,
+                          savedExperiences,
+                          setSavedExperiences,
+                          savedSuggestions,
+                          setSavedSuggestions
+                      }) => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('experiences');
     const [hiddenQuotes, setHiddenQuotes] = useState({});
@@ -40,20 +49,11 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
         } finally {
             setLoading(false);
         }
-    }, [baseApiUrl]);
+    }, [baseApiUrl, setSavedExperiences, setSavedSuggestions]);
 
     useEffect(() => {
         fetchSavedContent();
     }, [fetchSavedContent]);
-
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setSavedExperiences(prev => [...prev]);
-            setSavedSuggestions(prev => [...prev]);
-        }, 100);
-
-        return () => clearTimeout(timeoutId);
-    }, [activeTab]);
 
     const toggleQuote = (postId) => {
         setHiddenQuotes(prev => ({
@@ -68,36 +68,40 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
         if (!Array.isArray(tags)) return null;
         return tags.map((tag, i) => (
             <span key={i} className="tag-badge">
-                #{typeof tag === 'object' ? tag.name : tag}
-            </span>
+        #{typeof tag === 'object' ? tag.name : tag}
+      </span>
         ));
     };
 
     const handleExperienceActionComplete = useCallback((updatedExperience) => {
-        setSavedExperiences(prev => {
-            if (updatedExperience.saved === false) {
-                const newExperiences = prev.filter(exp => exp.uuid !== updatedExperience.uuid);
-                return newExperiences;
-            } else {
-                return prev.map(exp => exp.uuid === updatedExperience.uuid ? updatedExperience : exp);
+        if (updatedExperience.saved === false) {
+            setSavedExperiences(prev => prev.filter(exp => exp.uuid !== updatedExperience.uuid));
+            if (onContentUnsaved) {
+                onContentUnsaved(updatedExperience.uuid, 'experience');
             }
-        });
-    }, []);
+        } else {
+            setSavedExperiences(prev => prev.map(exp =>
+                exp.uuid === updatedExperience.uuid ? updatedExperience : exp
+            ));
+        }
+    }, [onContentUnsaved, setSavedExperiences]);
 
     const handleSuggestionActionComplete = useCallback((updatedSuggestion) => {
-        setSavedSuggestions(prev => {
-            if (updatedSuggestion.saved === false) {
-                const newSuggestions = prev.filter(sug => sug.uuid !== updatedSuggestion.uuid);
-                return newSuggestions;
-            } else {
-                return prev.map(sug => sug.uuid === updatedSuggestion.uuid ? updatedSuggestion : sug);
+        if (updatedSuggestion.saved === false) {
+            setSavedSuggestions(prev => prev.filter(sug => sug.uuid !== updatedSuggestion.uuid));
+            if (onContentUnsaved) {
+                onContentUnsaved(updatedSuggestion.uuid, 'suggestion');
             }
-        });
-    }, []);
+        } else {
+            setSavedSuggestions(prev => prev.map(sug =>
+                sug.uuid === updatedSuggestion.uuid ? updatedSuggestion : sug
+            ));
+        }
+    }, [onContentUnsaved, setSavedSuggestions]);
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
-        onPageChange(1); // Reset to first page when tab changes
+        onPageChange(1);
     };
 
     const getPaginatedItems = (items) => {
@@ -107,6 +111,20 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
     };
 
     const getTotalPages = (items) => Math.ceil(items.length / itemsPerPage);
+
+    // Handle navigation when current page becomes invalid after removing items
+    const adjustPageIfNeeded = useCallback((items) => {
+        const totalPagesCount = getTotalPages(items);
+        if (currentPage > totalPagesCount && totalPagesCount > 0) {
+            onPageChange(totalPagesCount);
+        }
+    }, [currentPage, onPageChange]);
+
+    // Adjust page when items are removed
+    useEffect(() => {
+        const currentItems = activeTab === 'experiences' ? savedExperiences : savedSuggestions;
+        adjustPageIfNeeded(currentItems);
+    }, [savedExperiences, savedSuggestions, activeTab, adjustPageIfNeeded]);
 
     if (loading) {
         return (
@@ -121,6 +139,9 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
         return (
             <div className="saved-content-error">
                 <p>Error loading saved content: {error}</p>
+                <button onClick={fetchSavedContent} className="retry-button">
+                    Retry
+                </button>
             </div>
         );
     }
@@ -134,7 +155,6 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
         <div className="saved-content-container">
             <div className="saved-content-header">
                 <h2><FaBookmark /> Saved Content</h2>
-
                 {!noSavedContent && (
                     <div className="saved-content-tabs">
                         <button
@@ -182,6 +202,7 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
                                 renderTags={renderTags}
                                 onActionComplete={handleExperienceActionComplete}
                                 isOwner={false}
+                                isSavedView={true}
                             />
                         ))}
 
@@ -201,6 +222,7 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
                                 formatDate={formatDate}
                                 onActionComplete={handleSuggestionActionComplete}
                                 isOwner={false}
+                                isSavedView={true}
                             />
                         ))}
                     </div>
@@ -215,8 +237,8 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
                                 <FaArrowLeft />
                             </button>
                             <span className="page-info">
-                                Page {currentPage} of {totalPages}
-                            </span>
+                Page {currentPage} of {totalPages}
+              </span>
                             <button
                                 className="pagination-button"
                                 onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}

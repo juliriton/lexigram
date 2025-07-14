@@ -66,33 +66,38 @@ public class TagService {
 
   public Optional<List<TagDTO>> getAllTags(Long id) {
     Optional<User> user = userRepository.findById(id);
-
     if (user.isEmpty()) {
       return Optional.empty();
     }
+
+    Optional<UserProfile> profileOpt = userProfileRepository.findByUserId(id);
+    Set<Tag> feedTags = profileOpt.map(UserProfile::getFeedTags).orElse(Collections.emptySet());
 
     List<Tag> tags = tagRepository.findAll();
     List<TagDTO> result = new ArrayList<>();
 
     for (Tag tag : tags) {
-      result.add(new TagDTO(tag.getUuid(), tag.getName()));
+      TagDTO dto = new TagDTO(tag.getUuid(), tag.getName(), feedTags.contains(tag));
+      result.add(dto);
     }
 
     return Optional.of(result);
   }
 
+
   public Optional<TagDTO> getTagByUuid(Long id, UUID uuid) {
     Optional<User> user = userRepository.findById(id);
-
     if (user.isEmpty()) {
       return Optional.empty();
     }
 
-    Optional<Tag> tagOpt = tagRepository.findByUuid(uuid);
+    Optional<UserProfile> profileOpt = userProfileRepository.findByUserId(id);
+    Set<Tag> feedTags = profileOpt.map(UserProfile::getFeedTags).orElse(Collections.emptySet());
 
+    Optional<Tag> tagOpt = tagRepository.findByUuid(uuid);
     if (tagOpt.isPresent()) {
       Tag tag = tagOpt.get();
-      return Optional.of(new TagDTO(tag.getUuid(), tag.getName()));
+      return Optional.of(new TagDTO(tag.getUuid(), tag.getName(), feedTags.contains(tag)));
     }
 
     return Optional.empty();
@@ -100,7 +105,6 @@ public class TagService {
 
   public Optional<Set<TagDTO>> getAllFeedTags(Long id) {
     Optional<UserProfile> profileOpt = userProfileRepository.findByUserId(id);
-
     if (profileOpt.isEmpty()) {
       return Optional.empty();
     }
@@ -109,7 +113,7 @@ public class TagService {
     Set<TagDTO> result = new HashSet<>();
 
     for (Tag tag : profile.getFeedTags()) {
-      result.add(new TagDTO(tag.getUuid(), tag.getName()));
+      result.add(new TagDTO(tag.getUuid(), tag.getName(), true));
     }
 
     return Optional.of(result);

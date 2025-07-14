@@ -86,7 +86,10 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
             setInteractions(updatedInteractions);
 
             if (onActionComplete) {
-                onActionComplete(updatedExperience);
+                onActionComplete({
+                    ...updatedExperience,
+                    saved: userStatus.saved  // Make sure this is included
+                });
             }
         } catch (err) {
             console.error('Error toggling save:', err);

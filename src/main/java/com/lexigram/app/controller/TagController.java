@@ -58,21 +58,33 @@ public class TagController {
   }
 
   @PostMapping("/feed/add/{uuid}")
-  public ResponseEntity<Void> addTagToFeed(@PathVariable UUID uuid, HttpSession session) {
+  public ResponseEntity<TagDTO> addTagToFeed(@PathVariable UUID uuid, HttpSession session) {
     Long userId = (Long) session.getAttribute("user");
     if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
     boolean added = tagService.addTagToFeedByUuid(userId, uuid);
-    return added ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    if (added) {
+      // Return the updated tag with inFeed = true
+      return tagService.getTagByUuid(userId, uuid)
+          .map(ResponseEntity::ok)
+          .orElse(ResponseEntity.notFound().build());
+    }
+    return ResponseEntity.notFound().build();
   }
 
   @PostMapping("/feed/remove/{uuid}")
-  public ResponseEntity<Void> removeTagFromFeed(@PathVariable UUID uuid, HttpSession session) {
+  public ResponseEntity<TagDTO> removeTagFromFeed(@PathVariable UUID uuid, HttpSession session) {
     Long userId = (Long) session.getAttribute("user");
     if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
     boolean removed = tagService.removeTagFromFeedByUuid(userId, uuid);
-    return removed ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    if (removed) {
+      // Return the updated tag with inFeed = false
+      return tagService.getTagByUuid(userId, uuid)
+          .map(ResponseEntity::ok)
+          .orElse(ResponseEntity.notFound().build());
+    }
+    return ResponseEntity.notFound().build();
   }
 
   @PostMapping("/feed/add-all")
@@ -94,4 +106,3 @@ public class TagController {
   }
 
 }
-

@@ -37,6 +37,8 @@ const UserProfilePage = ({ user, setUser }) => {
     const [removeFollowerConfirmation, setRemoveFollowerConfirmation] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
+    const [savedExperiences, setSavedExperiences] = useState([]);
+    const [savedSuggestions, setSavedSuggestions] = useState([]);
 
     // Pagination states
     const [postsPage, setPostsPage] = useState(1);
@@ -431,12 +433,46 @@ New: "${bioToUpdate}"`);
             } : post
         ));
 
-        // Also update the editingExperience state if it's the same one
+        // Force a refresh of the editing experience if it exists
         if (editingExperience && editingExperience.uuid === updatedExperience.uuid) {
             setEditingExperience(updatedExperience);
         }
 
         setUpdateMessage(message || "Experience updated successfully!");
+        setTimeout(() => setUpdateMessage(''), 3000);
+    };
+
+    const handleContentUnsaved = (uuid, type) => {
+        // Force a refresh of the saved content
+        const fetchSavedContent = async () => {
+            try {
+                const [experiencesRes, suggestionsRes] = await Promise.all([
+                    fetch(`${API_URL}/api/auth/me/profile/saved/experiences`, {
+                        credentials: 'include',
+                    }),
+                    fetch(`${API_URL}/api/auth/me/profile/saved/suggestions`, {
+                        credentials: 'include',
+                    })
+                ]);
+
+                if (experiencesRes.ok && suggestionsRes.ok) {
+                    const experiences = await experiencesRes.json();
+                    const suggestions = await suggestionsRes.json();
+                    setSavedExperiences(experiences);
+                    setSavedSuggestions(suggestions);
+                }
+            } catch (err) {
+                console.error('Error refreshing saved content:', err);
+            }
+        };
+
+        fetchSavedContent();
+
+        // Update the post count
+        setPostCount(prevCount => prevCount - 1);
+
+        // Show a message to the user
+        setUpdateMessage(`${type === 'experience' ? 'Experience' : 'Suggestion'} removed from saved content`);
         setTimeout(() => setUpdateMessage(''), 3000);
     };
 
@@ -513,6 +549,7 @@ New: "${bioToUpdate}"`);
             return (
                 <div key={postId} className="post-wrapper">
                     <ExperienceCard
+                        key={postId}
                         user={user}
                         post={post}
                         baseApiUrl={API_URL}
@@ -526,8 +563,9 @@ New: "${bioToUpdate}"`);
                         formatDate={formatDate}
                         onDelete={() => confirmDelete(post, 'Experience')}
                         onEdit={() => handleEditExperience(post)}
+                        onActionComplete={handleUpdateExperience}
                         isOwner={true}
-                        disableInteractions={true}
+                        disableInteractions={false}
                         showEditOption={true}
                         disablePopup={true}
                     />
@@ -860,6 +898,11 @@ New: "${bioToUpdate}"`);
                         currentPage={savedPage}
                         itemsPerPage={itemsPerPage}
                         onPageChange={setSavedPage}
+                        onContentUnsaved={handleContentUnsaved}
+                        savedExperiences={savedExperiences}
+                        setSavedExperiences={setSavedExperiences}
+                        savedSuggestions={savedSuggestions}
+                        setSavedSuggestions={setSavedSuggestions}
                     />
                 </div>
             )}
