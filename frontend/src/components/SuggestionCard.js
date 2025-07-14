@@ -109,39 +109,6 @@ const SuggestionCard = ({
         }
     };
 
-    // Function to render suggestion stats based on privacy settings
-    const renderSuggestionStats = () => {
-        const stats = [];
-
-        if (allowResonates) {
-            stats.push(
-                <div key="resonates" className="stat-item">
-                    <span className="stat-label">Resonates:</span>
-                    <span className="stat-value">{post.resonatesAmount || 0}</span>
-                </div>
-            );
-        }
-
-        if (allowSaves) {
-            stats.push(
-                <div key="saves" className="stat-item">
-                    <span className="stat-label">Saved:</span>
-                    <span className="stat-value">{post.savesAmount || 0}</span>
-                </div>
-            );
-        }
-
-        // Reply stats are always shown as they're always enabled for suggestions
-        stats.push(
-            <div key="replies" className="stat-item">
-                <span className="stat-label">Replies:</span>
-                <span className="stat-value">{post.replyAmount || 0}</span>
-            </div>
-        );
-
-        return stats;
-    };
-
     return (
         <div className={`suggestion-card ${isExpanded ? 'expanded' : ''}`}>
             {fullMediaUrl && (
@@ -259,8 +226,6 @@ const SuggestionCard = ({
                     onActionComplete={handleSuggestionInteractionComplete}
                 />
 
-                {/* Render stats based on privacy settings */}
-                {renderSuggestionStats()}
             </div>
         </div>
     );
