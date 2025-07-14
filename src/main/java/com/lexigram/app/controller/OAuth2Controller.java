@@ -8,12 +8,14 @@ import com.lexigram.app.repository.UserPrivacySettingsRepository;
 import com.lexigram.app.repository.UserProfileRepository;
 import com.lexigram.app.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -37,13 +39,16 @@ public class OAuth2Controller {
     this.userProfileRepository = userProfileRepository;
   }
 
-  @GetMapping("/success")
-  public ResponseEntity<UserDTO> oauth2Success(
+  @GetMapping("/login/success")
+  public void oauth2Success(
       @AuthenticationPrincipal OAuth2User principal,
-      HttpSession session) {
+      HttpSession session,
+      HttpServletResponse response) throws IOException {
 
     if (principal == null) {
-      return ResponseEntity.status(401).build();
+      // Redirect to login with error
+      response.sendRedirect(frontendUrl + "/login?error=oauth_failed");
+      return;
     }
 
     Map<String, Object> attributes = principal.getAttributes();
@@ -53,7 +58,8 @@ public class OAuth2Controller {
     String picture = (String) attributes.get("picture");
 
     if (email == null || baseUsername == null) {
-      return ResponseEntity.badRequest().build();
+      response.sendRedirect(frontendUrl + "/login?error=invalid_data");
+      return;
     }
 
     try {
@@ -102,20 +108,37 @@ public class OAuth2Controller {
       // Set session
       session.setAttribute("user", user.getId());
 
-      // Create response DTO
-      UserDTO userDTO = new UserDTO(
-          user.getId(),
-          user.getUuid(),
-          user.getUsername(),
-          user.getEmail()
-      );
-
-      return ResponseEntity.ok(userDTO);
+      // Redirect to frontend callback page
+      response.sendRedirect(frontendUrl + "/api/auth/oauth2/login/success");
 
     } catch (Exception e) {
       e.printStackTrace(); // Add this for better error logging
-      return ResponseEntity.internalServerError().build();
+      response.sendRedirect(frontendUrl + "/login?error=server_error");
     }
+  }
+
+  @GetMapping("/success")
+  public ResponseEntity<UserDTO> getAuthenticatedUser(HttpSession session) {
+    Long userId = (Long) session.getAttribute("user");
+
+    if (userId == null) {
+      return ResponseEntity.status(401).build();
+    }
+
+    Optional<User> userOpt = userRepository.findById(userId);
+    if (userOpt.isEmpty()) {
+      return ResponseEntity.status(401).build();
+    }
+
+    User user = userOpt.get();
+    UserDTO userDTO = new UserDTO(
+        user.getId(),
+        user.getUuid(),
+        user.getUsername(),
+        user.getEmail()
+    );
+
+    return ResponseEntity.ok(userDTO);
   }
 
   @GetMapping("/check")

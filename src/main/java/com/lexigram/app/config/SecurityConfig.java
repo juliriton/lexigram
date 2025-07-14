@@ -52,7 +52,7 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
-            .defaultSuccessUrl(frontendUrl + "/api/auth/oauth2/login/success", true)
+            .defaultSuccessUrl(baseUrl + "/api/auth/oauth2/login/success", true)
         )
         .formLogin(form -> form.disable())
         .httpBasic(httpBasic -> httpBasic.disable());
