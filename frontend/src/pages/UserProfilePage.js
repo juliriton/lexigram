@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FaUser, FaUsers, FaBookmark, FaTimes, FaUserEdit, FaImage, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import '../styles/UserProfilePage.css';
@@ -401,6 +401,17 @@ New: "${bioToUpdate}"`);
         setEditingExperience(experience);
     };
 
+    const handleContentUnsaved = useCallback((unsavedItem, type) => {
+        // Update the posts array with the updated post data
+        setPosts(prevPosts =>
+            prevPosts.map(post =>
+                post.uuid === unsavedItem.uuid
+                    ? { ...unsavedItem, type: post.type } // Preserve the type
+                    : post
+            )
+        );
+    }, []);
+
     const handleCloseSuggestionModal = () => {
         setEditingSuggestion(null);
         setTimeout(() => {}, 50);
@@ -426,9 +437,6 @@ New: "${bioToUpdate}"`);
             })
         );
 
-        setUpdateMessage(message || "Suggestion updated successfully!");
-        setTimeout(() => setUpdateMessage(''), 3000);
-
         // Close the modal after successful update
         setEditingSuggestion(null);
     };
@@ -446,8 +454,6 @@ New: "${bioToUpdate}"`);
             setEditingExperience(updatedExperience);
         }
 
-        setUpdateMessage(message || "Experience updated successfully!");
-        setTimeout(() => setUpdateMessage(''), 3000);
     };
 
     const getProfileImageUrl = () => {
@@ -538,6 +544,11 @@ New: "${bioToUpdate}"`);
                         onDelete={() => confirmDelete(post, 'Experience')}
                         onEdit={() => handleEditExperience(post)}
                         onActionComplete={handleUpdateExperience}
+                        onInteraction={(updatedPost) => {
+                            setPosts(posts.map(p =>
+                                p.uuid === updatedPost.uuid ? updatedPost : p
+                            ));
+                        }}
                         isOwner={true}
                         disableInteractions={false}
                         showEditOption={true}
@@ -561,6 +572,12 @@ New: "${bioToUpdate}"`);
                     renderMentions={renderMentions}
                     renderTags={renderTags}
                     formatDate={formatDate}
+                    onActionComplete={handleUpdateSuggestion}
+                    onInteraction={(updatedPost) => {
+                        setPosts(posts.map(p =>
+                            p.uuid === updatedPost.uuid ? updatedPost : p
+                        ));
+                    }}
                     onDelete={() => confirmDelete(post, 'Suggestion')}
                     onEdit={() => handleEditSuggestion(post)}
                     isOwner={true}
@@ -872,6 +889,7 @@ New: "${bioToUpdate}"`);
                         currentPage={savedPage}
                         itemsPerPage={itemsPerPage}
                         onPageChange={setSavedPage}
+                        onContentUnsaved={handleContentUnsaved}  // Add this prop
                     />
                 </div>
             )}

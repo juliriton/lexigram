@@ -162,9 +162,6 @@ const ExperienceCard = ({
     };
 
     const handleExperienceInteractionComplete = (updatedExperience) => {
-        if (onActionComplete) {
-            onActionComplete(updatedExperience);
-        }
         setUpdatedPost(updatedExperience);
     };
 

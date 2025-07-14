@@ -4,7 +4,7 @@ import ExperienceCard from './ExperienceCard';
 import SuggestionCard from './SuggestionCard';
 import '../styles/SavedContent.css';
 
-const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChange }) => {
+const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChange, onContentUnsaved }) => {
     const [savedExperiences, setSavedExperiences] = useState([]);
     const [savedSuggestions, setSavedSuggestions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -69,14 +69,25 @@ const SavedContent = ({ user, baseApiUrl, currentPage, itemsPerPage, onPageChang
         setSavedExperiences(prev =>
             prev.filter(exp => exp.uuid !== updatedExperience.uuid)
         );
-    }, []);
 
+        // Call parent callback to update the main posts array
+        if (onContentUnsaved) {
+            onContentUnsaved(updatedExperience, 'experience');
+        }
+    }, [onContentUnsaved]);
+
+    // Update the handleSuggestionActionComplete function
     const handleSuggestionActionComplete = useCallback((updatedSuggestion) => {
         // Immediately remove from saved list if unsaved
         setSavedSuggestions(prev =>
             prev.filter(sug => sug.uuid !== updatedSuggestion.uuid)
         );
-    }, []);
+
+        // Call parent callback to update the main posts array
+        if (onContentUnsaved) {
+            onContentUnsaved(updatedSuggestion, 'suggestion');
+        }
+    }, [onContentUnsaved]);
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);

@@ -98,9 +98,7 @@ const SuggestionCard = ({
     };
 
     const handleSuggestionInteractionComplete = (updatedSuggestion) => {
-        if (onActionComplete) {
-            onActionComplete(updatedSuggestion);
-        }
+        setUpdatedPost(updatedSuggestion);
     };
 
     const handleEdit = (e) => {
