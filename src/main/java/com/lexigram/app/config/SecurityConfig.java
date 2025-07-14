@@ -59,17 +59,24 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
 
-    // Be more specific with allowed origins in production
+    // More specific allowed origins for production
     configuration.setAllowedOrigins(Arrays.asList(
-        "http://localhost:3000",           // Local development frontend
-        "https://localhost:3000",          // Local development frontend with HTTPS
-        frontendUrl                        // Production frontend URL
+        "http://localhost:3000",                    // Local development frontend
+        "https://localhost:3000",                   // Local development frontend with HTTPS
+        "https://lexigram-ydhn.onrender.com",       // Production frontend URL
+        frontendUrl                                 // Dynamic frontend URL
     ));
 
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
     configuration.setMaxAge(3600L);
+
+    // Add preflight request handling
+    configuration.setAllowedHeaders(Arrays.asList(
+        "Origin", "Content-Type", "Accept", "Authorization",
+        "Access-Control-Request-Method", "Access-Control-Request-Headers"
+    ));
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
