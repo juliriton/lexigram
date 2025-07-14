@@ -1,18 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBell, FaCheck, FaTrash, FaUser, FaHeart, FaComment, FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaBell, FaCheck, FaTrash, FaUser, FaHeart, FaComment, FaArrowLeft, FaArrowRight, FaUserPlus, FaEnvelope } from "react-icons/fa";
 import '../styles/NotificationsPage.css';
 import Sidebar from '../components/SideBar';
 import {API_URL} from "../Api";
 
 const NotificationsPage = ({ user, setUser }) => {
-    const [notifications, setNotifications] = useState([]);
+    const [allNotifications, setAllNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
     const [actorProfiles, setActorProfiles] = useState({});
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profilePicture, setProfilePicture] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [activeTab, setActiveTab] = useState('notifications');
     const [itemsPerPage] = useState(10);
     const navigate = useNavigate();
     const defaultProfilePicture = `${API_URL}/images/default-profile-picture.jpg`;
@@ -23,7 +24,10 @@ const NotificationsPage = ({ user, setUser }) => {
         setProfilePicture(defaultProfilePicture);
     };
 
-    // Pagination functions
+    const notifications = allNotifications.filter(n =>
+        activeTab === 'notifications' ? n.type !== 'FOLLOW_REQUEST' : n.type === 'FOLLOW_REQUEST'
+    );
+
     const getPaginatedItems = (items) => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
@@ -70,7 +74,7 @@ const NotificationsPage = ({ user, setUser }) => {
             if (!res.ok) throw new Error('Failed to fetch notifications');
 
             const data = await res.json();
-            setNotifications(data);
+            setAllNotifications(data);
             setCurrentPage(1);
 
             const actorUuids = [...new Set(data.filter(n => n.actorUuid).map(n => n.actorUuid))];
@@ -130,7 +134,7 @@ const NotificationsPage = ({ user, setUser }) => {
             });
 
             if (res.ok) {
-                setNotifications(prev =>
+                setAllNotifications(prev =>
                     prev.map(n => n.uuid === uuid ? { ...n, read: true } : n)
                 );
                 setMessage('Notification marked as read.');
@@ -151,7 +155,7 @@ const NotificationsPage = ({ user, setUser }) => {
             });
 
             if (res.ok) {
-                setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                setAllNotifications(prev => prev.map(n => ({ ...n, read: true })));
                 setMessage('All notifications marked as read.');
             } else {
                 setMessage('Failed to acknowledge all notifications.');
@@ -170,7 +174,7 @@ const NotificationsPage = ({ user, setUser }) => {
             });
 
             if (res.ok) {
-                setNotifications(prev => prev.filter(n => n.uuid !== uuid));
+                setAllNotifications(prev => prev.filter(n => n.uuid !== uuid));
                 setMessage('Notification deleted.');
             } else {
                 setMessage('Failed to delete notification.');
@@ -193,7 +197,7 @@ const NotificationsPage = ({ user, setUser }) => {
             });
 
             if (res.ok) {
-                setNotifications([]);
+                setAllNotifications(prev => prev.filter(n => n.type === 'FOLLOW_REQUEST'));
                 setMessage('All notifications deleted.');
             } else {
                 setMessage('Failed to delete all notifications.');
@@ -208,17 +212,29 @@ const NotificationsPage = ({ user, setUser }) => {
         switch (type) {
             case 'FOLLOW':
                 return <FaUser className="notification-icon follow" />;
-            case 'LIKE':
+            case 'RESONATE':
                 return <FaHeart className="notification-icon like" />;
             case 'COMMENT':
                 return <FaComment className="notification-icon comment" />;
+            case 'MENTION':
+                return <FaEnvelope className="notification-icon mention" />;
+            case 'FOLLOW_REQUEST':
+                return <FaUserPlus className="notification-icon follow-request-icon" />;
             default:
                 return <FaBell className="notification-icon default" />;
         }
     };
 
     const formatDate = (timestamp) => {
-        return new Date(timestamp).toLocaleString();
+        const now = new Date();
+        const date = new Date(timestamp);
+        const diffInHours = (now - date) / (1000 * 60 * 60);
+
+        if (diffInHours < 24) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else {
+            return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
     };
 
     const handleNotificationClick = useCallback((notification) => {
@@ -228,12 +244,6 @@ const NotificationsPage = ({ user, setUser }) => {
             navigate(`/profile/${notification.actorUuid}`);
         }
     }, [navigate]);
-
-    if (loading) return <div className="container mt-4">Loading notifications...</div>;
-
-    const paginatedNotifications = getPaginatedItems(notifications);
-    const totalPagesCount = totalPages();
-    const showPagination = notifications.length > itemsPerPage;
 
     const acceptFollowRequest = async (requestUuid) => {
         try {
@@ -273,8 +283,23 @@ const NotificationsPage = ({ user, setUser }) => {
         }
     };
 
+    const unreadCount = allNotifications.filter(n => !n.read && n.type !== 'FOLLOW_REQUEST').length;
+    const followRequestCount = allNotifications.filter(n => n.type === 'FOLLOW_REQUEST').length;
+
+    if (loading) return (
+        <div className="loading-spinner">
+            <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    );
+
+    const paginatedNotifications = getPaginatedItems(notifications);
+    const totalPagesCount = totalPages();
+    const showPagination = notifications.length > itemsPerPage;
+
     return (
-        <div className="notifications-page container mt-4">
+        <div className="notifications-page">
             <label className="burger" htmlFor="burger">
                 <input
                     type="checkbox"
@@ -296,11 +321,34 @@ const NotificationsPage = ({ user, setUser }) => {
                 defaultProfilePicture={defaultProfilePicture}
             />
 
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="text-center flex-grow-1">
+            <div className="notifications-header">
+                <h2>
                     <FaBell className="me-2" />
                     Notifications
                 </h2>
+
+                <div className="tabs">
+                    <button
+                        className={`tab ${activeTab === 'notifications' ? 'active' : ''}`}
+                        onClick={() => {
+                            setActiveTab('notifications');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        Notifications
+                        {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+                    </button>
+                    <button
+                        className={`tab ${activeTab === 'requests' ? 'active' : ''}`}
+                        onClick={() => {
+                            setActiveTab('requests');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        Follow Requests
+                        {followRequestCount > 0 && <span className="notification-badge">{followRequestCount}</span>}
+                    </button>
+                </div>
             </div>
 
             {message && (
@@ -314,8 +362,8 @@ const NotificationsPage = ({ user, setUser }) => {
                 </div>
             )}
 
-            {notifications.length > 0 && (
-                <div className="notification-actions mb-4">
+            {activeTab === 'notifications' && notifications.length > 0 && (
+                <div className="notification-actions">
                     <div className="d-flex gap-2 justify-content-between align-items-center">
                         <div className="pagination-info">
                             Showing {paginatedNotifications.length} of {notifications.length} notifications
@@ -342,46 +390,53 @@ const NotificationsPage = ({ user, setUser }) => {
 
             <div className="notifications-list">
                 {notifications.length === 0 ? (
-                    <div className="no-notifications text-center py-5">
-                        <FaBell size={48} className="text-muted mb-3" />
-                        <h4 className="text-muted">No notifications</h4>
-                        <p className="text-muted">You're all caught up!</p>
+                    <div className="no-notifications">
+                        {activeTab === 'notifications' ? (
+                            <>
+                                <FaBell size={48} className="text-muted mb-3" />
+                                <h4>No notifications</h4>
+                                <p className="text-muted">You're all caught up!</p>
+                            </>
+                        ) : (
+                            <>
+                                <FaUserPlus size={48} className="text-muted mb-3" />
+                                <h4>No follow requests</h4>
+                                <p className="text-muted">When you receive follow requests, they'll appear here.</p>
+                            </>
+                        )}
                     </div>
                 ) : (
                     <>
                         {paginatedNotifications.map((notification) => (
                             <div
                                 key={notification.uuid}
-                                className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                                className={`notification-item ${!notification.read && activeTab === 'notifications' ? 'unread' : ''}`}
                                 onClick={() => handleNotificationClick(notification)}
-                                style={{ cursor: 'pointer' }}
                             >
                                 <div className="notification-content">
                                     <div className="notification-header">
-                                        <div className="notification-icon-wrapper">
+                                        <div className={`notification-icon-wrapper ${notification.type === 'FOLLOW_REQUEST' ? 'follow-request-bg' : ''}`}>
                                             {getNotificationIcon(notification.type)}
                                         </div>
-                                        <div className="notification-info flex-grow-1">
-                                            <h6 className="notification-title mb-1">
+                                        <div className="notification-info">
+                                            <h6 className="notification-title">
                                                 {notification.title}
-                                                {!notification.read && <span className="unread-dot"></span>}
+                                                {!notification.read && activeTab === 'notifications' && <span className="unread-dot"></span>}
                                             </h6>
-                                            <p className="notification-text mb-1">{notification.text}</p>
+                                            <p className="notification-text">{notification.text}</p>
                                             {notification.actorUuid && actorProfiles[notification.actorUuid] && (
                                                 <small className="text-muted">
                                                     by @{actorProfiles[notification.actorUuid].username}
                                                 </small>
                                             )}
                                             <div className="notification-meta">
-                                                <small className="text-muted">
-                                                    {formatDate(notification.creationDate)}
-                                                </small>
+                                                <small>{formatDate(notification.creationDate)}</small>
                                             </div>
 
-                                            {notification.type === 'FOLLOW_REQUEST' && notification.followRequestUuid && (
-                                                <div className="follow-request-actions mt-2">
+                                            {notification.type === 'FOLLOW_REQUEST' && (
+                                                <div className="notification-follow-request-actions mt-2">
                                                     <button
-                                                        className="btn btn-sm btn-success me-2"
+                                                        className="btn btn-success me-2"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             acceptFollowRequest(notification.followRequestUuid);
@@ -390,7 +445,7 @@ const NotificationsPage = ({ user, setUser }) => {
                                                         Accept
                                                     </button>
                                                     <button
-                                                        className="btn btn-sm btn-danger"
+                                                        className="btn btn-danger"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             rejectFollowRequest(notification.followRequestUuid);
@@ -404,54 +459,58 @@ const NotificationsPage = ({ user, setUser }) => {
                                     </div>
                                 </div>
 
-                                <div className="notification-actions">
-                                    {!notification.read && (
+                                {activeTab === 'notifications' && (
+                                    <div className="notification-actions">
+                                        {!notification.read && (
+                                            <button
+                                                className="btn btn-outline-success"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    acknowledgeNotification(notification.uuid);
+                                                }}
+                                                title="Mark as read"
+                                            >
+                                                <FaCheck/>
+                                            </button>
+                                        )}
                                         <button
-                                            className="btn btn-sm btn-outline-success me-2"
+                                            className="btn btn-outline-danger"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                acknowledgeNotification(notification.uuid);
+                                                deleteNotification(notification.uuid);
                                             }}
-                                            title="Mark as read"
+                                            title="Delete notification"
                                         >
-                                            <FaCheck/>
+                                            <FaTrash/>
                                         </button>
-                                    )}
-                                    <button
-                                        className="btn btn-sm btn-outline-danger"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteNotification(notification.uuid);
-                                        }}
-                                        title="Delete notification"
-                                        disabled={notification.type === 'FOLLOW_REQUEST'} // Add this line
-                                        style={notification.type === 'FOLLOW_REQUEST' ? {display: 'none'} : {}} // Or hide it completely
-                                    >
-                                        <FaTrash/>
-                                    </button>
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
 
                         {showPagination && (
-                            <div className="pagination-controls mt-4">
-                                <button
-                                    className="btn btn-outline-secondary"
-                                    onClick={handlePrevPage}
-                                    disabled={currentPage === 1}
-                                >
-                                    <FaArrowLeft />
-                                </button>
-                                <span className="page-info mx-3">
-                                    Page {currentPage} of {totalPagesCount}
-                                </span>
-                                <button
-                                    className="btn btn-outline-secondary"
-                                    onClick={handleNextPage}
-                                    disabled={currentPage >= totalPagesCount}
-                                >
-                                    <FaArrowRight />
-                                </button>
+                            <div className="navigation-buttons">
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={handlePrevPage}
+                                        disabled={currentPage === 1}
+                                    >
+                                        <FaArrowLeft className="me-1" />
+                                        Previous
+                                    </button>
+                                    <span className="page-info">
+                                        Page {currentPage} of {totalPagesCount}
+                                    </span>
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={handleNextPage}
+                                        disabled={currentPage >= totalPagesCount}
+                                    >
+                                        Next
+                                        <FaArrowRight className="ms-1" />
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </>
