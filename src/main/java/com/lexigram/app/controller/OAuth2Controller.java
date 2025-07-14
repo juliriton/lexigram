@@ -46,8 +46,11 @@ public class OAuth2Controller {
       HttpSession session,
       HttpServletResponse response) throws IOException {
 
+    System.out.println("OAuth2 success endpoint called");
+    System.out.println("Frontend URL: " + frontendUrl);
+
     if (principal == null) {
-      // Redirect to login with error
+      System.out.println("Principal is null, redirecting to login with error");
       response.sendRedirect(frontendUrl + "/login?error=oauth_failed");
       return;
     }
@@ -55,10 +58,14 @@ public class OAuth2Controller {
     Map<String, Object> attributes = principal.getAttributes();
     String email = (String) attributes.get("email");
     String name = (String) attributes.get("name");
-    String baseUsername = email.split("@")[0];
+    String baseUsername = email != null ? email.split("@")[0] : null;
     String picture = (String) attributes.get("picture");
 
+    System.out.println("OAuth2 user email: " + email);
+    System.out.println("OAuth2 user name: " + name);
+
     if (email == null || baseUsername == null) {
+      System.out.println("Invalid OAuth2 data, redirecting with error");
       response.sendRedirect(frontendUrl + "/login?error=invalid_data");
       return;
     }
@@ -70,6 +77,7 @@ public class OAuth2Controller {
       if (existingUserByEmail.isPresent()) {
         // User exists with this email (OAuth returning user)
         user = existingUserByEmail.get();
+        System.out.println("Existing user found: " + user.getUsername());
       } else {
         // New OAuth user - check for username conflicts
         String finalUsername = baseUsername;
@@ -80,6 +88,8 @@ public class OAuth2Controller {
           finalUsername = baseUsername + suffix;
           suffix++;
         }
+
+        System.out.println("Creating new user with username: " + finalUsername);
 
         // Create new user
         user = new User();
@@ -108,26 +118,35 @@ public class OAuth2Controller {
 
       // Set session
       session.setAttribute("user", user.getId());
+      System.out.println("Session set for user ID: " + user.getId());
 
-      // Redirect to frontend home page with success parameter
-      response.sendRedirect(frontendUrl + "/oauth-callback");
+      // Redirect to frontend OAuth callback page
+      String redirectUrl = frontendUrl + "/oauth-callback";
+      System.out.println("Redirecting to: " + redirectUrl);
+      response.sendRedirect(redirectUrl);
 
     } catch (Exception e) {
-      e.printStackTrace(); // Add this for better error logging
+      System.err.println("Error in OAuth2 success handler: " + e.getMessage());
+      e.printStackTrace();
       response.sendRedirect(frontendUrl + "/login?error=server_error");
     }
   }
 
   @GetMapping("/success")
   public ResponseEntity<UserDTO> getOAuthUser(HttpSession session) {
+    System.out.println("OAuth2 success API endpoint called");
+
     Long userId = (Long) session.getAttribute("user");
+    System.out.println("Session user ID: " + userId);
 
     if (userId == null) {
+      System.out.println("No user ID in session");
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     Optional<User> userOpt = userRepository.findById(userId);
     if (userOpt.isEmpty()) {
+      System.out.println("User not found for ID: " + userId);
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
@@ -139,6 +158,7 @@ public class OAuth2Controller {
         user.getEmail()
     );
 
+    System.out.println("Returning user data: " + userDTO.getUsername());
     return ResponseEntity.ok(userDTO);
   }
 

@@ -41,6 +41,7 @@ public class SecurityConfig {
                 "/api/auth/signup",
                 "/api/auth/login",
                 "/api/auth/me/**",
+                "/api/auth/oauth2/**",  // Explicitly allow OAuth2 endpoints
                 "/api/experience/**",  // Allow public access to experience endpoints
                 "/api/suggestion/**",  // Allow public access to suggestion endpoints
                 "/api/experience/*/comments/**",
@@ -53,6 +54,7 @@ public class SecurityConfig {
         )
         .oauth2Login(oauth2 -> oauth2
             .defaultSuccessUrl("/api/auth/oauth2/login/success", true)
+            .failureUrl("/api/auth/oauth2/login/failure")
         )
         .formLogin(form -> form.disable())
         .httpBasic(httpBasic -> httpBasic.disable());
