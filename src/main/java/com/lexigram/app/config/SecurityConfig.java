@@ -41,9 +41,10 @@ public class SecurityConfig {
                 "/api/auth/signup",
                 "/api/auth/login",
                 "/api/auth/me/**",
-                "/api/auth/oauth2/**",  // Explicitly allow OAuth2 endpoints
-                "/api/experience/**",  // Allow public access to experience endpoints
-                "/api/suggestion/**",  // Allow public access to suggestion endpoints
+                "/api/auth/oauth2/**",
+                "/api/experience/**",
+                "/api/suggestion/**",
+                "/oauth-callback",
                 "/api/experience/*/comments/**",
                 "/api/experience/*/comments",
                 "/api/suggestion/*/comments/**",

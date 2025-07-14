@@ -11,10 +11,14 @@ const OAuthCallbackPage = ({ setUser }) => {
         const completeOAuthFlow = async () => {
             try {
                 console.log('OAuth callback: Starting authentication flow');
-                console.log('API URL:', API_URL);
 
-                // Small delay to ensure session is established
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // First, verify if we're coming from OAuth redirect
+                const isOAuthRedirect = window.location.pathname === '/oauth-callback';
+
+                if (isOAuthRedirect) {
+                    // Clear any query parameters that might interfere
+                    window.history.replaceState({}, document.title, '/oauth-callback');
+                }
 
                 // Verify the session and get user data
                 const userResponse = await fetch(`${API_URL}/api/auth/oauth2/success`, {
@@ -29,28 +33,22 @@ const OAuthCallbackPage = ({ setUser }) => {
                 console.log('OAuth callback: Response status:', userResponse.status);
 
                 if (!userResponse.ok) {
-                    if (userResponse.status === 401) {
-                        throw new Error('Session verification failed - not authenticated');
-                    }
-                    throw new Error(`Session verification failed with status: ${userResponse.status}`);
+                    throw new Error(userResponse.status === 401
+                        ? 'Session verification failed - not authenticated'
+                        : `Session verification failed with status: ${userResponse.status}`);
                 }
 
                 const userData = await userResponse.json();
                 console.log('OAuth callback: User data received:', userData);
 
                 setUser(userData);
-                console.log('OAuth callback: Navigating to home page');
-                navigate('/');
+                navigate('/', { replace: true }); // Use replace to prevent back navigation to callback
 
             } catch (error) {
                 console.error('OAuth Error:', error);
                 setError(error.message);
                 setIsLoading(false);
-
-                // Wait a bit before redirecting to login
-                setTimeout(() => {
-                    navigate('/login?error=oauth_failed');
-                }, 3000);
+                navigate('/login?error=oauth_failed', { replace: true });
             }
         };
 
