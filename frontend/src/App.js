@@ -21,16 +21,28 @@ function App() {
     axios.defaults.withCredentials = true;
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
+    const [authChecked, setAuthChecked] = useState(false);
 
     const fetchCurrentUser = async () => {
         try {
+            console.log('Fetching current user from:', `${API_URL}/api/auth/me`);
             const res = await fetch(`${API_URL}/api/auth/me`, {
-                credentials: 'include'
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // Add cache control to prevent cached 401 responses
+                cache: 'no-cache'
             });
+
+            console.log('Auth response status:', res.status);
+
             if (res.ok) {
                 const userData = await res.json();
+                console.log('User authenticated:', userData);
                 setUser(userData);
             } else {
+                console.log('User not authenticated, status:', res.status);
                 setUser(null);
             }
         } catch (err) {
@@ -38,6 +50,7 @@ function App() {
             setUser(null);
         } finally {
             setUserLoading(false);
+            setAuthChecked(true);
         }
     };
 
@@ -46,10 +59,12 @@ function App() {
     }, []);
 
     const enhancedSetUser = (userData) => {
+        console.log('Setting user data:', userData);
         setUser(userData);
     };
 
-    if (userLoading) {
+    // Show loading only if we haven't checked auth yet
+    if (userLoading && !authChecked) {
         return (
             <div className="container">
                 <div className="spinner"></div>
@@ -67,7 +82,7 @@ function App() {
                 <Route path="/signup" element={<SignUpPage setUser={enhancedSetUser} />} />
                 <Route path="/post/create" element={<PostCreationPage user={user} setUser={enhancedSetUser} />} />
 
-                {/* Post view routes - make sure these match your URLs exactly */}
+                {/* Post view routes - these should work even without authentication */}
                 <Route path="/experience/:uuid" element={<PostViewPage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/suggestion/:uuid" element={<PostViewPage user={user} setUser={enhancedSetUser} />} />
 

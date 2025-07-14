@@ -9,6 +9,7 @@ const PostViewPage = ({ user, setUser }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [showPostModal, setShowPostModal] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Add debugging
     useEffect(() => {
@@ -33,14 +34,16 @@ const PostViewPage = ({ user, setUser }) => {
     };
 
     useEffect(() => {
-        // Show the modal when component mounts
+        // Show the modal when component mounts, regardless of authentication status
         if (uuid) {
             console.log('Setting showPostModal to true for UUID:', uuid);
             setShowPostModal(true);
+            setIsLoading(false);
         } else {
-            console.log('No UUID found, not showing modal');
+            console.log('No UUID found, redirecting to home');
+            navigate('/', { replace: true });
         }
-    }, [uuid]);
+    }, [uuid, navigate]);
 
     const handleCloseModal = () => {
         console.log('Closing modal and navigating to home');
@@ -60,12 +63,22 @@ const PostViewPage = ({ user, setUser }) => {
         return null;
     }
 
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className="container">
+                <div className="spinner"></div>
+                <p>Loading post...</p>
+            </div>
+        );
+    }
+
     return (
         <>
             {/* Render the home page in the background */}
             <HomePage user={user} setUser={setUser} />
 
-            {/* Show the post popup modal */}
+            {/* Show the post popup modal - this should work even without authentication */}
             <PostPopupModal
                 isOpen={showPostModal}
                 onClose={handleCloseModal}

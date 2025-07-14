@@ -41,8 +41,12 @@ public class SecurityConfig {
                 "/api/auth/signup",
                 "/api/auth/login",
                 "/api/auth/me/**",
+                "/api/experience/**",  // Allow public access to experience endpoints
+                "/api/suggestion/**",  // Allow public access to suggestion endpoints
                 "/api/experience/*/comments/**",
                 "/api/experience/*/comments",
+                "/api/suggestion/*/comments/**",
+                "/api/suggestion/*/comments",
                 "/images/**"
             ).permitAll()
             .anyRequest().authenticated()
