@@ -92,7 +92,7 @@ function App() {
                 <Route path="/tags" element={<TagPage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/fork/:uuid" element={<ForkExperiencePage user={user} setUser={enhancedSetUser} />} />
                 <Route path="/suggestion/:uuid/reply" element={<ReplySuggestionPage user={user} setUser={enhancedSetUser} />} />
-                <Route path="/api/auth/oauth2/login/success" element={<OAuthCallbackPage setUser={enhancedSetUser} />} />
+                <Route path="/oauth-callback" element={<OAuthCallbackPage setUser={enhancedSetUser} />} />
 
                 {/* Catch-all route for 404s - redirect to home */}
                 <Route path="*" element={<HomePage user={user} setUser={enhancedSetUser} />} />

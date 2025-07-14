@@ -52,7 +52,7 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
-            .defaultSuccessUrl(baseUrl + "/api/auth/oauth2/login/success", true)
+            .defaultSuccessUrl("/api/auth/oauth2/login/success", true)
         )
         .formLogin(form -> form.disable())
         .httpBasic(httpBasic -> httpBasic.disable());
@@ -65,9 +65,10 @@ public class SecurityConfig {
 
     // Be more specific with allowed origins in production
     configuration.setAllowedOrigins(Arrays.asList(
-        "http://localhost:3000",           // Local development frontend
-        "https://localhost:3000",          // Local development frontend with HTTPS
-        frontendUrl                        // Production frontend URL
+        "http://localhost:3000",
+        "https://localhost:3000",
+        "https://lexigram-ydhn.onrender.com",
+        frontendUrl
     ));
 
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

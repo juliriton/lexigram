@@ -109,7 +109,7 @@ public class OAuth2Controller {
       session.setAttribute("user", user.getId());
 
       // Redirect to frontend callback page
-      response.sendRedirect(frontendUrl + "/api/auth/oauth2/login/success");
+      response.sendRedirect(frontendUrl + "/oauth-callback");
 
     } catch (Exception e) {
       e.printStackTrace(); // Add this for better error logging
