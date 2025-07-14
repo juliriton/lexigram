@@ -263,3 +263,49 @@
     color: white;
     transform: scale(1.1);
 }
+
+/* Replies section */
+.replies-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e9ecef;
+}
+
+.view-replies-btn {
+    background: none;
+    border: 1px solid #e9ecef;
+    color: #0d6efd;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    width: 100%;
+    justify-content: center;
+}
+
+.view-replies-btn:hover {
+    background: #f8f9fa;
+    border-color: #0d6efd;
+    transform: translateY(-1px);
+}
+
+.view-replies-btn:active {
+    transform: translateY(0);
+}
+
+.replies-btn-icon {
+    font-size: 0.85rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .view-replies-btn {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+}
