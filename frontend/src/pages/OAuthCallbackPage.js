@@ -8,20 +8,19 @@ const OAuthCallbackPage = ({ setUser }) => {
     useEffect(() => {
         const completeOAuthFlow = async () => {
             try {
-                // Verify the session
-                const sessionResponse = await fetch(`${API_URL}/api/auth/oauth2/success`, {
+                // Verify the session and get user data
+                const userResponse = await fetch(`${API_URL}/api/auth/oauth2/success`, {
                     credentials: 'include'
                 });
 
-                if (!sessionResponse.ok) throw new Error('Session verification failed');
+                if (!userResponse.ok) throw new Error('Session verification failed');
 
-                const userData = await sessionResponse.json();
-                localStorage.setItem('userId', userData.id);
+                const userData = await userResponse.json();
                 setUser(userData);
                 navigate('/');
             } catch (error) {
                 console.error('OAuth Error:', error);
-                navigate(`/login?error=oauth_failed`);
+                navigate('/login?error=oauth_failed');
             }
         };
 

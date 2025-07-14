@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -118,16 +119,16 @@ public class OAuth2Controller {
   }
 
   @GetMapping("/success")
-  public ResponseEntity<UserDTO> getAuthenticatedUser(HttpSession session) {
+  public ResponseEntity<UserDTO> getOAuthUser(HttpSession session) {
     Long userId = (Long) session.getAttribute("user");
 
     if (userId == null) {
-      return ResponseEntity.status(401).build();
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     Optional<User> userOpt = userRepository.findById(userId);
     if (userOpt.isEmpty()) {
-      return ResponseEntity.status(401).build();
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     User user = userOpt.get();
