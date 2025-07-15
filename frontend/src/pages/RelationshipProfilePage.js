@@ -109,7 +109,6 @@ const RelationshipProfile = ({ user, setUser }) => {
             setProfileUser(userData);
             setIsFollowing(userData.isFollowing);
             setCanViewPosts(userData.canViewPosts !== false);
-
             setFollowRequestPending(userData.followRequestPending || false);
 
             const profilePicUrl = userData.profilePictureUrl
@@ -169,10 +168,8 @@ const RelationshipProfile = ({ user, setUser }) => {
                 if (result.requestPending) {
                     setFollowRequestPending(true);
                 } else if (result.following) {
-
                     setIsFollowing(true);
                 }
-                // Refrescar datos del perfil
                 fetchProfileData();
             }
         } catch (err) {
@@ -309,22 +306,24 @@ const RelationshipProfile = ({ user, setUser }) => {
                         <p>{profileUser?.biography || 'No bio provided'}</p>
                     </div>
 
-                    <div className="relationship-stats">
-                        <div className="relationship-stat">
-                            <span className="relationship-stat-value">
-                                {(userPosts.experiences?.length || 0) + (userPosts.suggestions?.length || 0)}
-                            </span>
-                            <span className="relationship-stat-label">Posts</span>
+                    {canViewPosts && (
+                        <div className="relationship-stats">
+                            <div className="relationship-stat">
+                                <span className="relationship-stat-value">
+                                    {(userPosts.experiences?.length || 0) + (userPosts.suggestions?.length || 0)}
+                                </span>
+                                <span className="relationship-stat-label">Posts</span>
+                            </div>
+                            <div className="relationship-stat">
+                                <span className="relationship-stat-value">{profileUser?.followerAmount || 0}</span>
+                                <span className="relationship-stat-label">Followers</span>
+                            </div>
+                            <div className="relationship-stat">
+                                <span className="relationship-stat-value">{profileUser?.followingAmount || 0}</span>
+                                <span className="relationship-stat-label">Following</span>
+                            </div>
                         </div>
-                        <div className="relationship-stat">
-                            <span className="relationship-stat-value">{profileUser?.followerAmount || 0}</span>
-                            <span className="relationship-stat-label">Followers</span>
-                        </div>
-                        <div className="relationship-stat">
-                            <span className="relationship-stat-value">{profileUser?.followingAmount || 0}</span>
-                            <span className="relationship-stat-label">Following</span>
-                        </div>
-                    </div>
+                    )}
 
                     {user && user.uuid !== userId && (
                         <div className="relationship-actions">

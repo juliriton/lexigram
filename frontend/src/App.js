@@ -33,6 +33,27 @@ function AppContent({ user, setUser, userLoading, authChecked, fetchCurrentUser 
         }
     }, [location.search, fetchCurrentUser]);
 
+    // Handle direct URL access for experiences and suggestions
+    useEffect(() => {
+        const path = location.pathname;
+
+        // Check if this is a direct access to experience or suggestion
+        const experienceMatch = path.match(/^\/experience\/([a-f0-9-]+)$/);
+        const suggestionMatch = path.match(/^\/suggestion\/([a-f0-9-]+)$/);
+
+        if (experienceMatch || suggestionMatch) {
+            console.log('Direct URL access detected for:', path);
+            // For direct URL access, we ensure user auth is checked first
+            if (!authChecked && userLoading) {
+                console.log('Auth still loading, will handle after auth check');
+                return;
+            }
+
+            // Auth is checked, proceed with the route
+            console.log('Auth checked, proceeding to route:', path);
+        }
+    }, [location.pathname, authChecked, userLoading]);
+
     return (
         <Routes>
             <Route path="/" element={<HomePage user={user} setUser={setUser} />} />
