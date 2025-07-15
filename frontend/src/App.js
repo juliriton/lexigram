@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import UserProfilePage from './pages/UserProfilePage';
 import LoginPage from './pages/LoginPage';
@@ -15,12 +15,17 @@ import ReplySuggestionPage from "./pages/ReplySuggestionPage";
 import PostViewPage from "./pages/PostViewPage";
 import SuggestionRepliesPage from "./pages/SuggestionRepliesPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
+import PostPopupModal from './components/PostPopUpModal';
 import './App.css';
 import axios from "axios";
 import { API_URL } from './Api.js';
 
 function AppContent({ user, setUser, userLoading, authChecked, fetchCurrentUser }) {
     const location = useLocation();
+    const navigate = useNavigate();
+    const [showPostModal, setShowPostModal] = useState(false);
+    const [modalPostUuid, setModalPostUuid] = useState(null);
+    const [modalPostType, setModalPostType] = useState(null);
 
     // Check for OAuth success parameter
     useEffect(() => {
@@ -33,6 +38,29 @@ function AppContent({ user, setUser, userLoading, authChecked, fetchCurrentUser 
         }
     }, [location.search, fetchCurrentUser]);
 
+    // Check for post URL parameters (experience or suggestion)
+    useEffect(() => {
+        const urlParams = new URLSearchParams(location.search);
+        const experienceId = urlParams.get('experience');
+        const suggestionId = urlParams.get('suggestion');
+
+        if (experienceId) {
+            console.log('Experience ID detected in URL:', experienceId);
+            setModalPostUuid(experienceId);
+            setModalPostType('experience');
+            setShowPostModal(true);
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (suggestionId) {
+            console.log('Suggestion ID detected in URL:', suggestionId);
+            setModalPostUuid(suggestionId);
+            setModalPostType('suggestion');
+            setShowPostModal(true);
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, [location.search]);
+
     // Handle direct URL access for experiences and suggestions
     useEffect(() => {
         const path = location.pathname;
@@ -43,56 +71,94 @@ function AppContent({ user, setUser, userLoading, authChecked, fetchCurrentUser 
 
         if (experienceMatch || suggestionMatch) {
             console.log('Direct URL access detected for:', path);
+
+            // Extract UUID and type
+            const uuid = experienceMatch ? experienceMatch[1] : suggestionMatch[1];
+            const type = experienceMatch ? 'experience' : 'suggestion';
+
             // For direct URL access, we ensure user auth is checked first
             if (!authChecked && userLoading) {
                 console.log('Auth still loading, will handle after auth check');
                 return;
             }
 
-            // Auth is checked, proceed with the route
-            console.log('Auth checked, proceeding to route:', path);
+            // Auth is checked, show modal and redirect to home
+            console.log('Auth checked, showing modal for:', type, uuid);
+            setModalPostUuid(uuid);
+            setModalPostType(type);
+            setShowPostModal(true);
+
+            // Navigate to home page while keeping the modal open
+            navigate('/', { replace: true });
         }
-    }, [location.pathname, authChecked, userLoading]);
+    }, [location.pathname, authChecked, userLoading, navigate]);
+
+    const handleCloseModal = () => {
+        console.log('Closing post modal');
+        setShowPostModal(false);
+        setModalPostUuid(null);
+        setModalPostType(null);
+    };
+
+    const formatDate = (timestamp) => {
+        return new Date(timestamp).toLocaleDateString();
+    };
 
     return (
-        <Routes>
-            <Route path="/" element={<HomePage user={user} setUser={setUser} />} />
-            <Route path="/profile" element={<UserProfilePage user={user} setUser={setUser} />} />
-            <Route path="/login" element={<LoginPage setUser={setUser} />} />
-            <Route path="/signup" element={<SignUpPage setUser={setUser} />} />
-            <Route path="/post/create" element={<PostCreationPage user={user} setUser={setUser} />} />
+        <>
+            <Routes>
+                <Route path="/" element={<HomePage user={user} setUser={setUser} />} />
+                <Route path="/profile" element={<UserProfilePage user={user} setUser={setUser} />} />
+                <Route path="/login" element={<LoginPage setUser={setUser} />} />
+                <Route path="/signup" element={<SignUpPage setUser={setUser} />} />
+                <Route path="/post/create" element={<PostCreationPage user={user} setUser={setUser} />} />
 
-            {/* Post view routes - these should work even without authentication */}
-            <Route path="/experience/:uuid" element={
-                <PostViewPage
+                {/* Keep these routes for fallback/SEO purposes */}
+                <Route path="/experience/:uuid" element={
+                    <PostViewPage
+                        user={user}
+                        setUser={setUser}
+                        requireAuth={false}
+                    />
+                } />
+                <Route path="/suggestion/:uuid" element={
+                    <PostViewPage
+                        user={user}
+                        setUser={setUser}
+                        requireAuth={false}
+                    />
+                } />
+
+                {/* Experience forks route */}
+                <Route path="/experience/:uuid/forks" element={<ExperienceForksPage user={user} setUser={setUser} />} />
+
+                <Route path="/settings" element={<SettingsPage user={user} setUser={setUser} />} />
+                <Route path="/profile/:userId" element={<RelationshipProfilePage user={user} setUser={setUser} />} />
+                <Route path="/notifications" element={<NotificationsPage user={user} setUser={setUser} />} />
+                <Route path="/tags" element={<TagPage user={user} setUser={setUser} />} />
+                <Route path="/suggestion/:uuid/replies" element={<SuggestionRepliesPage user={user} setUser={setUser} />} />
+                <Route path="/fork/:uuid" element={<ForkExperiencePage user={user} setUser={setUser} />} />
+                <Route path="/suggestion/:uuid/reply" element={<ReplySuggestionPage user={user} setUser={setUser} />} />
+                <Route path="/oauth-callback" element={<OAuthCallbackPage setUser={setUser} />} />
+
+                {/* Catch-all route for 404s - redirect to home */}
+                <Route path="*" element={<HomePage user={user} setUser={setUser} />} />
+            </Routes>
+
+            {/* Post popup modal */}
+            {showPostModal && modalPostUuid && (
+                <PostPopupModal
+                    isOpen={showPostModal}
+                    onClose={handleCloseModal}
+                    postUuid={modalPostUuid}
+                    type={modalPostType}
                     user={user}
-                    setUser={setUser}
-                    requireAuth={false}
+                    baseApiUrl={API_URL}
+                    formatDate={formatDate}
+                    enableFallback={true}
                 />
-            } />
-            <Route path="/suggestion/:uuid" element={
-                <PostViewPage
-                    user={user}
-                    setUser={setUser}
-                    requireAuth={false}
-                />
-            } />
-
-            {/* Experience forks route */}
-            <Route path="/experience/:uuid/forks" element={<ExperienceForksPage user={user} setUser={setUser} />} />
-
-            <Route path="/settings" element={<SettingsPage user={user} setUser={setUser} />} />
-            <Route path="/profile/:userId" element={<RelationshipProfilePage user={user} setUser={setUser} />} />
-            <Route path="/notifications" element={<NotificationsPage user={user} setUser={setUser} />} />
-            <Route path="/tags" element={<TagPage user={user} setUser={setUser} />} />
-            <Route path="/suggestion/:uuid/replies" element={<SuggestionRepliesPage user={user} setUser={setUser} />} />
-            <Route path="/fork/:uuid" element={<ForkExperiencePage user={user} setUser={setUser} />} />
-            <Route path="/suggestion/:uuid/reply" element={<ReplySuggestionPage user={user} setUser={setUser} />} />
-            <Route path="/oauth-callback" element={<OAuthCallbackPage setUser={setUser} />} />
-
-            {/* Catch-all route for 404s - redirect to home */}
-            <Route path="*" element={<HomePage user={user} setUser={setUser} />} />
-        </Routes>
+            )}
+        </>
     );
 }
 

@@ -720,7 +720,7 @@ public class ExperienceService {
   }
 
   public String getExperienceLink(UUID uuid) {
-    return URL + "/experience/" + uuid.toString();
+    return URL + "/?experience=" + uuid.toString();
   }
 
   public Set<ExperienceDTO> getSavedExperiences(Long id) {
