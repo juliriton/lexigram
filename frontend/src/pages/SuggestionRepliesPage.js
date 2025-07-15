@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaComment, FaArrowRight } from 'react-icons/fa';
 import SuggestionCard from '../components/SuggestionCard';
 import ExperienceCard from '../components/ExperienceCard';
+import Sidebar from '../components/SideBar';
 import '../styles/SuggestionRepliesPage.css';
 
 const SuggestionRepliesPage = ({ user, setUser }) => {
@@ -16,13 +17,47 @@ const SuggestionRepliesPage = ({ user, setUser }) => {
     const [itemsPerPage] = useState(4);
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
 
     const baseApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+    const handleImageError = () => {
+        setProfilePicture(defaultProfilePicture);
+    };
 
     useEffect(() => {
         fetchOriginalSuggestion();
         fetchReplies();
     }, [uuid]);
+
+    useEffect(() => {
+        const fetchProfilePicture = async () => {
+            try {
+                const res = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                    credentials: 'include',
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setProfilePicture(
+                        data.profilePictureUrl
+                            ? `${baseApiUrl}${data.profilePictureUrl}`
+                            : defaultProfilePicture
+                    );
+                }
+            } catch (err) {
+                console.error('Error fetching profile picture:', err);
+                setProfilePicture(defaultProfilePicture);
+            }
+        };
+
+        if (user) {
+            fetchProfilePicture();
+        }
+    }, [user, baseApiUrl, defaultProfilePicture]);
 
     const fetchOriginalSuggestion = async () => {
         try {
@@ -132,6 +167,27 @@ const SuggestionRepliesPage = ({ user, setUser }) => {
 
     return (
         <div className="suggestion-replies-page">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
+
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={baseApiUrl}
+                defaultProfilePicture={defaultProfilePicture}
+            />
+
             <div className="suggestion-container">
                 <div className="suggestion-replies-header">
                     <button

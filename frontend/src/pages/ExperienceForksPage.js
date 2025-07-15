@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaCodeBranch, FaArrowRight } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
+import Sidebar from '../components/SideBar';
 import '../styles/ExperienceForksPage.css';
 
 const ExperienceForksPage = ({ user, setUser }) => {
@@ -16,8 +17,17 @@ const ExperienceForksPage = ({ user, setUser }) => {
     const [showMentions, setShowMentions] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(4);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(null);
 
     const baseApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+    const defaultProfilePicture = `${baseApiUrl}/images/default-profile-picture.jpg`;
+
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+    const handleImageError = () => {
+        setProfilePicture(defaultProfilePicture);
+    };
 
     useEffect(() => {
         fetchOriginalExperience();
@@ -31,6 +41,31 @@ const ExperienceForksPage = ({ user, setUser }) => {
             setFilteredForks(allForks);
         }
     }, [allForks, originalExperience]);
+
+    useEffect(() => {
+        const fetchProfilePicture = async () => {
+            try {
+                const res = await fetch(`${baseApiUrl}/api/auth/me/profile`, {
+                    credentials: 'include',
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setProfilePicture(
+                        data.profilePictureUrl
+                            ? `${baseApiUrl}${data.profilePictureUrl}`
+                            : defaultProfilePicture
+                    );
+                }
+            } catch (err) {
+                console.error('Error fetching profile picture:', err);
+                setProfilePicture(defaultProfilePicture);
+            }
+        };
+
+        if (user) {
+            fetchProfilePicture();
+        }
+    }, [user, baseApiUrl, defaultProfilePicture]);
 
     const fetchOriginalExperience = async () => {
         try {
@@ -136,6 +171,27 @@ const ExperienceForksPage = ({ user, setUser }) => {
 
     return (
         <div className="forks-page">
+            <label className="burger" htmlFor="burger">
+                <input
+                    type="checkbox"
+                    id="burger"
+                    checked={sidebarOpen}
+                    onChange={toggleSidebar}
+                />
+                <span></span><span></span><span></span>
+            </label>
+
+            <Sidebar
+                user={user}
+                setUser={setUser}
+                profilePicture={profilePicture}
+                handleImageError={handleImageError}
+                sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
+                baseApiUrl={baseApiUrl}
+                defaultProfilePicture={defaultProfilePicture}
+            />
+
             <div className="container">
                 <div className="forks-header">
                     <button
