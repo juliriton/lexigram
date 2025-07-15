@@ -1,0 +1,253 @@
+/* Suggestion Replies Page - Clean & Consistent Styling */
+.suggestion-replies-page {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.suggestion-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Header Section */
+.suggestion-replies-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.suggestion-back-button {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    padding: 0.5rem;
+}
+
+.suggestion-back-button:hover {
+    color: #495057;
+}
+
+.suggestion-header-content h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.suggestion-comment-icon {
+    color: #f8bf02;
+    font-size: 1.5rem;
+}
+
+.suggestion-replies-count {
+    margin: 0.5rem 0 0;
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+/* Content Sections */
+.suggestion-original-section,
+.suggestion-replies-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.suggestion-original-section h2,
+.suggestion-replies-section h2 {
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f8bf02;
+    font-size: 1.5rem;
+}
+
+/* Replies Grid */
+.suggestion-replies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Empty State */
+.suggestion-no-replies {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px dashed #dee2e6;
+}
+
+.suggestion-empty-icon {
+    font-size: 3rem;
+    color: #adb5bd;
+    margin-bottom: 1.5rem;
+}
+
+.suggestion-no-replies p {
+    color: #6c757d;
+    margin: 0.75rem 0;
+    font-size: 1.1rem;
+}
+
+.suggestion-no-replies p:last-child {
+    color: #f8bf02;
+    font-weight: 500;
+}
+
+/* Pagination */
+.suggestion-pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.suggestion-pagination-button {
+    background: white;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.suggestion-pagination-button:hover:not(:disabled) {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+.suggestion-pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.suggestion-page-info {
+    font-size: 0.9rem;
+    color: #6c757d;
+    min-width: 120px;
+    text-align: center;
+}
+
+/* Loading and Error States */
+.suggestion-loading-spinner {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.suggestion-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #f8bf02;
+    width: 40px;
+    height: 40px;
+    animation: suggestion-spin 1s linear infinite;
+    margin: 0 auto 1.5rem;
+}
+
+@keyframes suggestion-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.suggestion-error-message {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.suggestion-error-message p {
+    color: #dc3545;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.suggestion-error-message .btn {
+    background: #f8bf02;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-weight: 500;
+}
+
+.suggestion-error-message .btn:hover {
+    background: #e6ac00;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .suggestion-container {
+        padding: 0 1rem;
+    }
+
+    .suggestion-replies-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.25rem;
+    }
+
+    .suggestion-header-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .suggestion-replies-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .suggestion-original-section,
+    .suggestion-replies-section {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .suggestion-replies-page {
+        padding: 1.5rem 0;
+    }
+
+    .suggestion-header-content h1 {
+        font-size: 1.3rem;
+    }
+
+    .suggestion-pagination-container {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .suggestion-page-info {
+        order: -1;
+    }
+}

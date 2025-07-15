@@ -75,12 +75,13 @@ const SuggestionCard = ({
         setShowOptions(!showOptions);
     };
 
-    const handleViewReplies = () => {
+    const handleViewReplies = (e) => {
+        e.stopPropagation();
         if (!user) {
             navigate('/login');
             return;
         }
-        setShowReplies(true);
+        navigate(`/suggestion/${updatedPost.uuid}/replies`);
     };
 
     const handleCloseReplies = () => {

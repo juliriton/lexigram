@@ -13,6 +13,7 @@ import ForkExperiencePage from "./pages/ForkExperiencePage";
 import ExperienceForksPage from "./pages/ExperienceForksPage";
 import ReplySuggestionPage from "./pages/ReplySuggestionPage";
 import PostViewPage from "./pages/PostViewPage";
+import SuggestionRepliesPage from "./pages/SuggestionRepliesPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import './App.css';
 import axios from "axios";
@@ -51,6 +52,7 @@ function AppContent({ user, setUser, userLoading, authChecked, fetchCurrentUser 
             <Route path="/profile/:userId" element={<RelationshipProfilePage user={user} setUser={setUser} />} />
             <Route path="/notifications" element={<NotificationsPage user={user} setUser={setUser} />} />
             <Route path="/tags" element={<TagPage user={user} setUser={setUser} />} />
+            <Route path="/suggestion/:uuid/replies" element={<SuggestionRepliesPage user={user} setUser={setUser} />} />
             <Route path="/fork/:uuid" element={<ForkExperiencePage user={user} setUser={setUser} />} />
             <Route path="/suggestion/:uuid/reply" element={<ReplySuggestionPage user={user} setUser={setUser} />} />
             <Route path="/oauth-callback" element={<OAuthCallbackPage setUser={setUser} />} />
@@ -66,16 +68,9 @@ function App() {
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     // Use useCallback to prevent fetchCurrentUser from being recreated on every render
     const fetchCurrentUser = useCallback(async () => {
-        // If we're already loading and it's not the initial load, don't fetch again
-        if (userLoading && !isInitialLoad) {
-            console.log('Already loading user data, skipping fetch');
-            return;
-        }
-
         try {
             console.log('Fetching current user from:', `${API_URL}/api/auth/me`);
             setUserLoading(true);
@@ -85,7 +80,6 @@ function App() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // Add cache control to prevent cached 401 responses
                 cache: 'no-cache'
             });
 
@@ -105,17 +99,15 @@ function App() {
         } finally {
             setUserLoading(false);
             setAuthChecked(true);
-            setIsInitialLoad(false);
         }
-    }, [userLoading, isInitialLoad]);
+    }, []);
 
     // Initial auth check - only runs once
     useEffect(() => {
-        if (isInitialLoad) {
-            fetchCurrentUser();
-        }
-    }, [fetchCurrentUser, isInitialLoad]);
+        fetchCurrentUser();
+    }, [fetchCurrentUser]);
 
+    // Enhanced setUser that properly manages loading states
     const enhancedSetUser = useCallback((userData) => {
         console.log('Setting user data:', userData);
         setUser(userData);
@@ -123,8 +115,8 @@ function App() {
         setAuthChecked(true);
     }, []);
 
-    // Show loading only if we haven't checked auth yet and it's the initial load
-    if (userLoading && !authChecked && isInitialLoad) {
+    // Show loading only while we're actually loading and haven't checked auth yet
+    if (userLoading && !authChecked) {
         return (
             <div className="container">
                 <div className="spinner"></div>
