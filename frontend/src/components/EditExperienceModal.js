@@ -3,7 +3,7 @@ import { FaTimes, FaTag, FaEdit, FaUserTag } from 'react-icons/fa';
 import '../styles/EditPostModal.css';
 
 const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
-    const [activeTab, setActiveTab] = useState('quote');
+    const [activeTab, setActiveTab] = useState(experience.isOrigin ? 'quote' : 'reflection');
     const [quote, setQuote] = useState(experience.quote || '');
     const [reflection, setReflection] = useState(experience.reflection || '');
     const [tags, setTags] = useState([]);
@@ -112,11 +112,14 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
         setSuccess(null);
         setChanges([]);
 
-        const quoteError = validateField('quote', quote);
-        if (quoteError) {
-            setErrors({ ...errors, quote: quoteError });
-            setIsSaving(false);
-            return;
+        // Only validate quote if it's not a fork
+        if (experience.isOrigin) {
+            const quoteError = validateField('quote', quote);
+            if (quoteError) {
+                setErrors({ ...errors, quote: quoteError });
+                setIsSaving(false);
+                return;
+            }
         }
 
         try {
@@ -127,15 +130,15 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
             // Create updated experience object early to use in API calls
             const updatedExperience = {
                 ...experience,
-                quote: quote,
+                quote: experience.isOrigin ? quote : experience.quote, // Preserve original quote if it's a fork
                 reflection: reflection,
                 tags: tags.map(tag => typeof tag === 'string' ? { name: tag } : tag),
                 mentions: mentions,
                 updatedAt: new Date().toISOString()
             };
 
-            // Update quote if changed
-            if (quote !== experience.quote) {
+            // Update quote if changed and it's not a fork
+            if (experience.isOrigin && quote !== experience.quote) {
                 try {
                     const response = await fetch(`${baseApiUrl}/api/auth/me/profile/edit/experience/${experience.uuid}/quote`, {
                         method: 'PUT',
@@ -283,10 +286,12 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 </div>
 
                 <div className="form-toggle-buttons">
-                    <div className={`toggle-button ${activeTab === 'quote' ? 'active' : ''}`} onClick={() => handleTabChange('quote')}>
-                        <FaEdit />
-                        <span>Quote</span>
-                    </div>
+                    {experience.isOrigin && (
+                        <div className={`toggle-button ${activeTab === 'quote' ? 'active' : ''}`} onClick={() => handleTabChange('quote')}>
+                            <FaEdit />
+                            <span>Quote</span>
+                        </div>
+                    )}
                     <div className={`toggle-button ${activeTab === 'reflection' ? 'active' : ''}`} onClick={() => handleTabChange('reflection')}>
                         <FaEdit />
                         <span>Reflection</span>
@@ -326,7 +331,7 @@ const EditExperienceModal = ({ experience, onClose, onUpdate, baseApiUrl }) => {
                 )}
 
                 <div className="form-section">
-                    {activeTab === 'quote' && (
+                    {activeTab === 'quote' && experience.isOrigin && (
                         <div className="quote-section">
                             <label htmlFor="quote">Quote</label>
                             <textarea

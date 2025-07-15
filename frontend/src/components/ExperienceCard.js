@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag } from 'react-icons/fa';
+import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag, FaCodeBranch } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
@@ -42,10 +42,12 @@ const ExperienceCard = ({
     const [showFullRefl, setShowFullRefl] = useState(false);
     const [showAllTags, setShowAllTags] = useState(false);
     const [showCommentsModal, setShowCommentsModal] = useState(false);
-    const [tagFeedStatusVerified, setTagFeedStatusVerified] = useState(false);
+    const [feedTags, setFeedTags] = useState(new Set());
+    const [forksCount, setForksCount] = useState(0);
 
-    const verifyTagFeedStatus = async () => {
-        if (!user || !updatedPost.tags || updatedPost.tags.length === 0 || tagFeedStatusVerified) {
+    const fetchFeedTags = async () => {
+        if (!user) {
+            setFeedTags(new Set());
             return;
         }
 
@@ -55,21 +57,32 @@ const ExperienceCard = ({
             });
 
             if (response.ok) {
-                const feedTags = await response.json();
-                const feedTagUuids = new Set(feedTags.map(tag => tag.uuid));
-
-                setUpdatedPost(prevPost => ({
-                    ...prevPost,
-                    tags: prevPost.tags.map(tag => ({
-                        ...tag,
-                        inFeed: feedTagUuids.has(tag.uuid)
-                    }))
-                }));
-
-                setTagFeedStatusVerified(true);
+                const feedTagsData = await response.json();
+                const feedTagUuids = new Set(feedTagsData.map(tag => tag.uuid));
+                setFeedTags(feedTagUuids);
+            } else {
+                setFeedTags(new Set());
             }
         } catch (err) {
-            console.error('Error verifying tag feed status:', err);
+            console.error('Error fetching feed tags:', err);
+            setFeedTags(new Set());
+        }
+    };
+
+    const fetchForksCount = async () => {
+        if (!user) return;
+
+        try {
+            const response = await fetch(`${baseApiUrl}/api/auth/me/experience/${postId}/branches`, {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const forksData = await response.json();
+                setForksCount(Array.isArray(forksData) ? forksData.length : 0);
+            }
+        } catch (err) {
+            console.error('Error fetching forks count:', err);
         }
     };
 
@@ -78,8 +91,9 @@ const ExperienceCard = ({
     }, [post]);
 
     useEffect(() => {
-        verifyTagFeedStatus();
-    }, [user, baseApiUrl, updatedPost.tags, tagFeedStatusVerified]);
+        fetchFeedTags();
+        fetchForksCount();
+    }, [user, baseApiUrl, postId]);
 
     const quoteFontSize = useMemo(() => {
         const f = updatedPost.style?.fontSize || 20;
@@ -130,6 +144,15 @@ const ExperienceCard = ({
         }
     };
 
+    const handleShowForks = (e) => {
+        e.stopPropagation();
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+        navigate(`/experience/${postId}/forks`);
+    };
+
     const handlePostUpdate = (updatedExperience, message) => {
         setUpdatedPost(updatedExperience);
         if (onActionComplete) {
@@ -166,9 +189,6 @@ const ExperienceCard = ({
     };
 
     const handleExperienceInteractionComplete = (updatedExperience) => {
-        if (onActionComplete) {
-            onActionComplete(updatedExperience);
-        }
         setUpdatedPost(updatedExperience);
     };
 
@@ -187,21 +207,18 @@ const ExperienceCard = ({
             });
 
             if (response.ok) {
-                setUpdatedPost(prevPost => ({
-                    ...prevPost,
-                    tags: prevPost.tags.map(tag =>
-                        tag.uuid === tagUuid ? { ...tag, inFeed: !isInFeed } : tag
-                    )
-                }));
+                setFeedTags(prev => {
+                    const newSet = new Set(prev);
+                    if (isInFeed) {
+                        newSet.delete(tagUuid);
+                    } else {
+                        newSet.add(tagUuid);
+                    }
+                    return newSet;
+                });
 
                 if (onActionComplete) {
-                    const updatedPostWithTag = {
-                        ...updatedPost,
-                        tags: updatedPost.tags.map(tag =>
-                            tag.uuid === tagUuid ? { ...tag, inFeed: !isInFeed } : tag
-                        )
-                    };
-                    onActionComplete(updatedPostWithTag);
+                    onActionComplete(updatedPost);
                 }
             } else {
                 alert('Failed to update tag feed');
@@ -311,7 +328,7 @@ const ExperienceCard = ({
                             <span className="badge exp-badge">
                                 <FaPhotoVideo /> Experience
                             </span>
-                            {updatedPost.origin && (
+                            {updatedPost.isOrigin && (
                                 <span className="badge orig-badge">
                                     <FaStar /> Origin
                                 </span>
@@ -398,10 +415,10 @@ const ExperienceCard = ({
                                         {user && (
                                             <button
                                                 className="tag-add-btn"
-                                                onClick={(e) => handleAddTagToFeed(t.uuid, t.inFeed, e)}
-                                                title={t.inFeed ? "Remove from feed" : "Add to feed"}
+                                                onClick={(e) => handleAddTagToFeed(t.uuid, feedTags.has(t.uuid), e)}
+                                                title={feedTags.has(t.uuid) ? "Remove from feed" : "Add to feed"}
                                             >
-                                                {t.inFeed ? '-' : '+'}
+                                                {feedTags.has(t.uuid) ? '-' : '+'}
                                             </button>
                                         )}
                                     </span>
@@ -412,10 +429,10 @@ const ExperienceCard = ({
                                         {user && (
                                             <button
                                                 className="tag-add-btn"
-                                                onClick={(e) => handleAddTagToFeed(t.uuid, t.inFeed, e)}
-                                                title={t.inFeed ? "Remove from feed" : "Add to feed"}
+                                                onClick={(e) => handleAddTagToFeed(t.uuid, feedTags.has(t.uuid), e)}
+                                                title={feedTags.has(t.uuid) ? "Remove from feed" : "Add to feed"}
                                             >
-                                                {t.inFeed ? '-' : '+'}
+                                                {feedTags.has(t.uuid) ? '-' : '+'}
                                             </button>
                                         )}
                                     </span>
@@ -462,6 +479,18 @@ const ExperienceCard = ({
                                 }}
                             >
                                 {showMentions[postId] ? 'Hide Mentions' : 'Show Mentions'}
+                            </button>
+                        )}
+                        {user && updatedPost.branchAmount > 0 && (
+                            <button
+                                className="btn btn-sm btn-outline-info"
+                                onClick={handleShowForks}
+                                title="View all forks of this experience"
+                            >
+                                <FaCodeBranch /> Show Forks
+                                {forksCount > 0 && (
+                                    <span className="forks-count-badge">{forksCount}</span>
+                                )}
                             </button>
                         )}
                     </div>

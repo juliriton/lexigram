@@ -12,16 +12,11 @@ const OAuthCallbackPage = ({ setUser }) => {
             try {
                 console.log('OAuth callback: Starting authentication flow');
 
-                // First, verify if we're coming from OAuth redirect
-                const isOAuthRedirect = window.location.pathname === '/oauth-callback';
+                // Add a small delay to ensure session is established
+                await new Promise(resolve => setTimeout(resolve, 500));
 
-                if (isOAuthRedirect) {
-                    // Clear any query parameters that might interfere
-                    window.history.replaceState({}, document.title, '/oauth-callback');
-                }
-
-                // Verify the session and get user data
-                const userResponse = await fetch(`${API_URL}/api/auth/oauth2/success`, {
+                // Try to get user data from the main auth endpoint
+                const userResponse = await fetch(`${API_URL}/api/auth/me`, {
                     method: 'GET',
                     credentials: 'include',
                     headers: {
@@ -33,22 +28,41 @@ const OAuthCallbackPage = ({ setUser }) => {
                 console.log('OAuth callback: Response status:', userResponse.status);
 
                 if (!userResponse.ok) {
-                    throw new Error(userResponse.status === 401
-                        ? 'Session verification failed - not authenticated'
-                        : `Session verification failed with status: ${userResponse.status}`);
+                    // If /me fails, try the OAuth-specific endpoint
+                    const oauthResponse = await fetch(`${API_URL}/api/auth/oauth2/success`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        cache: 'no-cache'
+                    });
+
+                    if (!oauthResponse.ok) {
+                        throw new Error('Authentication failed - session not established');
+                    }
+
+                    const oauthData = await oauthResponse.json();
+                    console.log('OAuth callback: User data from OAuth endpoint:', oauthData);
+                    setUser(oauthData);
+                } else {
+                    const userData = await userResponse.json();
+                    console.log('OAuth callback: User data from /me endpoint:', userData);
+                    setUser(userData);
                 }
 
-                const userData = await userResponse.json();
-                console.log('OAuth callback: User data received:', userData);
-
-                setUser(userData);
-                navigate('/', { replace: true }); // Use replace to prevent back navigation to callback
+                // Successfully authenticated, redirect to home
+                navigate('/', { replace: true });
 
             } catch (error) {
                 console.error('OAuth Error:', error);
                 setError(error.message);
                 setIsLoading(false);
-                navigate('/login?error=oauth_failed', { replace: true });
+
+                // Wait a moment before redirecting to show error
+                setTimeout(() => {
+                    navigate('/login?error=oauth_failed', { replace: true });
+                }, 2000);
             }
         };
 
@@ -91,6 +105,12 @@ const OAuthCallbackPage = ({ setUser }) => {
                     animation: 'spin 2s linear infinite'
                 }}></div>
                 <p style={{ marginTop: '20px' }}>Completing authentication...</p>
+                <style jsx>{`
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `}</style>
             </div>
         );
     }
