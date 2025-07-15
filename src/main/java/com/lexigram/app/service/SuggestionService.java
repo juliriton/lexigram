@@ -452,6 +452,7 @@ public class SuggestionService {
 
     return replies;
   }
+
   public Optional<SuggestionDTO> getSuggestionFromUuid(Long id, UUID uuid) {
     Optional<User> userOptional = userRepository.findById(id);
 
@@ -469,4 +470,16 @@ public class SuggestionService {
 
     return Optional.of(new SuggestionDTO(suggestion));
   }
+
+  public Optional<SuggestionDTO> getPublicSuggestionByUuid(UUID uuid) {
+    Optional<Suggestion> suggestionOptional = suggestionRepository.findByUuid(uuid);
+    if (suggestionOptional.isPresent()) {
+      Suggestion suggestion = suggestionOptional.get();
+      if (suggestion.getUser().getUserPrivacySettings().getVisibility()) {
+        return Optional.of(new SuggestionDTO(suggestion));
+      }
+    }
+    return Optional.empty();
+  }
+
 }

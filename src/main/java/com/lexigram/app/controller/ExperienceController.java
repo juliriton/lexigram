@@ -29,7 +29,7 @@ public class ExperienceController {
 
   @GetMapping("/experience/{uuid}")
   public ResponseEntity<ExperienceDTO> getExperience(HttpSession session,
-                                                          @PathVariable UUID uuid) {
+                                                     @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
@@ -40,7 +40,7 @@ public class ExperienceController {
       return ResponseEntity.ok(experienceDTO);
     }
 
-    return ResponseEntity.status(401).build();
+    return ResponseEntity.status(404).build();
   }
 
   @PostMapping("/experience/{uuid}/resonate")

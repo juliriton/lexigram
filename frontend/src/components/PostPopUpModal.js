@@ -29,18 +29,28 @@ const PostPopupModal = ({
         setError(null);
 
         try {
-            // Determine endpoint based on post type
-            let endpoint;
-            if (type === 'Suggestion') {
-                endpoint = `${baseApiUrl}/api/auth/me/suggestion/${postUuid}`;
-            } else {
-                endpoint = `${baseApiUrl}/api/auth/me/experience/${postUuid}`;
+            // Determine post type for endpoint
+            const postType = type === 'Suggestion' ? 'suggestion' : 'experience';
+
+            // First try public endpoint
+            let endpoint = `${baseApiUrl}/api/public/${postType}/${postUuid}`;
+            let response = await fetch(endpoint, {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            // If public access fails and user is logged in, try authenticated endpoint
+            if (!response.ok && user) {
+                endpoint = `${baseApiUrl}/api/auth/me/${postType}/${postUuid}`;
+                response = await fetch(endpoint, {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
             }
-
-            let options = {};
-            options.credentials = 'include';
-
-            const response = await fetch(endpoint, options);
 
             if (response.ok) {
                 const postData = await response.json();

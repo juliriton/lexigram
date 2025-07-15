@@ -63,8 +63,20 @@ function AppContent({ user, setUser, userLoading, authChecked, fetchCurrentUser 
             <Route path="/post/create" element={<PostCreationPage user={user} setUser={setUser} />} />
 
             {/* Post view routes - these should work even without authentication */}
-            <Route path="/experience/:uuid" element={<PostViewPage user={user} setUser={setUser} />} />
-            <Route path="/suggestion/:uuid" element={<PostViewPage user={user} setUser={setUser} />} />
+            <Route path="/experience/:uuid" element={
+                <PostViewPage
+                    user={user}
+                    setUser={setUser}
+                    requireAuth={false}
+                />
+            } />
+            <Route path="/suggestion/:uuid" element={
+                <PostViewPage
+                    user={user}
+                    setUser={setUser}
+                    requireAuth={false}
+                />
+            } />
 
             {/* Experience forks route */}
             <Route path="/experience/:uuid/forks" element={<ExperienceForksPage user={user} setUser={setUser} />} />

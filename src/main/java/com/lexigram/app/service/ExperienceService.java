@@ -780,4 +780,15 @@ public class ExperienceService {
     return Optional.of(new ExperienceDTO(experience));
   }
 
+  public Optional<ExperienceDTO> getPublicExperienceByUuid(UUID uuid) {
+    Optional<Experience> experienceOptional = experienceRepository.findByUuid(uuid);
+    if (experienceOptional.isPresent()) {
+      Experience experience = experienceOptional.get();
+      if (experience.getUser().getUserPrivacySettings().getVisibility()) {
+        return Optional.of(new ExperienceDTO(experience));
+      }
+    }
+    return Optional.empty();
+  }
+
 }

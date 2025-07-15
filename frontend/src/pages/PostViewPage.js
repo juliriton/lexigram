@@ -4,12 +4,14 @@ import HomePage from './HomePage';
 import PostPopupModal from '../components/PostPopUpModal';
 import { API_URL } from '../Api.js';
 
-const PostViewPage = ({ user, setUser }) => {
+const PostViewPage = ({ user, setUser, requireAuth = true }) => {
     const { uuid } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const [showPostModal, setShowPostModal] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [accessDenied, setAccessDenied] = useState(false);
+    const [postData, setPostData] = useState(null);
 
     // Add debugging
     useEffect(() => {
@@ -25,25 +27,119 @@ const PostViewPage = ({ user, setUser }) => {
     // Determine post type based on the current route
     const getPostType = () => {
         if (location.pathname.includes('/suggestion/')) {
-            return 'Suggestion';
+            return 'suggestion';
         } else if (location.pathname.includes('/experience/')) {
-            return 'Experience';
+            return 'experience';
         }
         // Default fallback
-        return 'Experience';
+        return 'experience';
+    };
+
+    // Check if user has access to view the post
+    const checkPostAccess = async () => {
+        try {
+            console.log('Checking post access for UUID:', uuid);
+            const postType = getPostType();
+
+            // First try public endpoint
+            let endpoint = `${API_URL}/api/public/${postType}/${uuid}`;
+            let response = await fetch(endpoint, {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            // Handle public endpoint response
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Post data retrieved from public endpoint:', data);
+                setPostData(data);
+                return { hasAccess: true, postData: data };
+            } else if (response.status === 403) {
+                // Private post - get user info for redirect
+                const errorData = await response.json();
+                console.log('Private post detected:', errorData);
+                if (errorData.private && errorData.userId) {
+                    // Redirect to profile page to show it's private
+                    navigate(`/profile/${errorData.userId}`, { replace: true });
+                    return { hasAccess: false, isPrivate: true };
+                }
+            }
+
+            // If public access fails and user is logged in, try authenticated endpoint
+            if (!response.ok && user) {
+                endpoint = `${API_URL}/api/auth/me/${postType}/${uuid}`;
+                response = await fetch(endpoint, {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Post data retrieved from authenticated endpoint:', data);
+                    setPostData(data);
+                    return { hasAccess: true, postData: data };
+                } else if (response.status === 403) {
+                    // Still private even with auth - user doesn't have access
+                    // Try to get user info from the response
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.private && errorData.userId) {
+                            navigate(`/profile/${errorData.userId}`, { replace: true });
+                            return { hasAccess: false, isPrivate: true };
+                        }
+                    } catch (e) {
+                        console.log('Could not parse error response');
+                    }
+
+                    // If we can't get user info, redirect to home
+                    navigate('/', { replace: true });
+                    return { hasAccess: false };
+                }
+            }
+
+            // Handle 404 or other errors
+            if (response.status === 404) {
+                console.log('Post not found');
+                navigate('/', { replace: true });
+                return { hasAccess: false };
+            } else {
+                console.log('Error fetching post:', response.status);
+                navigate('/', { replace: true });
+                return { hasAccess: false };
+            }
+        } catch (error) {
+            console.error('Error checking post access:', error);
+            navigate('/', { replace: true });
+            return { hasAccess: false };
+        }
     };
 
     useEffect(() => {
-        // Show the modal when component mounts, regardless of authentication status
-        if (uuid) {
-            console.log('Setting showPostModal to true for UUID:', uuid);
-            setShowPostModal(true);
+        const initializeAccess = async () => {
+            if (!uuid) {
+                navigate('/', { replace: true });
+                return;
+            }
+
+            setIsLoading(true);
+            const { hasAccess, postData, isPrivate } = await checkPostAccess();
+
+            if (hasAccess) {
+                setShowPostModal(true);
+                setAccessDenied(false);
+            } else {
+                setAccessDenied(true);
+                // The redirection is already handled in checkPostAccess
+            }
             setIsLoading(false);
-        } else {
-            console.log('No UUID found, redirecting to home');
-            navigate('/', { replace: true });
-        }
-    }, [uuid, navigate]);
+        };
+
+        initializeAccess();
+    }, [uuid, navigate, location, user]);
 
     const handleCloseModal = () => {
         console.log('Closing modal and navigating to home');
@@ -73,22 +169,35 @@ const PostViewPage = ({ user, setUser }) => {
         );
     }
 
+    // If access is denied, this component will redirect to profile or home
+    // so we don't need to render anything here
+    if (accessDenied) {
+        return (
+            <div className="container">
+                <div className="spinner"></div>
+                <p>Redirecting...</p>
+            </div>
+        );
+    }
+
     return (
         <>
             {/* Render the home page in the background */}
             <HomePage user={user} setUser={setUser} />
 
-            {/* Show the post popup modal - this should work even without authentication */}
-            <PostPopupModal
-                isOpen={showPostModal}
-                onClose={handleCloseModal}
-                postUuid={uuid}
-                type={getPostType()}
-                user={user}
-                baseApiUrl={API_URL}
-                formatDate={formatDate}
-                enableFallback={true}
-            />
+            {/* Show the post popup modal only if access is granted */}
+            {showPostModal && (
+                <PostPopupModal
+                    isOpen={showPostModal}
+                    onClose={handleCloseModal}
+                    postUuid={uuid}
+                    type={getPostType()}
+                    user={user}
+                    baseApiUrl={API_URL}
+                    formatDate={formatDate}
+                    enableFallback={true}
+                />
+            )}
         </>
     );
 };

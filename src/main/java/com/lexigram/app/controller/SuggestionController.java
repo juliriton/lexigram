@@ -31,7 +31,7 @@ public class SuggestionController {
 
   @GetMapping("/suggestion/{uuid}")
   public ResponseEntity<SuggestionDTO> getSuggestion(HttpSession session,
-                                                  @PathVariable UUID uuid) {
+                                                     @PathVariable UUID uuid) {
     Long id = (Long) session.getAttribute("user");
     if (id == null) return ResponseEntity.status(401).build();
 
