@@ -689,3 +689,21 @@
     background: #6f42c1;
     color: #fff;
 }
+
+.experience-card.modal-view {
+    font-size: 1.2rem;
+}
+
+.experience-card.modal-view .title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.experience-card.modal-view .reflection-text {
+    font-size: 1.3rem;
+    line-height: 1.6;
+}
+
+.experience-card.modal-view .media-wrapper {
+    height: 400px;
+}

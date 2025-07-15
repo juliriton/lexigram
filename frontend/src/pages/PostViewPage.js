@@ -13,10 +13,47 @@ const PostViewPage = ({ user, setUser, requireAuth = true }) => {
     const [accessDenied, setAccessDenied] = useState(false);
     const [postData, setPostData] = useState(null);
 
+    // Get UUID from either URL params or query params
+    const getPostUuid = () => {
+        // First try to get from URL params (e.g., /suggestion/uuid)
+        if (uuid) {
+            return uuid;
+        }
+
+        // Then try query params (e.g., /?suggestion=uuid or /?experience=uuid)
+        const urlParams = new URLSearchParams(location.search);
+        return urlParams.get('suggestion') || urlParams.get('experience');
+    };
+
+    // Determine post type based on the current route or query parameters
+    const getPostType = () => {
+        // First check URL path
+        if (location.pathname.includes('/suggestion/')) {
+            return 'suggestion';
+        } else if (location.pathname.includes('/experience/')) {
+            return 'experience';
+        }
+
+        // Then check query parameters
+        const urlParams = new URLSearchParams(location.search);
+        if (urlParams.has('suggestion')) {
+            return 'suggestion';
+        } else if (urlParams.has('experience')) {
+            return 'experience';
+        }
+
+        // Default fallback
+        return 'experience';
+    };
+
+    const currentUuid = getPostUuid();
+
     // Add debugging
     useEffect(() => {
         console.log('PostViewPage mounted with:', {
             uuid,
+            currentUuid,
+            postType: getPostType(),
             pathname: location.pathname,
             search: location.search,
             hash: location.hash,
@@ -24,25 +61,14 @@ const PostViewPage = ({ user, setUser, requireAuth = true }) => {
         });
     }, [uuid, location, user]);
 
-    // Determine post type based on the current route
-    const getPostType = () => {
-        if (location.pathname.includes('/suggestion/')) {
-            return 'suggestion';
-        } else if (location.pathname.includes('/experience/')) {
-            return 'experience';
-        }
-        // Default fallback
-        return 'experience';
-    };
-
     // Check if user has access to view the post
     const checkPostAccess = async () => {
         try {
-            console.log('Checking post access for UUID:', uuid);
+            console.log('Checking post access for UUID:', currentUuid);
             const postType = getPostType();
 
             // First try public endpoint
-            let endpoint = `${API_URL}/api/public/${postType}/${uuid}`;
+            let endpoint = `${API_URL}/api/public/${postType}/${currentUuid}`;
             let response = await fetch(endpoint, {
                 credentials: 'include',
                 headers: {
@@ -69,7 +95,7 @@ const PostViewPage = ({ user, setUser, requireAuth = true }) => {
 
             // If public access fails and user is logged in, try authenticated endpoint
             if (!response.ok && user) {
-                endpoint = `${API_URL}/api/auth/me/${postType}/${uuid}`;
+                endpoint = `${API_URL}/api/auth/me/${postType}/${currentUuid}`;
                 response = await fetch(endpoint, {
                     credentials: 'include',
                     headers: {
@@ -120,7 +146,7 @@ const PostViewPage = ({ user, setUser, requireAuth = true }) => {
 
     useEffect(() => {
         const initializeAccess = async () => {
-            if (!uuid) {
+            if (!currentUuid) {
                 navigate('/', { replace: true });
                 return;
             }
@@ -139,7 +165,7 @@ const PostViewPage = ({ user, setUser, requireAuth = true }) => {
         };
 
         initializeAccess();
-    }, [uuid, navigate, location, user]);
+    }, [currentUuid, navigate, location, user]);
 
     const handleCloseModal = () => {
         console.log('Closing modal and navigating to home');
@@ -153,7 +179,7 @@ const PostViewPage = ({ user, setUser, requireAuth = true }) => {
     };
 
     // Add a fallback if uuid is missing
-    if (!uuid) {
+    if (!currentUuid) {
         console.log('No UUID provided, redirecting to home');
         navigate('/', { replace: true });
         return null;
@@ -190,7 +216,7 @@ const PostViewPage = ({ user, setUser, requireAuth = true }) => {
                 <PostPopupModal
                     isOpen={showPostModal}
                     onClose={handleCloseModal}
-                    postUuid={uuid}
+                    postUuid={currentUuid}
                     type={getPostType()}
                     user={user}
                     baseApiUrl={API_URL}

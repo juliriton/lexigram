@@ -29,11 +29,18 @@ const PostPopupModal = ({
         setError(null);
 
         try {
-            // Determine post type for endpoint
-            const postType = type === 'Suggestion' ? 'suggestion' : 'experience';
+            // Fix: Normalize the type to match the API endpoint
+            // The type from App.js is 'suggestion' or 'experience' (lowercase)
+            // But we need to handle cases where it might be 'Suggestion' or 'Experience' (capitalized)
+            const normalizedType = type.toLowerCase();
+            const postType = normalizedType === 'suggestion' ? 'suggestion' : 'experience';
+
+            console.log('Fetching post with type:', postType, 'UUID:', postUuid);
 
             // First try public endpoint
             let endpoint = `${baseApiUrl}/api/public/${postType}/${postUuid}`;
+            console.log('Trying public endpoint:', endpoint);
+
             let response = await fetch(endpoint, {
                 credentials: 'include',
                 headers: {
@@ -44,6 +51,8 @@ const PostPopupModal = ({
             // If public access fails and user is logged in, try authenticated endpoint
             if (!response.ok && user) {
                 endpoint = `${baseApiUrl}/api/auth/me/${postType}/${postUuid}`;
+                console.log('Trying authenticated endpoint:', endpoint);
+
                 response = await fetch(endpoint, {
                     credentials: 'include',
                     headers: {
@@ -54,12 +63,19 @@ const PostPopupModal = ({
 
             if (response.ok) {
                 const postData = await response.json();
+                console.log('Post data retrieved successfully:', postData);
                 setPost(postData);
             } else if (response.status === 404) {
+                console.error('Post not found - 404');
                 setError('Post not found');
             } else if (response.status === 401) {
+                console.error('Unauthorized - 401');
                 setError('Unauthorized - please log in');
+            } else if (response.status === 403) {
+                console.error('Forbidden - 403');
+                setError('You do not have permission to view this post');
             } else {
+                console.error('Failed to load post - status:', response.status);
                 setError('Failed to load post');
             }
         } catch (err) {
@@ -92,6 +108,16 @@ const PostPopupModal = ({
         setPost(updatedPost);
     };
 
+    // Determine if this is an experience or suggestion for rendering
+    const isExperience = () => {
+        // Check the post data first if available
+        if (post && post.type) {
+            return post.type === 'Experience';
+        }
+        // Fall back to the type prop
+        return type.toLowerCase() === 'experience';
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -114,12 +140,13 @@ const PostPopupModal = ({
                 style={{
                     backgroundColor: 'white',
                     borderRadius: '12px',
-                    maxWidth: '600px',
+                    maxWidth: '800px',
                     width: '100%',
                     maxHeight: '90vh',
                     overflow: 'auto',
                     position: 'relative',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+                    padding: '30px'
                 }}
             >
                 <button
@@ -138,7 +165,7 @@ const PostPopupModal = ({
                         padding: '5px'
                     }}
                 >
-                    <FaTimes />
+                    <FaTimes/>
                 </button>
 
                 {loading && (
@@ -150,8 +177,8 @@ const PostPopupModal = ({
                         padding: '60px 20px',
                         color: '#666'
                     }}>
-                        <FaSpinner className="fa-spin" size={30} />
-                        <p style={{ marginTop: '15px' }}>Loading post...</p>
+                        <FaSpinner className="fa-spin" size={30}/>
+                        <p style={{marginTop: '15px'}}>Loading post...</p>
                     </div>
                 )}
 
@@ -184,7 +211,7 @@ const PostPopupModal = ({
 
                 {post && !loading && !error && (
                     <div style={{ padding: '20px' }}>
-                        {(post.type === 'Experience' || type === 'Experience') ? (
+                        {isExperience() ? (
                             <ExperienceCard
                                 user={user}
                                 post={post}
@@ -222,6 +249,7 @@ const PostPopupModal = ({
                                 disablePopup={true}
                                 isOwner={user && post.user && user.uuid === post.user.uuid}
                                 onActionComplete={handleActionComplete}
+                                className="modal-view"
                             />
                         ) : (
                             <SuggestionCard
@@ -233,6 +261,7 @@ const PostPopupModal = ({
                                 formatDate={formatDate}
                                 isOwner={user && post.user && user.uuid === post.user.uuid}
                                 onActionComplete={handleActionComplete}
+                                className="modal-view"
                             />
                         )}
                     </div>

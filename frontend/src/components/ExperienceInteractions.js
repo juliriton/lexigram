@@ -156,7 +156,7 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
 
     const handleShare = async () => {
         try {
-            let urlToShare = `${window.location.origin}/experience/${experience.uuid}`;
+            let urlToShare = `${window.location.origin}/?experience=${experience.uuid}`;
 
             if (user) {
                 const endpoint = `${baseApiUrl}/api/auth/me/experience/${experience.uuid}/share`;
@@ -175,7 +175,7 @@ const ExperienceInteractions = ({ user, experience, baseApiUrl, onActionComplete
             setTimeout(() => setShowCopiedMessage(false), 2000);
         } catch (err) {
             console.error('Error sharing:', err);
-            const shareUrl = `${window.location.origin}/experience/${experience.uuid}`;
+            const shareUrl = `${window.location.origin}/?experience=${experience.uuid}`;
             await copyToClipboard(shareUrl);
             setShowCopiedMessage(true);
             setTimeout(() => setShowCopiedMessage(false), 2000);

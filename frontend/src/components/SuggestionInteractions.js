@@ -134,7 +134,7 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
 
     const handleShare = async () => {
         try {
-            let urlToShare = `${window.location.origin}/suggestion/${suggestion.uuid}`;
+            let urlToShare = `${window.location.origin}/?suggestion=${suggestion.uuid}`;
 
             if (user) {
                 const endpoint = `${baseApiUrl}/api/auth/me/suggestion/${suggestion.uuid}/share`;
@@ -153,7 +153,7 @@ const SuggestionInteractions = ({ user, suggestion, baseApiUrl, onActionComplete
             setTimeout(() => setShowCopiedMessage(false), 2000);
         } catch (err) {
             console.error('Error sharing:', err);
-            const shareUrl = `${window.location.origin}/suggestion/${suggestion.uuid}`;
+            const shareUrl = `${window.location.origin}/?suggestion=${suggestion.uuid}`;
             await copyToClipboard(shareUrl);
             setShowCopiedMessage(true);
             setTimeout(() => setShowCopiedMessage(false), 2000);
