@@ -79,7 +79,11 @@ const ExperienceCard = ({
 
             if (response.ok) {
                 const forksData = await response.json();
-                setForksCount(Array.isArray(forksData) ? forksData.length : 0);
+                // Filter out the original experience from the count
+                const actualForks = Array.isArray(forksData)
+                    ? forksData.filter(fork => fork.uuid !== postId)
+                    : [];
+                setForksCount(actualForks.length);
             }
         } catch (err) {
             console.error('Error fetching forks count:', err);
@@ -325,23 +329,23 @@ const ExperienceCard = ({
                 <div className="content">
                     <div className="header-row">
                         <div className="badges">
-    <span className="badge exp-badge">
-        <FaPhotoVideo/> Experience
-    </span>
+                            <span className="badge exp-badge">
+                                <FaPhotoVideo/> Experience
+                            </span>
                             {updatedPost.origin && (
                                 <span className="badge orig-badge">
-            <FaStar/> Origin
-        </span>
+                                    <FaStar/> Origin
+                                </span>
                             )}
                             {updatedPost.reply && (
                                 <span className="badge reply-badge">
-            <FaReply/> Reply
-        </span>
+                                    <FaReply/> Reply
+                                </span>
                             )}
                             {!updatedPost.origin && (
                                 <span className="badge fork-badge">
-            <FaCodeBranch/> Fork
-        </span>
+                                    <FaCodeBranch/> Fork
+                                </span>
                             )}
                         </div>
 

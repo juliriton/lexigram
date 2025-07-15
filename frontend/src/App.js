@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import UserProfilePage from './pages/UserProfilePage';
@@ -25,6 +25,7 @@ function AppContent({ user, setUser, userLoading, authChecked, fetchCurrentUser 
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
         if (urlParams.get('oauth') === 'success') {
+            console.log('OAuth success detected, fetching user data...');
             // Remove the parameter from URL and fetch user data
             window.history.replaceState({}, document.title, window.location.pathname);
             fetchCurrentUser();
@@ -65,10 +66,20 @@ function App() {
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-    const fetchCurrentUser = async () => {
+    // Use useCallback to prevent fetchCurrentUser from being recreated on every render
+    const fetchCurrentUser = useCallback(async () => {
+        // If we're already loading and it's not the initial load, don't fetch again
+        if (userLoading && !isInitialLoad) {
+            console.log('Already loading user data, skipping fetch');
+            return;
+        }
+
         try {
             console.log('Fetching current user from:', `${API_URL}/api/auth/me`);
+            setUserLoading(true);
+
             const res = await fetch(`${API_URL}/api/auth/me`, {
                 credentials: 'include',
                 headers: {
@@ -94,20 +105,26 @@ function App() {
         } finally {
             setUserLoading(false);
             setAuthChecked(true);
+            setIsInitialLoad(false);
         }
-    };
+    }, [userLoading, isInitialLoad]);
 
+    // Initial auth check - only runs once
     useEffect(() => {
-        fetchCurrentUser();
-    }, []);
+        if (isInitialLoad) {
+            fetchCurrentUser();
+        }
+    }, [fetchCurrentUser, isInitialLoad]);
 
-    const enhancedSetUser = (userData) => {
+    const enhancedSetUser = useCallback((userData) => {
         console.log('Setting user data:', userData);
         setUser(userData);
-    };
+        setUserLoading(false);
+        setAuthChecked(true);
+    }, []);
 
-    // Show loading only if we haven't checked auth yet
-    if (userLoading && !authChecked) {
+    // Show loading only if we haven't checked auth yet and it's the initial load
+    if (userLoading && !authChecked && isInitialLoad) {
         return (
             <div className="container">
                 <div className="spinner"></div>

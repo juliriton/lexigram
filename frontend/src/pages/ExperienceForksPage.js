@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaCodeBranch } from 'react-icons/fa';
+import { FaArrowLeft, FaCodeBranch, FaArrowRight } from 'react-icons/fa';
 import ExperienceCard from '../components/ExperienceCard';
 import '../styles/ExperienceForksPage.css';
 
@@ -8,11 +8,14 @@ const ExperienceForksPage = ({ user, setUser }) => {
     const { uuid } = useParams();
     const navigate = useNavigate();
     const [originalExperience, setOriginalExperience] = useState(null);
-    const [forks, setForks] = useState([]);
+    const [allForks, setAllForks] = useState([]);
+    const [filteredForks, setFilteredForks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [hiddenQuotes, setHiddenQuotes] = useState({});
     const [showMentions, setShowMentions] = useState({});
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(4);
 
     const baseApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
@@ -20,6 +23,14 @@ const ExperienceForksPage = ({ user, setUser }) => {
         fetchOriginalExperience();
         fetchForks();
     }, [uuid]);
+
+    useEffect(() => {
+        if (originalExperience) {
+            setFilteredForks(allForks.filter(fork => fork.uuid !== originalExperience.uuid));
+        } else {
+            setFilteredForks(allForks);
+        }
+    }, [allForks, originalExperience]);
 
     const fetchOriginalExperience = async () => {
         try {
@@ -49,7 +60,7 @@ const ExperienceForksPage = ({ user, setUser }) => {
 
             if (response.ok) {
                 const data = await response.json();
-                setForks(Array.from(data));
+                setAllForks(data);
             } else if (response.status === 401) {
                 navigate('/login');
             } else {
@@ -79,13 +90,21 @@ const ExperienceForksPage = ({ user, setUser }) => {
     };
 
     const handleActionComplete = (updatedExperience) => {
-        // Update the fork in the list if it was modified
-        setForks(prevForks =>
+        setAllForks(prevForks =>
             prevForks.map(fork =>
                 fork.uuid === updatedExperience.uuid ? updatedExperience : fork
             )
         );
     };
+
+    const getPaginatedForks = () => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredForks.slice(startIndex, endIndex);
+    };
+
+    const totalPages = Math.ceil(filteredForks.length / itemsPerPage);
+    const showPagination = filteredForks.length > itemsPerPage;
 
     if (loading) {
         return (
@@ -132,7 +151,7 @@ const ExperienceForksPage = ({ user, setUser }) => {
                             Forks of Experience
                         </h1>
                         <p className="forks-count">
-                            {forks.length} fork{forks.length !== 1 ? 's' : ''} found
+                            {filteredForks.length} fork{filteredForks.length !== 1 ? 's' : ''} found
                         </p>
                     </div>
                 </div>
@@ -158,31 +177,54 @@ const ExperienceForksPage = ({ user, setUser }) => {
 
                 <div className="forks-section">
                     <h2>Forks</h2>
-                    {forks.length === 0 ? (
+                    {filteredForks.length === 0 ? (
                         <div className="no-forks">
                             <FaCodeBranch className="empty-icon" />
                             <p>No forks found for this experience.</p>
                             <p>Be the first to fork it!</p>
                         </div>
                     ) : (
-                        <div className="forks-grid">
-                            {forks.map((fork) => (
-                                <ExperienceCard
-                                    key={fork.uuid}
-                                    user={user}
-                                    post={fork}
-                                    username={fork.user.username}
-                                    baseApiUrl={baseApiUrl}
-                                    hiddenQuotes={hiddenQuotes}
-                                    toggleQuote={toggleQuote}
-                                    showMentions={showMentions}
-                                    setShowMentions={setShowMentions}
-                                    formatDate={formatDate}
-                                    disablePopup={true}
-                                    onActionComplete={handleActionComplete}
-                                />
-                            ))}
-                        </div>
+                        <>
+                            <div className="forks-grid">
+                                {getPaginatedForks().map((fork) => (
+                                    <ExperienceCard
+                                        key={fork.uuid}
+                                        user={user}
+                                        post={fork}
+                                        username={fork.user.username}
+                                        baseApiUrl={baseApiUrl}
+                                        hiddenQuotes={hiddenQuotes}
+                                        toggleQuote={toggleQuote}
+                                        showMentions={showMentions}
+                                        setShowMentions={setShowMentions}
+                                        formatDate={formatDate}
+                                        disablePopup={true}
+                                        onActionComplete={handleActionComplete}
+                                    />
+                                ))}
+                            </div>
+                            {showPagination && (
+                                <div className="pagination-container">
+                                    <button
+                                        className="pagination-button"
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        <FaArrowLeft />
+                                    </button>
+                                    <span className="page-info">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <button
+                                        className="pagination-button"
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage >= totalPages}
+                                    >
+                                        <FaArrowRight />
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
