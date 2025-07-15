@@ -679,3 +679,13 @@
         justify-content: center;
     }
 }
+
+.reply-badge {
+    background: #6c757d;
+    color: #fff;
+}
+
+.fork-badge {
+    background: #6f42c1;
+    color: #fff;
+}

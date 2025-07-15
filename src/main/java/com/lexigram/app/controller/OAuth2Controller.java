@@ -120,8 +120,8 @@ public class OAuth2Controller {
       session.setAttribute("user", user.getId());
       System.out.println("Session set for user ID: " + user.getId());
 
-      // Redirect to frontend OAuth callback page
-      String redirectUrl = frontendUrl + "/oauth-callback";
+      // Instead of redirecting to /oauth-callback, redirect directly to home with success parameter
+      String redirectUrl = frontendUrl + "/?oauth=success";
       System.out.println("Redirecting to: " + redirectUrl);
       response.sendRedirect(redirectUrl);
 

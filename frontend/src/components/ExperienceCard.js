@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag, FaCodeBranch } from 'react-icons/fa';
+import { FaPhotoVideo, FaTrash, FaEdit, FaEllipsisH, FaUserTag, FaCodeBranch, FaReply } from 'react-icons/fa';
 import { FaStar } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EditExperienceModal from './EditExperienceModal';
@@ -325,13 +325,23 @@ const ExperienceCard = ({
                 <div className="content">
                     <div className="header-row">
                         <div className="badges">
-                            <span className="badge exp-badge">
-                                <FaPhotoVideo /> Experience
-                            </span>
-                            {updatedPost.isOrigin && (
+    <span className="badge exp-badge">
+        <FaPhotoVideo/> Experience
+    </span>
+                            {updatedPost.origin && (
                                 <span className="badge orig-badge">
-                                    <FaStar /> Origin
-                                </span>
+            <FaStar/> Origin
+        </span>
+                            )}
+                            {updatedPost.reply && (
+                                <span className="badge reply-badge">
+            <FaReply/> Reply
+        </span>
+                            )}
+                            {!updatedPost.origin && (
+                                <span className="badge fork-badge">
+            <FaCodeBranch/> Fork
+        </span>
                             )}
                         </div>
 
@@ -342,18 +352,18 @@ const ExperienceCard = ({
                                     onClick={toggleOptions}
                                     aria-label="Post options"
                                 >
-                                    <FaEllipsisH />
+                                    <FaEllipsisH/>
                                 </button>
 
                                 {showOptions && (
                                     <div className="options-dropdown">
                                         {(showEditOption || onEdit) && (
                                             <button onClick={handleEdit} className="option-item edit">
-                                                <FaEdit size={14} /> <span>Edit</span>
+                                                <FaEdit size={14}/> <span>Edit</span>
                                             </button>
                                         )}
                                         <button onClick={handleDelete} className="option-item delete">
-                                            <FaTrash size={14} /> <span>Delete</span>
+                                            <FaTrash size={14}/> <span>Delete</span>
                                         </button>
                                     </div>
                                 )}
